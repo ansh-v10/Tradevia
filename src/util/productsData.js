@@ -374,7 +374,9 @@ export const allCategories = [
   "Sweets & Namkeen",
   "Beverages",
   "Grains & Masalas",
-  "Fresh & Dairy"
+  "Fresh & Dairy",
+  "Snacks & Biscuits",
+  "Cosmetics & Hygiene"
 ];
 
 export const allBrands = [

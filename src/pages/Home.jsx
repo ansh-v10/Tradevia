@@ -53,12 +53,26 @@ export default function Home({
     setCurrentPage('browse');
   };
 
-  // Get most bought products from dynamic prop
-  const mostBoughtProducts = products.filter(p => p.isMostBought).slice(0, 8);
-  // Get super saver deals from dynamic prop
+  // Get most bought products from dynamic prop, sorting out-of-stock to the bottom
+  const mostBoughtProducts = products
+    .filter(p => p.isMostBought)
+    .sort((a, b) => {
+      const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
+      const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
+      return isOutOfStockA - isOutOfStockB;
+    })
+    .slice(0, 8);
+  // Get super saver deals from dynamic prop, sorting out-of-stock to the bottom
   const superSaverDeals = products
     .map(p => ({ ...p, discountPercent: Math.round(((p.retailPrice - p.wholesalePrice) / p.retailPrice) * 100) }))
-    .sort((a, b) => b.discountPercent - a.discountPercent)
+    .sort((a, b) => {
+      const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
+      const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
+      if (isOutOfStockA !== isOutOfStockB) {
+        return isOutOfStockA - isOutOfStockB;
+      }
+      return b.discountPercent - a.discountPercent;
+    })
     .slice(0, 4);
 
   const resolveImgSrc = (src) => {
@@ -98,6 +112,18 @@ export default function Home({
     { 
       name: "Grains & Masalas", 
       icon: <img src={resolveImgSrc(categoryImages["Grains & Masalas"] || "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80")} alt="Grains Atta" className="category-icon-img" /> 
+    },
+    { 
+      name: "Fresh & Dairy", 
+      icon: <img src={resolveImgSrc(categoryImages["Fresh & Dairy"] || "https://images.unsplash.com/photo-1528750955906-c8b4a3952f2d?auto=format&fit=crop&w=150&q=80")} alt="Fresh & Dairy" className="category-icon-img" /> 
+    },
+    { 
+      name: "Snacks & Biscuits", 
+      icon: <img src={resolveImgSrc(categoryImages["Snacks & Biscuits"] || "https://images.unsplash.com/photo-1558961312-50a49c93acfe?auto=format&fit=crop&w=150&q=80")} alt="Snacks & Biscuits" className="category-icon-img" /> 
+    },
+    { 
+      name: "Cosmetics & Hygiene", 
+      icon: <img src={resolveImgSrc(categoryImages["Cosmetics & Hygiene"] || "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=150&q=80")} alt="Cosmetics & Hygiene" className="category-icon-img" /> 
     },
     { 
       name: "More", 
@@ -209,8 +235,8 @@ export default function Home({
                   <div style={{ fontSize: '11px', textAlign: 'left', marginTop: '2px' }}>
                     {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
                       <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
-                    ) : (product.inventory !== undefined ? product.inventory : 100) < 30 ? (
-                      <span style={{ color: 'var(--color-warning)', fontWeight: 'bold' }}>⚠️ Only {product.inventory} packs left!</span>
+                    ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
+                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left in stock : {product.inventory}</span>
                     ) : (
                       <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock ({product.inventory !== undefined ? product.inventory : 100} packs)</span>
                     )}
@@ -293,14 +319,29 @@ export default function Home({
                     Margin: <span className="margin-green">{margin}% Profit</span>
                   </div>
 
+                  <div style={{ fontSize: '11px', textAlign: 'left', marginTop: '6px', marginBottom: '6px' }}>
+                    {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
+                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
+                    ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
+                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left in stock : {product.inventory}</span>
+                    ) : (
+                      <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock ({product.inventory !== undefined ? product.inventory : 100} packs)</span>
+                    )}
+                  </div>
+
                   <div className="price-checkout-row">
                     <div className="price-stack">
                       <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
                       <span className="wholesale-deal-price">₹{product.wholesalePrice} <span className="ex-gst">ex. GST</span></span>
                     </div>
                     
-                    <button className="product-quick-add-btn" onClick={() => onAddToCart(product, product.moq || 10)}>
-                      Add Bulk ({product.moq || 10})
+                    <button 
+                      className="product-quick-add-btn" 
+                      onClick={() => onAddToCart(product, product.moq || 10)}
+                      disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
+                      style={(product.inventory !== undefined ? product.inventory : 100) <= 0 ? { backgroundColor: '#cbd5e1', cursor: 'not-allowed', color: '#64748b' } : {}}
+                    >
+                      {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? 'Out of Stock' : `Add Bulk (${product.moq || 10})`}
                     </button>
                   </div>
 

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CloseIcon } from './Icons';
 
 export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login', checkoutPrompt = false }) {
-  const [mode, setMode] = useState(initialMode); // 'login' or 'signup'
-  const [loginIdentifier, setLoginIdentifier] = useState(''); // email or mobile number
+  const [mode, setMode] = useState(initialMode); 
+  const [loginIdentifier, setLoginIdentifier] = useState(''); 
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -12,12 +12,10 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Reset errors and fields when modal opens or toggles mode
   useEffect(() => {
     setErrors({});
     setSuccessMsg('');
     if (!isOpen) {
-      // clear fields on close
       setLoginIdentifier('');
       setPassword('');
       setFullName('');
@@ -32,7 +30,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
   const validateForm = () => {
     const tempErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const mobileRegex = /^[6-9]\d{9}$/; // 10-digit Indian mobile numbers
+    const mobileRegex = /^[6-9]\d{9}$/; 
 
     if (mode === 'login') {
       if (!loginIdentifier) {
@@ -82,7 +80,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
     if (!validateForm()) return;
 
     if (mode === 'signup') {
-      // Simulate account registration
       const userData = {
         name: fullName,
         businessName,
@@ -97,7 +94,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
       }, 1200);
 
     } else {
-      // Simulate account login
       const cleanIdentifier = loginIdentifier.replace(/\s/g, '');
       const isMobile = /^\d+$/.test(cleanIdentifier);
       
@@ -124,12 +120,10 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
     <div className="login-modal-overlay" onClick={onClose}>
       <div className="login-modal-card" onClick={(e) => e.stopPropagation()}>
         
-        {/* Close Button */}
         <button className="login-modal-close-btn" onClick={onClose} aria-label="Close modal">
           <CloseIcon size={24} />
         </button>
 
-        {/* Modal Header */}
         <div className="login-modal-header">
           <span className="modal-logo">Sanjay<span className="logo-accent">Sales</span></span>
           <span className="modal-tag">B2B Trade Member</span>
@@ -148,15 +142,12 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
           </p>
         </div>
 
-        {/* Success Message Banner */}
         {successMsg && <div className="modal-success-banner">{successMsg}</div>}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="login-form">
           
           {mode === 'signup' && (
             <>
-              {/* Full Name */}
               <div className="form-group">
                 <label htmlFor="fullName">Contact Person Name *</label>
                 <input 
@@ -170,7 +161,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
                 {errors.fullName && <span className="input-error-msg">{errors.fullName}</span>}
               </div>
 
-              {/* Business Name */}
               <div className="form-group">
                 <label htmlFor="businessName">Registered Business Name *</label>
                 <input 
@@ -190,7 +180,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
                 </div>
               )}
 
-              {/* Mobile Number */}
               <div className="form-group">
                 <label htmlFor="mobileNumber">Commercial Mobile Number</label>
                 <input 
@@ -205,7 +194,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
                 {errors.mobileNumber && <span className="input-error-msg">{errors.mobileNumber}</span>}
               </div>
 
-              {/* Email Address */}
               <div className="form-group">
                 <label htmlFor="email">Email Address</label>
                 <input 
@@ -222,7 +210,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
           )}
 
           {mode === 'login' && (
-            /* Email or Phone Login Input */
             <div className="form-group">
               <label htmlFor="loginIdentifier">Commercial Email or 10-Digit Mobile *</label>
               <input 
@@ -237,7 +224,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             </div>
           )}
 
-          {/* Password */}
           <div className="form-group">
             <label htmlFor="password">Security Password *</label>
             <input 
@@ -251,13 +237,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             {errors.password && <span className="input-error-msg">{errors.password}</span>}
           </div>
 
-          {/* Submit button */}
           <button type="submit" className="login-submit-btn">
             {mode === 'login' ? 'Login Securely' : 'Register Business'}
           </button>
         </form>
 
-        {/* Toggle Mode */}
         <div className="login-modal-footer">
           {mode === 'login' ? (
             <p>

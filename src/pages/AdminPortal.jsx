@@ -43,7 +43,18 @@ export default function AdminPortal({
   const [bulkSuccess, setBulkSuccess] = useState('');
 
   // Search filter inside admin catalog
+  const [adminSearchInput, setAdminSearchInput] = useState('');
   const [adminSearch, setAdminSearch] = useState('');
+
+  const handleSearchSubmit = () => {
+    setAdminSearch(adminSearchInput);
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
+    }
+  };
 
   // FileReader handler for base64 conversions
   const handleImageFileChange = (e) => {
@@ -233,6 +244,9 @@ export default function AdminPortal({
         "Sweets & Namkeen": "rasgulla_category.jpg",
         "Beverages": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=150&q=80",
         "Grains & Masalas": "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80",
+        "Fresh & Dairy": "https://images.unsplash.com/photo-1528750955906-c8b4a3952f2d?auto=format&fit=crop&w=150&q=80",
+        "Snacks & Biscuits": "https://images.unsplash.com/photo-1558961312-50a49c93acfe?auto=format&fit=crop&w=150&q=80",
+        "Cosmetics & Hygiene": "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=150&q=80",
         "More": ""
       });
       setBulkSuccess("Wholesale database restored to factory settings!");
@@ -371,7 +385,7 @@ export default function AdminPortal({
                     {errors.moq && <span className="input-error-msg">{errors.moq}</span>}
                   </div>
                   <div className="form-group">
-                    <label htmlFor="prod-inv">Stock Inventory (Packs) *</label>
+                    <label htmlFor="prod-inv">Quantity / Stock Inventory *</label>
                     <input 
                       type="number" 
                       id="prod-inv"
@@ -522,16 +536,40 @@ export default function AdminPortal({
           {/* Right Column: Listing Table */}
           <div className="admin-table-column">
             <div className="summary-card" style={{ padding: '20px' }}>
-              <div className="admin-search-header-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <div className="admin-search-header-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
                 <h3 style={{ margin: 0 }}>Active Store Inventory ({products.length})</h3>
-                <input 
-                  type="text" 
-                  value={adminSearch}
-                  onChange={(e) => setAdminSearch(e.target.value)}
-                  placeholder="Filter active listings..."
-                  className="pincode-input"
-                  style={{ maxWidth: '220px', padding: '6px 12px' }}
-                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input 
+                    type="text" 
+                    value={adminSearchInput}
+                    onChange={(e) => setAdminSearchInput(e.target.value)}
+                    onKeyDown={handleSearchKeyPress}
+                    placeholder="Search active listings..."
+                    className="pincode-input"
+                    style={{ maxWidth: '200px', padding: '6px 12px', margin: 0 }}
+                  />
+                  <button 
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="pincode-btn font-bold"
+                    style={{ padding: '6px 12px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Search
+                  </button>
+                  {adminSearch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdminSearchInput('');
+                        setAdminSearch('');
+                      }}
+                      className="pincode-btn"
+                      style={{ padding: '6px 12px', backgroundColor: '#e2e8f0', color: 'var(--color-text-main)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Desktop Table View */}
@@ -545,7 +583,7 @@ export default function AdminPortal({
                         <th className="text-right">MRP</th>
                         <th className="text-right">Dist. Rate</th>
                         <th className="text-center">MOQ</th>
-                        <th className="text-center">Stock</th>
+                        <th className="text-center">Quantity (Stock)</th>
                         <th className="text-center">Action</th>
                       </tr>
                     </thead>
@@ -565,7 +603,7 @@ export default function AdminPortal({
                           <td className="text-right">₹{prod.retailPrice}</td>
                           <td className="text-right font-bold">₹{prod.wholesalePrice}</td>
                           <td className="text-center">{prod.moq || 10}</td>
-                          <td className="text-center font-bold" style={{ color: (prod.inventory !== undefined ? prod.inventory : 100) <= 0 ? 'var(--color-danger)' : (prod.inventory !== undefined ? prod.inventory : 100) < 30 ? 'var(--color-warning)' : 'var(--color-success)' }}>
+                          <td className="text-center font-bold" style={{ color: (prod.inventory !== undefined ? prod.inventory : 100) <= 0 ? 'var(--color-danger)' : (prod.inventory !== undefined ? prod.inventory : 100) < 10 ? 'var(--color-warning)' : 'var(--color-success)' }}>
                             {prod.inventory !== undefined ? prod.inventory : 100}
                           </td>
                           <td className="text-center">
@@ -621,7 +659,7 @@ export default function AdminPortal({
                           <span>MRP: <strong>₹{prod.retailPrice}</strong></span>
                           <span>Rate: <strong style={{ color: 'var(--color-primary)' }}>₹{prod.wholesalePrice}</strong></span>
                           <span>MOQ: <strong>{prod.moq || 10}</strong></span>
-                          <span>Stock: <strong style={{ color: (prod.inventory !== undefined ? prod.inventory : 100) <= 0 ? 'var(--color-danger)' : (prod.inventory !== undefined ? prod.inventory : 100) < 30 ? 'var(--color-warning)' : 'var(--color-success)' }}>{prod.inventory !== undefined ? prod.inventory : 100}</strong></span>
+                          <span>Quantity: <strong style={{ color: (prod.inventory !== undefined ? prod.inventory : 100) <= 0 ? 'var(--color-danger)' : (prod.inventory !== undefined ? prod.inventory : 100) < 10 ? 'var(--color-warning)' : 'var(--color-success)' }}>{prod.inventory !== undefined ? prod.inventory : 100}</strong></span>
                         </div>
                       </div>
 

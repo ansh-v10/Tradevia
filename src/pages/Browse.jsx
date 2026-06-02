@@ -24,6 +24,7 @@ export default function Browse({
 }) {
   const [sortOption, setSortOption] = useState('most-bought'); // 'alpha', 'price-low', 'price-high', 'most-bought'
   const [quantities, setQuantities] = useState({}); // { productId: qty }
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
 
   // Mobile Bottom Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false); // true/false
@@ -49,9 +50,8 @@ export default function Browse({
     }
   };
 
-  const handleQuantityChange = (productId, val, moqVal = 10) => {
-    const qty = Math.max(moqVal, parseInt(val) || moqVal);
-    setQuantities(prev => ({ ...prev, [productId]: qty }));
+  const handleQuantityChange = (productId, val) => {
+    setQuantities(prev => ({ ...prev, [productId]: val }));
   };
 
   const clearAllFilters = () => {
@@ -59,6 +59,7 @@ export default function Browse({
     setSelectedBrands([]);
     setSearchQuery('');
     setSortOption('most-bought');
+    setShowInStockOnly(false);
   };
 
   // Filter and Sort Logic consuming dynamic products prop
@@ -83,10 +84,24 @@ export default function Browse({
         if (!selectedBrands.includes(product.brand)) return false;
       }
 
+      // 4. In Stock Filter
+      if (showInStockOnly) {
+        const stockCount = product.inventory !== undefined ? product.inventory : 100;
+        if (stockCount <= 0) return false;
+      }
+
       return true;
     })
     .sort((a, b) => {
-      // 4. Sort Logic
+      // Out of stock sorting: sort out-of-stock (inventory <= 0) to the bottom
+      const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
+      const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
+      
+      if (isOutOfStockA !== isOutOfStockB) {
+        return isOutOfStockA - isOutOfStockB; // 0 (in-stock) comes before 1 (out-of-stock)
+      }
+
+      // 5. Sort Option Logic
       if (sortOption === 'alpha') {
         return a.name.localeCompare(b.name);
       }
@@ -121,7 +136,7 @@ export default function Browse({
           
           <div className="sidebar-header-flex">
             <h3>Filter Products</h3>
-            {(selectedCategories.length > 0 || selectedBrands.length > 0 || searchQuery) && (
+            {(selectedCategories.length > 0 || selectedBrands.length > 0 || searchQuery || showInStockOnly) && (
               <button className="clear-filters-btn" onClick={clearAllFilters}>
                 Clear All
               </button>
@@ -134,6 +149,22 @@ export default function Browse({
               <button className="clear-search-x" onClick={() => setSearchQuery('')}>×</button>
             </div>
           )}
+
+          {/* Availability Filter Group */}
+          <div className="filter-group-wrapper" style={{ marginBottom: '20px' }}>
+            <h4 className="filter-group-title">Availability</h4>
+            <div className="filter-checkbox-list">
+              <label className="checkbox-label-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox"
+                  checked={showInStockOnly}
+                  onChange={(e) => setShowInStockOnly(e.target.checked)}
+                  className="custom-checkbox"
+                />
+                <span className="checkbox-text-label" style={{ fontWeight: '700', color: 'var(--color-success)' }}>In Stock Only</span>
+              </label>
+            </div>
+          </div>
 
           {/* Category Filter Group */}
           <div className="filter-group-wrapper">
@@ -288,8 +319,8 @@ export default function Browse({
                       <div className="qty-selector-container">
                         <button 
                           className="qty-btn"
-                          onClick={() => handleQuantityChange(product.id, qty - 1, product.moq || 10)}
-                          disabled={qty <= (product.moq || 10)}
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
+                          disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
                         >
                           -
                         </button>
@@ -297,17 +328,24 @@ export default function Browse({
                           type="text" 
                           className="qty-input"
                           value={qty}
-                          onChange={(e) => handleQuantityChange(product.id, e.target.value, product.moq || 10)}
+                          onChange={(e) => {
+                            const valStr = e.target.value;
+                            const parsed = parseInt(valStr);
+                            handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                          }}
                           onBlur={(e) => {
                             const val = parseInt(e.target.value);
-                            if (isNaN(val) || val < (product.moq || 10)) {
-                              handleQuantityChange(product.id, product.moq || 10, product.moq || 10);
+                            const moqVal = product.moq || 10;
+                            if (isNaN(val) || val < moqVal) {
+                              handleQuantityChange(product.id, moqVal);
+                            } else {
+                              handleQuantityChange(product.id, val);
                             }
                           }}
                         />
                         <button 
                           className="qty-btn"
-                          onClick={() => handleQuantityChange(product.id, qty + 1, product.moq || 10)}
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
                         >
                           +
                         </button>
@@ -319,15 +357,15 @@ export default function Browse({
                       <div style={{ fontWeight: '700', marginBottom: '4px', color: 'var(--color-text-main)', textAlign: 'left' }}>Volume Price Breaks (ex. GST):</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                         <span>MOQ ({product.moq || 10} - { (product.moq || 10) + 14 } packs):</span>
-                        <strong style={{ color: qty < (product.moq || 10) + 15 ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/pack</strong>
+                        <strong style={{ color: (parseInt(qty) || 0) < (product.moq || 10) + 15 ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/pack</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                         <span>Medium ({ (product.moq || 10) + 15 } - { (product.moq || 10) + 39 } packs):</span>
-                        <strong style={{ color: qty >= (product.moq || 10) + 15 && qty < (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 15)}/pack</strong>
+                        <strong style={{ color: (parseInt(qty) || 0) >= (product.moq || 10) + 15 && (parseInt(qty) || 0) < (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 15)}/pack</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Bulk ({ (product.moq || 10) + 40 }+ packs):</span>
-                        <strong style={{ color: qty >= (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 40)}/pack</strong>
+                        <strong style={{ color: (parseInt(qty) || 0) >= (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 40)}/pack</strong>
                       </div>
                     </div>
 
@@ -335,8 +373,8 @@ export default function Browse({
                     <div style={{ marginTop: '4px', marginBottom: '8px', fontSize: '12px', textAlign: 'left' }}>
                       {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
                         <span style={{ color: 'var(--color-danger)', fontWeight: '700' }}>❌ Out of Stock</span>
-                      ) : (product.inventory !== undefined ? product.inventory : 100) < 30 ? (
-                        <span style={{ color: 'var(--color-warning)', fontWeight: '700' }}>⚠️ Only {product.inventory} bulk packs left!</span>
+                      ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
+                        <span style={{ color: 'var(--color-danger)', fontWeight: '700' }}>left in stock : {product.inventory}</span>
                       ) : (
                         <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock ({product.inventory !== undefined ? product.inventory : 100} packs)</span>
                       )}
@@ -345,7 +383,7 @@ export default function Browse({
                     {/* Add to Cart button */}
                     <button 
                       className="add-to-cart-b2b-btn"
-                      onClick={() => onAddToCart(product, qty)}
+                      onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
                       disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
                       style={(product.inventory !== undefined ? product.inventory : 100) <= 0 ? { backgroundColor: '#cbd5e1', cursor: 'not-allowed', color: '#64748b' } : {}}
                     >
@@ -396,6 +434,19 @@ export default function Browse({
               <button className="close-drawer-btn" onClick={() => setMobileDrawerOpen(false)}>
                 <CloseIcon size={20} />
               </button>
+            </div>
+
+            {/* Common Filter Options inside Drawer */}
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--color-border)', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center' }}>
+              <label className="drawer-label-row" style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input 
+                  type="checkbox"
+                  checked={showInStockOnly}
+                  onChange={(e) => setShowInStockOnly(e.target.checked)}
+                  className="custom-checkbox"
+                />
+                <span className="checkbox-text-label" style={{ fontWeight: '700', color: 'var(--color-success)', fontSize: '13px' }}>✓ Show In-Stock Products Only</span>
+              </label>
             </div>
 
             {/* Drawer Content */}

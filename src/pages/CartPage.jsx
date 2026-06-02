@@ -58,10 +58,13 @@ export default function CartPage({
     }
   }, [user]);
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cart.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
   
   // Calculations
-  const rawSubtotal = cart.reduce((acc, item) => acc + (getTieredWholesalePrice(item.product, item.quantity) * item.quantity), 0);
+  const rawSubtotal = cart.reduce((acc, item) => {
+    const qty = parseInt(item.quantity) || 0;
+    return acc + (getTieredWholesalePrice(item.product, qty) * qty);
+  }, 0);
   const gstAmount = Math.round(rawSubtotal * 0.18); // 18% GST for FMCG/Beverages/Toiletries
   
   // Extra bulk tier discount (e.g. 5% off if subtotal is above 10,000)
@@ -89,15 +92,18 @@ export default function CartPage({
     const orderPayload = {
       id: generatedId,
       date: new Date().toISOString(),
-      items: cart.map(item => ({
-        id: item.product.id,
-        name: item.product.name,
-        brand: item.product.brand,
-        packSize: item.product.packSize,
-        quantity: item.quantity,
-        wholesalePrice: getTieredWholesalePrice(item.product, item.quantity),
-        retailPrice: item.product.retailPrice
-      })),
+      items: cart.map(item => {
+        const qty = parseInt(item.quantity) || 10;
+        return {
+          id: item.product.id,
+          name: item.product.name,
+          brand: item.product.brand,
+          packSize: item.product.packSize,
+          quantity: qty,
+          wholesalePrice: getTieredWholesalePrice(item.product, qty),
+          retailPrice: item.product.retailPrice
+        };
+      }),
       rawSubtotal,
       gstAmount,
       bulkTierDiscount,
@@ -187,9 +193,10 @@ export default function CartPage({
 
               <div className="cart-items-list-container">
                 {cart.map((item) => {
-                  const itemPrice = getTieredWholesalePrice(item.product, item.quantity);
-                  const itemTotal = itemPrice * item.quantity;
-                  const savings = (item.product.retailPrice - item.product.wholesalePrice) * item.quantity;
+                  const qty = parseInt(item.quantity) || 0;
+                  const itemPrice = getTieredWholesalePrice(item.product, qty);
+                  const itemTotal = itemPrice * qty;
+                  const savings = (item.product.retailPrice - item.product.wholesalePrice) * qty;
                   const moqLimit = item.product.moq || 10;
 
                   return (
@@ -214,8 +221,8 @@ export default function CartPage({
                         <div className="qty-selector-container">
                           <button 
                             className="qty-btn"
-                            onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                            disabled={item.quantity <= moqLimit}
+                            onClick={() => onUpdateQuantity(item.product.id, (parseInt(item.quantity) || 10) - 1)}
+                            disabled={(parseInt(item.quantity) || 0) <= moqLimit}
                             aria-label="Decrease quantity"
                           >
                             -
@@ -225,13 +232,16 @@ export default function CartPage({
                             className="qty-input"
                             value={item.quantity}
                             onChange={(e) => {
-                              const val = parseInt(e.target.value) || moqLimit;
-                              onUpdateQuantity(item.product.id, val);
+                              const valStr = e.target.value;
+                              const parsed = parseInt(valStr);
+                              onUpdateQuantity(item.product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
                             }}
                             onBlur={(e) => {
                               const val = parseInt(e.target.value);
                               if (isNaN(val) || val < moqLimit) {
                                 onUpdateQuantity(item.product.id, moqLimit);
+                              } else {
+                                onUpdateQuantity(item.product.id, val);
                               }
                             }}
                           />
@@ -608,14 +618,17 @@ export default function CartPage({
                 </tr>
               </thead>
               <tbody>
-                {cart.map((item) => (
-                  <tr key={item.product.id}>
-                    <td>{item.product.name} ({item.product.packSize})</td>
-                    <td className="text-center">{item.quantity}</td>
-                    <td className="text-right">₹{getTieredWholesalePrice(item.product, item.quantity)}</td>
-                    <td className="text-right">₹{(getTieredWholesalePrice(item.product, item.quantity) * item.quantity).toLocaleString('en-IN')}</td>
-                  </tr>
-                ))}
+                 {cart.map((item) => {
+                   const qty = parseInt(item.quantity) || 0;
+                   return (
+                     <tr key={item.product.id}>
+                       <td>{item.product.name} ({item.product.packSize})</td>
+                       <td className="text-center">{qty}</td>
+                       <td className="text-right">₹{getTieredWholesalePrice(item.product, qty)}</td>
+                       <td className="text-right">₹{(getTieredWholesalePrice(item.product, qty) * qty).toLocaleString('en-IN')}</td>
+                     </tr>
+                   );
+                 })}
               </tbody>
             </table>
 
