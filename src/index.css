@@ -1110,13 +1110,10 @@ h1, h2, h3, h4, h5, h6 {
 .text-center { text-align: center; }
 
 .categories-row-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 12px;
   padding-bottom: 12px;
-  scrollbar-width: thin;
 }
 
 .category-circle-card {
@@ -1125,8 +1122,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   text-align: center;
   cursor: pointer;
-  min-width: 110px;
-  flex-shrink: 0;
+  width: 100%;
   transition: var(--transition-smooth);
 }
 
@@ -1135,8 +1131,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .category-icon-wrapper {
-  width: 80px;
-  height: 80px;
+  width: 130px;
+  height: 130px;
   border-radius: 12px;
   background-color: #ffffff;
   border: 2px solid var(--color-border);
@@ -2796,16 +2792,17 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .categories-row-flex {
-    gap: 12px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px 6px;
   }
 
   .category-circle-card {
-    min-width: 90px;
+    min-width: 0;
   }
 
   .category-icon-wrapper {
-    width: 68px;
-    height: 68px;
+    width: 70px;
+    height: 70px;
   }
 
   /* Bestsellers and Deal grid sizing */
