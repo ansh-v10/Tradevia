@@ -1,18 +1,14 @@
-# React + Vite
+# Sanjay Sales - Kirana B2B Wholesale App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium B2B wholesale platform for Kirana stores, department stores, and small businesses to purchase essentials, FMCG, and sweets at direct distributor rates.
 
-Currently, two official plugins are available:
+## Core Features
+1. **Minimum Order Quantities (MOQ)**: Automated enforcements ensuring trade requirements are met.
+2. **Multi-Step Address Checkout**: Amazon/Flipkart-style checkout flow with saved commercial address profiles.
+3. **B2B Tax Invoices & Order History**: Automated 18% CGST/SGST breakdowns and chronological logs of past invoices.
+4. **Decoupled Admin Control Desk**: Dynamic management of product listings, pricing sheets, category layouts, and Base64 image media uploads.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+* React 19 & Vite 8
+* Vanilla CSS Styling
+* Multi-Page Application (MPA) Routing
