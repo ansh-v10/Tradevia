@@ -120,6 +120,18 @@ export default function Home({
       icon: <img src={resolveImgSrc(categoryImages["Grains & Masalas"] || "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80")} alt="Grains Atta" className="category-icon-img" /> 
     },
     { 
+      name: "Fresh & Dairy", 
+      icon: <img src={resolveImgSrc(categoryImages["Fresh & Dairy"] || "https://images.unsplash.com/photo-1528750955906-c8b4a3952f2d?auto=format&fit=crop&w=150&q=80")} alt="Fresh & Dairy" className="category-icon-img" /> 
+    },
+    { 
+      name: "Snacks & Biscuits", 
+      icon: <img src={resolveImgSrc(categoryImages["Snacks & Biscuits"] || "https://images.unsplash.com/photo-1558961312-50a49c93acfe?auto=format&fit=crop&w=150&q=80")} alt="Snacks & Biscuits" className="category-icon-img" /> 
+    },
+    { 
+      name: "Cosmetics & Hygiene", 
+      icon: <img src={resolveImgSrc(categoryImages["Cosmetics & Hygiene"] || "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=150&q=80")} alt="Cosmetics & Hygiene" className="category-icon-img" /> 
+    },
+    { 
       name: "More", 
       icon: <div className="category-more-text">MORE →</div> 
     }
@@ -130,11 +142,10 @@ export default function Home({
     { name: "Cadbury", logo: "cadbury_logo.jpg" },
     { name: "Haldiram's", logo: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=150&q=80" },
     { name: "Dettol", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Dettol_logo.svg/150px-Dettol_logo.svg.png" },
-    { name: "Unilever", logo: "https://images.unsplash.com/photo-1607006342411-91f15712cfa6?auto=format&fit=crop&w=150&q=80" },
     { name: "Nestle", logo: "https://images.unsplash.com/photo-1582201942922-47e5c3e490fc?auto=format&fit=crop&w=150&q=80" },
-    { name: "ITC Aashirvaad", logo: "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80" },
     { name: "Coca-Cola", logo: "cocacola_logo.png" },
-    { name: "Colgate", logo: "colgate_logo.png" }
+    { name: "Colgate", logo: "colgate_logo.png" },
+    { name: "More", logo: "" }
   ];
 
   return (
@@ -294,19 +305,28 @@ export default function Home({
           {brandLogos.map((brand, idx) => (
             <div 
               key={idx} 
-              className="brand-logo-card" 
+              className={`brand-logo-card ${brand.name === 'More' ? 'show-more-card' : ''}`}
               onClick={() => {
-                setSelectedBrands([brand.name]);
-                setSelectedCategories([]); // clear category
+                if (brand.name === 'More') {
+                  setSelectedBrands([]);
+                  setSelectedCategories([]);
+                } else {
+                  setSelectedBrands([brand.name]);
+                  setSelectedCategories([]); // clear category
+                }
                 setCurrentPage('browse');
               }}
               style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', width: '120px', transition: 'var(--transition-fast)' }}
             >
-              <img 
-                src={resolveImgSrc(brand.logo)} 
-                alt={`${brand.name} logo`} 
-                style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', marginBottom: '8px' }} 
-              />
+              {brand.name === 'More' ? (
+                <div className="brand-more-text" style={{ width: '60px', height: '60px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px', color: 'var(--color-primary)', backgroundColor: '#f1f5f9', marginBottom: '8px' }}>MORE →</div>
+              ) : (
+                <img 
+                  src={resolveImgSrc(brand.logo)} 
+                  alt={`${brand.name} logo`} 
+                  style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', marginBottom: '8px' }} 
+                />
+              )}
               <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-main)', textAlign: 'center' }}>{brand.name}</span>
             </div>
           ))}
