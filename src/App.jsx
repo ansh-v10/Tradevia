@@ -73,6 +73,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home'); // 'home', 'browse', 'cart'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
 
   // --- Modal Visibility Hooks ---
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -261,6 +262,7 @@ export default function App() {
             categoryImages={categoryImages}
             setCurrentPage={setCurrentPage}
             setSelectedCategories={setSelectedCategories}
+            setSelectedBrands={setSelectedBrands}
             onAddToCart={handleAddToCart}
           />
         )}
@@ -272,6 +274,8 @@ export default function App() {
             setSearchQuery={setSearchQuery}
             selectedCategories={selectedCategories}
             setSelectedCategories={setSelectedCategories}
+            selectedBrands={selectedBrands}
+            setSelectedBrands={setSelectedBrands}
             onAddToCart={handleAddToCart}
           />
         )}

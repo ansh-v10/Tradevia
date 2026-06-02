@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TrashIcon, CartIcon, CloseIcon } from '../components/Icons';
+import { getTieredWholesalePrice } from '../util/productsData';
 
 export default function CartPage({ 
   cart, 
@@ -60,7 +61,7 @@ export default function CartPage({
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   
   // Calculations
-  const rawSubtotal = cart.reduce((acc, item) => acc + (item.product.wholesalePrice * item.quantity), 0);
+  const rawSubtotal = cart.reduce((acc, item) => acc + (getTieredWholesalePrice(item.product, item.quantity) * item.quantity), 0);
   const gstAmount = Math.round(rawSubtotal * 0.18); // 18% GST for FMCG/Beverages/Toiletries
   
   // Extra bulk tier discount (e.g. 5% off if subtotal is above 10,000)
@@ -94,7 +95,7 @@ export default function CartPage({
         brand: item.product.brand,
         packSize: item.product.packSize,
         quantity: item.quantity,
-        wholesalePrice: item.product.wholesalePrice,
+        wholesalePrice: getTieredWholesalePrice(item.product, item.quantity),
         retailPrice: item.product.retailPrice
       })),
       rawSubtotal,
@@ -186,9 +187,9 @@ export default function CartPage({
 
               <div className="cart-items-list-container">
                 {cart.map((item) => {
-                  const itemPrice = item.product.wholesalePrice;
+                  const itemPrice = getTieredWholesalePrice(item.product, item.quantity);
                   const itemTotal = itemPrice * item.quantity;
-                  const savings = (item.product.retailPrice - itemPrice) * item.quantity;
+                  const savings = (item.product.retailPrice - item.product.wholesalePrice) * item.quantity;
                   const moqLimit = item.product.moq || 10;
 
                   return (
@@ -611,8 +612,8 @@ export default function CartPage({
                   <tr key={item.product.id}>
                     <td>{item.product.name} ({item.product.packSize})</td>
                     <td className="text-center">{item.quantity}</td>
-                    <td className="text-right">₹{item.product.wholesalePrice}</td>
-                    <td className="text-right">₹{(item.product.wholesalePrice * item.quantity).toLocaleString('en-IN')}</td>
+                    <td className="text-right">₹{getTieredWholesalePrice(item.product, item.quantity)}</td>
+                    <td className="text-right">₹{(getTieredWholesalePrice(item.product, item.quantity) * item.quantity).toLocaleString('en-IN')}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   allCategories, 
-  allBrands 
+  allBrands,
+  getTieredWholesalePrice
 } from '../util/productsData';
 import { 
   StarIcon, 
@@ -17,9 +18,10 @@ export default function Browse({
   setSearchQuery, 
   selectedCategories, 
   setSelectedCategories, 
+  selectedBrands,
+  setSelectedBrands,
   onAddToCart 
 }) {
-  const [selectedBrands, setSelectedBrands] = useState([]);
   const [sortOption, setSortOption] = useState('most-bought'); // 'alpha', 'price-low', 'price-high', 'most-bought'
   const [quantities, setQuantities] = useState({}); // { productId: qty }
 
@@ -278,7 +280,7 @@ export default function Browse({
                     {/* Price & Quantity Selector */}
                     <div className="price-checkout-row">
                       <div className="price-stack">
-                        <span className="wholesale-deal-price">₹{product.wholesalePrice}</span>
+                        <span className="wholesale-deal-price">₹{getTieredWholesalePrice(product, qty)}</span>
                         <span className="price-gst-sub">excl. 18% GST</span>
                       </div>
 
@@ -309,6 +311,23 @@ export default function Browse({
                         >
                           +
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Volume Price Breaks (ex. GST) */}
+                    <div className="tiered-pricing-breaks" style={{ fontSize: '11px', color: 'var(--color-text-muted)', backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', margin: '8px 0 12px', border: '1px dashed var(--color-border)' }}>
+                      <div style={{ fontWeight: '700', marginBottom: '4px', color: 'var(--color-text-main)', textAlign: 'left' }}>Volume Price Breaks (ex. GST):</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                        <span>MOQ ({product.moq || 10} - { (product.moq || 10) + 14 } packs):</span>
+                        <strong style={{ color: qty < (product.moq || 10) + 15 ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/pack</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                        <span>Medium ({ (product.moq || 10) + 15 } - { (product.moq || 10) + 39 } packs):</span>
+                        <strong style={{ color: qty >= (product.moq || 10) + 15 && qty < (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 15)}/pack</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Bulk ({ (product.moq || 10) + 40 }+ packs):</span>
+                        <strong style={{ color: qty >= (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 40)}/pack</strong>
                       </div>
                     </div>
 

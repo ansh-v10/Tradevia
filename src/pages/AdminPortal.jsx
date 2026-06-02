@@ -27,6 +27,8 @@ export default function AdminPortal({
   const [isMostBought, setIsMostBought] = useState(false);
   const [moq, setMoq] = useState('10');
   const [inventory, setInventory] = useState('100');
+  const [tier2Price, setTier2Price] = useState('');
+  const [tier3Price, setTier3Price] = useState('');
   const [errors, setErrors] = useState({});
   const [actionSuccess, setActionSuccess] = useState('');
 
@@ -75,6 +77,8 @@ export default function AdminPortal({
     setIsMostBought(product.isMostBought || false);
     setMoq(product.moq ? product.moq.toString() : '10');
     setInventory(product.inventory !== undefined ? product.inventory.toString() : '100');
+    setTier2Price(product.tier2Price !== undefined && product.tier2Price !== null ? product.tier2Price.toString() : '');
+    setTier3Price(product.tier3Price !== undefined && product.tier3Price !== null ? product.tier3Price.toString() : '');
     
     // Auto-detect image source type
     if (product.imageUrl && product.imageUrl.startsWith('data:')) {
@@ -105,6 +109,8 @@ export default function AdminPortal({
     setImageSourceType('link');
     setMoq('10');
     setInventory('100');
+    setTier2Price('');
+    setTier3Price('');
     setErrors({});
   };
 
@@ -120,12 +126,21 @@ export default function AdminPortal({
     const wholesale = parseFloat(wholesalePrice);
     const minOrderQty = parseInt(moq);
     const stockQty = parseInt(inventory);
+    const t2 = tier2Price !== '' ? parseFloat(tier2Price) : null;
+    const t3 = tier3Price !== '' ? parseFloat(tier3Price) : null;
 
     if (isNaN(retail) || retail <= 0) tempErrors.retailPrice = "Enter valid retail price";
     if (isNaN(wholesale) || wholesale <= 0) tempErrors.wholesalePrice = "Enter valid wholesale price";
     if (wholesale >= retail) tempErrors.wholesalePrice = "Wholesale price must be lower than MRP";
     if (isNaN(minOrderQty) || minOrderQty <= 0) tempErrors.moq = "Enter valid MOQ (at least 1)";
     if (isNaN(stockQty) || stockQty < 0) tempErrors.inventory = "Enter valid inventory quantity (0 or more)";
+    
+    if (t2 !== null && (isNaN(t2) || t2 <= 0 || t2 >= wholesale)) {
+      tempErrors.tier2Price = "Tier 2 rate must be lower than base wholesale price";
+    }
+    if (t3 !== null && (isNaN(t3) || t3 <= 0 || (t2 !== null ? t3 >= t2 : t3 >= wholesale))) {
+      tempErrors.tier3Price = "Tier 3 rate must be lower than Tier 2 rate / base wholesale price";
+    }
 
     if (!imageUrl) tempErrors.imageUrl = "Product image file or web URL is required";
 
@@ -143,6 +158,8 @@ export default function AdminPortal({
       isMostBought,
       moq: minOrderQty || 10,
       inventory: stockQty >= 0 ? stockQty : 100,
+      tier2Price: t2,
+      tier3Price: t3,
       rating: editingId ? (products.find(p => p.id === editingId)?.rating || 4.5) : 4.5,
       reviewsCount: editingId ? (products.find(p => p.id === editingId)?.reviewsCount || 100) : 100
     };
@@ -168,6 +185,8 @@ export default function AdminPortal({
     setImageSourceType('link');
     setMoq('10');
     setInventory('100');
+    setTier2Price('');
+    setTier3Price('');
 
     setTimeout(() => setActionSuccess(''), 2500);
   };
@@ -389,6 +408,33 @@ export default function AdminPortal({
                       className={errors.wholesalePrice ? 'error-input' : ''}
                     />
                     {errors.wholesalePrice && <span className="input-error-msg">{errors.wholesalePrice}</span>}
+                  </div>
+                </div>
+
+                <div className="form-group-row-flex">
+                  <div className="form-group">
+                    <label htmlFor="prod-t2">Tier 2 Rate (₹) (Qty &ge; MOQ+15)</label>
+                    <input 
+                      type="number" 
+                      id="prod-t2"
+                      value={tier2Price}
+                      onChange={(e) => setTier2Price(e.target.value)}
+                      placeholder="Leave blank for auto-5% off"
+                      className={errors.tier2Price ? 'error-input' : ''}
+                    />
+                    {errors.tier2Price && <span className="input-error-msg">{errors.tier2Price}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="prod-t3">Tier 3 Rate (₹) (Qty &ge; MOQ+40)</label>
+                    <input 
+                      type="number" 
+                      id="prod-t3"
+                      value={tier3Price}
+                      onChange={(e) => setTier3Price(e.target.value)}
+                      placeholder="Leave blank for auto-10% off"
+                      className={errors.tier3Price ? 'error-input' : ''}
+                    />
+                    {errors.tier3Price && <span className="input-error-msg">{errors.tier3Price}</span>}
                   </div>
                 </div>
 

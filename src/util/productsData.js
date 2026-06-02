@@ -399,3 +399,20 @@ export const allBrands = [
   "Amul",
   "Mother Dairy"
 ];
+
+export function getTieredWholesalePrice(product, quantity) {
+  if (!product) return 0;
+  const baseWholesale = product.wholesalePrice;
+  const moq = product.moq || 10;
+  
+  if (quantity >= moq + 40) {
+    return product.tier3Price !== undefined && product.tier3Price !== null && product.tier3Price !== ""
+      ? parseFloat(product.tier3Price)
+      : Math.round(baseWholesale * 0.9 * 10) / 10;
+  } else if (quantity >= moq + 15) {
+    return product.tier2Price !== undefined && product.tier2Price !== null && product.tier2Price !== ""
+      ? parseFloat(product.tier2Price)
+      : Math.round(baseWholesale * 0.95 * 10) / 10;
+  }
+  return baseWholesale;
+}

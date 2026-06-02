@@ -6,6 +6,7 @@ export default function Home({
   categoryImages,      // dynamic state passed from App.jsx
   setCurrentPage, 
   setSelectedCategories, 
+  setSelectedBrands,
   onAddToCart 
 }) {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -105,14 +106,14 @@ export default function Home({
   ];
 
   const brandLogos = [
-    { name: "Amul", desc: "Dairy Leader" },
-    { name: "Cadbury", desc: "Chocolates" },
-    { name: "Haldiram's", desc: "Namkeen & Sweets" },
-    { name: "Dettol", desc: "Hygiene Pack" },
-    { name: "Unilever", desc: "Home & Toiletries" },
-    { name: "Nestle", desc: "KitKat & Maggie" },
-    { name: "ITC Aashirvaad", desc: "Atta & Spices" },
-    { name: "Coca-Cola", desc: "Soft Drinks" }
+    { name: "Amul", logo: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=150&q=80" },
+    { name: "Cadbury", logo: "https://images.unsplash.com/photo-1549007994-cb92ca817bc7?auto=format&fit=crop&w=150&q=80" },
+    { name: "Haldiram's", logo: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=150&q=80" },
+    { name: "Dettol", logo: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=150&q=80" },
+    { name: "Unilever", logo: "https://images.unsplash.com/photo-1607006342411-91f15712cfa6?auto=format&fit=crop&w=150&q=80" },
+    { name: "Nestle", logo: "https://images.unsplash.com/photo-1582201942922-47e5c3e490fc?auto=format&fit=crop&w=150&q=80" },
+    { name: "ITC Aashirvaad", logo: "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80" },
+    { name: "Coca-Cola", logo: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=150&q=80" }
   ];
 
   return (
@@ -225,11 +226,24 @@ export default function Home({
       <section className="brands-showcase-section navbar-width-limiter">
         <h2 className="section-title text-left">Direct Store Brands</h2>
         <p className="section-subtitle text-left font-sm">Authorized wholesale distributors for leading retail brands</p>
-        <div className="brands-flex-row">
+        <div className="brands-flex-row" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {brandLogos.map((brand, idx) => (
-            <div key={idx} className="brand-logo-card" onClick={() => handleCategorySelect('More')}>
-              <h4>{brand.name}</h4>
-              <span>{brand.desc}</span>
+            <div 
+              key={idx} 
+              className="brand-logo-card" 
+              onClick={() => {
+                setSelectedBrands([brand.name]);
+                setSelectedCategories([]); // clear category
+                setCurrentPage('browse');
+              }}
+              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', width: '120px', transition: 'var(--transition-fast)' }}
+            >
+              <img 
+                src={brand.logo} 
+                alt={`${brand.name} logo`} 
+                style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', marginBottom: '8px' }} 
+              />
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-main)', textAlign: 'center' }}>{brand.name}</span>
             </div>
           ))}
         </div>
