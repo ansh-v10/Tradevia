@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Browse from './pages/Browse';
-import CartPage from './pages/CartPage';
+import AppRouter from './router/AppRouter';
 import LoginModal from './components/LoginModal';
-import YourOrders from './pages/YourOrders';
 import { productsData } from './util/productsData';
 import './App.css';
 
@@ -70,7 +68,17 @@ export default function App() {
   });
 
   // --- Router & Filter Navigation States ---
-  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'browse', 'cart'
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Determine currentPage string based on URL path to keep existing code working seamlessly:
+  const currentPage = location.pathname === '/' ? 'home' : (location.pathname === '/browse' ? 'browse' : (location.pathname === '/cart' ? 'cart' : (location.pathname === '/orders' ? 'orders' : 'home')));
+
+  // Redirect/Navigate helper that components can still call:
+  const setCurrentPage = (page) => {
+    if (page === 'home') navigate('/');
+    else navigate('/' + page);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
@@ -253,55 +261,32 @@ export default function App() {
         setSelectedCategories={setSelectedCategories}
       />
 
-      {/* Pages Container with State-based custom routing */}
+      {/* Pages Container with React Router */}
       <div className="main-content-fluid-grow">
-        
-        {currentPage === 'home' && (
-          <Home 
-            products={products}
-            categoryImages={categoryImages}
-            setCurrentPage={setCurrentPage}
-            setSelectedCategories={setSelectedCategories}
-            setSelectedBrands={setSelectedBrands}
-            onAddToCart={handleAddToCart}
-          />
-        )}
-
-        {currentPage === 'browse' && (
-          <Browse 
-            products={products}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedCategories={selectedCategories}
-            setSelectedCategories={setSelectedCategories}
-            selectedBrands={selectedBrands}
-            setSelectedBrands={setSelectedBrands}
-            onAddToCart={handleAddToCart}
-          />
-        )}
-
-        {currentPage === 'cart' && (
-          <CartPage 
-            cart={cart}
-            user={user}
-            addresses={addresses}
-            onAddAddress={handleAddAddress}
-            onAddOrder={handleAddOrder}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            onOpenLoginModal={() => openLoginModalWithContext(true)}
-            onClearCart={handleClearCart}
-            setCurrentPage={setCurrentPage}
-          />
-        )}
-
-        {currentPage === 'orders' && (
-          <YourOrders 
-            orders={orders}
-            setCurrentPage={setCurrentPage}
-          />
-        )}
-
+        <AppRouter 
+          products={products}
+          categoryImages={categoryImages}
+          setCurrentPage={setCurrentPage}
+          setSelectedCategories={setSelectedCategories}
+          setSelectedBrands={setSelectedBrands}
+          onAddToCart={handleAddToCart}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
+          selectedBrands={selectedBrands}
+          setSelectedBrands={setSelectedBrands}
+          cart={cart}
+          user={user}
+          addresses={addresses}
+          onAddAddress={handleAddAddress}
+          onAddOrder={handleAddOrder}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onOpenLoginModal={() => openLoginModalWithContext(true)}
+          onClearCart={handleClearCart}
+          orders={orders}
+        />
       </div>
 
       {/* Login & SignUp Slide Modal */}

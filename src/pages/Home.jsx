@@ -120,18 +120,6 @@ export default function Home({
       icon: <img src={resolveImgSrc(categoryImages["Grains & Masalas"] || "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80")} alt="Grains Atta" className="category-icon-img" /> 
     },
     { 
-      name: "Fresh & Dairy", 
-      icon: <img src={resolveImgSrc(categoryImages["Fresh & Dairy"] || "https://images.unsplash.com/photo-1528750955906-c8b4a3952f2d?auto=format&fit=crop&w=150&q=80")} alt="Fresh & Dairy" className="category-icon-img" /> 
-    },
-    { 
-      name: "Snacks & Biscuits", 
-      icon: <img src={resolveImgSrc(categoryImages["Snacks & Biscuits"] || "https://images.unsplash.com/photo-1558961312-50a49c93acfe?auto=format&fit=crop&w=150&q=80")} alt="Snacks & Biscuits" className="category-icon-img" /> 
-    },
-    { 
-      name: "Cosmetics & Hygiene", 
-      icon: <img src={resolveImgSrc(categoryImages["Cosmetics & Hygiene"] || "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=150&q=80")} alt="Cosmetics & Hygiene" className="category-icon-img" /> 
-    },
-    { 
       name: "More", 
       icon: <div className="category-more-text">MORE →</div> 
     }
@@ -140,9 +128,13 @@ export default function Home({
   const brandLogos = [
     { name: "Amul", logo: "amul_logo.jpg" },
     { name: "Cadbury", logo: "cadbury_logo.jpg" },
+    { name: "Haldiram's", logo: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=150&q=80" },
     { name: "Dettol", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Dettol_logo.svg/150px-Dettol_logo.svg.png" },
-    { name: "Colgate", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Colgate_Logo.svg/150px-Colgate_Logo.svg.png" },
-    { name: "Coca-Cola", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Coca-Cola_logo.svg/150px-Coca-Cola_logo.svg.png" }
+    { name: "Unilever", logo: "https://images.unsplash.com/photo-1607006342411-91f15712cfa6?auto=format&fit=crop&w=150&q=80" },
+    { name: "Nestle", logo: "https://images.unsplash.com/photo-1582201942922-47e5c3e490fc?auto=format&fit=crop&w=150&q=80" },
+    { name: "ITC Aashirvaad", logo: "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?auto=format&fit=crop&w=150&q=80" },
+    { name: "Coca-Cola", logo: "cocacola_logo.png" },
+    { name: "Colgate", logo: "colgate_logo.png" }
   ];
 
   return (
@@ -311,7 +303,7 @@ export default function Home({
               style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', width: '120px', transition: 'var(--transition-fast)' }}
             >
               <img 
-                src={brand.logo} 
+                src={resolveImgSrc(brand.logo)} 
                 alt={`${brand.name} logo`} 
                 style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', marginBottom: '8px' }} 
               />
