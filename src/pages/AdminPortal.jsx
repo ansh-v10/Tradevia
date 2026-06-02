@@ -336,8 +336,8 @@ export default function AdminPortal({
                   {errors.moq && <span className="input-error-msg">{errors.moq}</span>}
                 </div>
 
-                <div className="form-group-row-flex" style={{ display: 'flex', gap: '16px' }}>
-                  <div className="form-group" style={{ flex: 1 }}>
+                <div className="form-group-row-flex">
+                  <div className="form-group">
                     <label htmlFor="prod-mrp">Standard MRP (₹) *</label>
                     <input 
                       type="number" 
@@ -349,7 +349,7 @@ export default function AdminPortal({
                     />
                     {errors.retailPrice && <span className="input-error-msg">{errors.retailPrice}</span>}
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group">
                     <label htmlFor="prod-whol">Distributor Rate (₹) *</label>
                     <input 
                       type="number" 
@@ -424,7 +424,7 @@ export default function AdminPortal({
                   <span className="checkbox-text-label font-bold text-sm">Feature as Kirana Bestseller</span>
                 </label>
 
-                <div className="admin-form-actions-row" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+                <div className="admin-form-actions-row">
                   <button type="submit" className="checkout-proceed-btn" style={{ flex: 2 }}>
                     {editingId ? 'Save Changes' : 'Publish Product'}
                   </button>
@@ -459,63 +459,116 @@ export default function AdminPortal({
                 />
               </div>
 
-              <div className="admin-table-scroll-container" style={{ overflowX: 'auto', maxHeight: '600px' }}>
-                <table className="invoice-table" style={{ width: '100%', fontSize: '13px' }}>
-                  <thead>
-                    <tr>
-                      <th>Label & Brand</th>
-                      <th>Segment</th>
-                      <th className="text-right">MRP</th>
-                      <th className="text-right">Dist. Rate</th>
-                      <th className="text-center">MOQ</th>
-                      <th className="text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map(prod => (
-                      <tr key={prod.id}>
-                        <td>
-                          <div className="admin-item-details-cell" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <img src={prod.imageUrl} alt="" style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'cover' }} />
-                            <div>
-                              <strong>{prod.name}</strong>
-                              <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)' }}>Brand: {prod.brand} | {prod.packSize}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td><span className="gst-info-bubble">{prod.category}</span></td>
-                        <td className="text-right">₹{prod.retailPrice}</td>
-                        <td className="text-right font-bold">₹{prod.wholesalePrice}</td>
-                        <td className="text-center">{prod.moq || 10}</td>
-                        <td className="text-center">
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <button 
-                              className="pincode-btn" 
-                              onClick={() => handleEditClick(prod)}
-                              style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: '#e2e8f0', color: 'var(--color-text-main)' }}
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              className="pincode-btn" 
-                              onClick={() => handleDeleteClick(prod.id, prod.name)}
-                              style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)' }}
-                            >
-                              Del
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredProducts.length === 0 && (
+              {/* Desktop Table View */}
+              <div className="admin-desktop-table-view">
+                <div className="admin-table-scroll-container" style={{ overflowX: 'auto', maxHeight: '600px' }}>
+                  <table className="invoice-table" style={{ width: '100%', fontSize: '13px' }}>
+                    <thead>
                       <tr>
-                        <td colSpan={6} className="text-center" style={{ padding: '24px 0', color: 'var(--color-text-muted)' }}>
-                          No active listings match your filters.
-                        </td>
+                        <th>Label & Brand</th>
+                        <th>Segment</th>
+                        <th className="text-right">MRP</th>
+                        <th className="text-right">Dist. Rate</th>
+                        <th className="text-center">MOQ</th>
+                        <th className="text-center">Action</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map(prod => (
+                        <tr key={prod.id}>
+                          <td>
+                            <div className="admin-item-details-cell" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <img src={prod.imageUrl} alt="" style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'cover' }} />
+                              <div>
+                                <strong>{prod.name}</strong>
+                                <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)' }}>Brand: {prod.brand} | {prod.packSize}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td><span className="gst-info-bubble">{prod.category}</span></td>
+                          <td className="text-right">₹{prod.retailPrice}</td>
+                          <td className="text-right font-bold">₹{prod.wholesalePrice}</td>
+                          <td className="text-center">{prod.moq || 10}</td>
+                          <td className="text-center">
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                              <button 
+                                className="pincode-btn" 
+                                onClick={() => handleEditClick(prod)}
+                                style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: '#e2e8f0', color: 'var(--color-text-main)' }}
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                className="pincode-btn" 
+                                onClick={() => handleDeleteClick(prod.id, prod.name)}
+                                style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)' }}
+                              >
+                                Del
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredProducts.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="text-center" style={{ padding: '24px 0', color: 'var(--color-text-muted)' }}>
+                            No active listings match your filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Cards View */}
+              <div className="admin-mobile-cards-view">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '600px', overflowY: 'auto' }}>
+                  {filteredProducts.map(prod => (
+                    <div key={prod.id} className="admin-mobile-product-card" style={{ padding: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <img src={prod.imageUrl} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
+                        <div style={{ flexGrow: 1 }}>
+                          <strong style={{ fontSize: '13px', display: 'block', textAlign: 'left' }}>{prod.name}</strong>
+                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)', textAlign: 'left' }}>Brand: {prod.brand} | {prod.packSize}</span>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          Segment: <span className="gst-info-bubble">{prod.category}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span>MRP: <strong>₹{prod.retailPrice}</strong></span>
+                          <span>Rate: <strong style={{ color: 'var(--color-primary)' }}>₹{prod.wholesalePrice}</strong></span>
+                          <span>MOQ: <strong>{prod.moq || 10}</strong></span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <button 
+                          className="pincode-btn" 
+                          onClick={() => handleEditClick(prod)}
+                          style={{ flex: 1, padding: '8px', fontSize: '11px', backgroundColor: '#e2e8f0', color: 'var(--color-text-main)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          Edit Product
+                        </button>
+                        <button 
+                          className="pincode-btn" 
+                          onClick={() => handleDeleteClick(prod.id, prod.name)}
+                          style={{ flex: 1, padding: '8px', fontSize: '11px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredProducts.length === 0 && (
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '13px', padding: '20px' }}>
+                      No active listings match your filters.
+                    </p>
+                  )}
+                </div>
               </div>
 
             </div>
@@ -532,7 +585,7 @@ export default function AdminPortal({
           <div className="divider-card"></div>
 
           <form onSubmit={handleCategorySave} className="login-form">
-            <div className="admin-category-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div className="admin-category-form-grid">
               {Object.keys(localCategoryImages).map(catName => {
                 if (catName === 'More') return null; // "More" uses styled text
                 return (

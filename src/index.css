@@ -3061,6 +3061,35 @@ html, body {
   background-color: white;
 }
 
+.admin-desktop-table-view {
+  display: block;
+}
+
+.admin-mobile-cards-view {
+  display: none;
+}
+
+.form-group-row-flex {
+  display: flex;
+  gap: 16px;
+}
+
+.form-group-row-flex .form-group {
+  flex: 1;
+}
+
+.admin-form-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-category-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
 @media (max-width: 900px) {
   .admin-grid-layout {
     grid-template-columns: 1fr;
@@ -3072,6 +3101,25 @@ html, body {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-desktop-table-view {
+    display: none;
+  }
+  .admin-mobile-cards-view {
+    display: block;
+  }
+  .admin-category-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-group-row-flex {
+    flex-direction: column;
+    gap: 0;
+  }
+  .admin-form-actions-row {
+    flex-direction: column;
   }
 }
 
