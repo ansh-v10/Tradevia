@@ -89,19 +89,43 @@ export default function App() {
 
   // Sync catalog database to LocalStorage (so updates from separate admin app apply)
   useEffect(() => {
-    localStorage.setItem('ss_products', JSON.stringify(products));
+    try {
+      localStorage.setItem('ss_products', JSON.stringify(products));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        console.warn("Storage quota exceeded on storefront sync!");
+      }
+    }
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
+    try {
+      localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        console.warn("Storage quota exceeded on category images storefront sync!");
+      }
+    }
   }, [categoryImages]);
 
   useEffect(() => {
-    localStorage.setItem('ss_orders', JSON.stringify(orders));
+    try {
+      localStorage.setItem('ss_orders', JSON.stringify(orders));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        console.warn("Storage quota exceeded on orders storefront sync!");
+      }
+    }
   }, [orders]);
 
   useEffect(() => {
-    localStorage.setItem('ss_addresses', JSON.stringify(addresses));
+    try {
+      localStorage.setItem('ss_addresses', JSON.stringify(addresses));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        console.warn("Storage quota exceeded on addresses storefront sync!");
+      }
+    }
   }, [addresses]);
 
   // Listen for storage events (allows instant storefront update when Admin panel updates localStorage in another tab!)

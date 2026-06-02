@@ -46,9 +46,9 @@ export default function AdminPortal({
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check size limit (localStorage max capacity ~5MB, so recommend files < 1.5MB)
-    if (file.size > 1.5 * 1024 * 1024) {
-      alert("This file is too large. For browser localStorage limits, select a compression file under 1.5 MB.");
+    // Check size limit (localStorage max capacity ~5MB, we check up to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("This file is too large. Please select an image file under 5 MB.");
       e.target.value = ""; // clear input
       return;
     }

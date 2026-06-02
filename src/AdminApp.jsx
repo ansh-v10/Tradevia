@@ -26,13 +26,29 @@ export default function AdminApp() {
     return saved ? JSON.parse(saved) : defaultCategoryImages;
   });
 
-  // Sync catalog database to LocalStorage
+  // Sync catalog database to LocalStorage with try/catch to protect against browser storage limits
   useEffect(() => {
-    localStorage.setItem('ss_products', JSON.stringify(products));
+    try {
+      localStorage.setItem('ss_products', JSON.stringify(products));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        alert("Warning: Browser local storage (localStorage) limit exceeded! The 5MB image is too large to save as a base64 string. Please try using a web URL link or compress the image.");
+      } else {
+        console.error("Local storage error:", e);
+      }
+    }
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
+    try {
+      localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        alert("Warning: Browser local storage limit exceeded for category images!");
+      } else {
+        console.error("Local storage error:", e);
+      }
+    }
   }, [categoryImages]);
 
   // Sync across tabs/pages (if storefront alters anything, although storefront is read-only)
