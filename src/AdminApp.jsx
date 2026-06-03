@@ -19,67 +19,9 @@ const defaultCategoryImages = {
 
 export default function AdminApp() {
   // --- Dynamic B2B Catalog and Settings States ---
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('ss_products');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map(p => ({ ...p, inventory: p.inventory !== undefined ? p.inventory : 100 }));
-    }
-    return productsData.map(p => ({ ...p, inventory: 100 }));
-  });
-
-  const [categoryImages, setCategoryImages] = useState(() => {
-    const saved = localStorage.getItem('ss_category_images');
-    return saved ? JSON.parse(saved) : defaultCategoryImages;
-  });
-
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('ss_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Sync catalog database to LocalStorage with try/catch to protect against browser storage limits
-  useEffect(() => {
-    try {
-      localStorage.setItem('ss_products', JSON.stringify(products));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        alert("Warning: Browser local storage (localStorage) limit exceeded! The 5MB image is too large to save as a base64 string. Please try using a web URL link or compress the image.");
-      } else {
-        console.error("Local storage error:", e);
-      }
-    }
-  }, [products]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        alert("Warning: Browser local storage limit exceeded for category images!");
-      } else {
-        console.error("Local storage error:", e);
-      }
-    }
-  }, [categoryImages]);
-
-  // Sync across tabs/pages (if storefront alters anything, although storefront is read-only)
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'ss_products') {
-        const parsed = e.newValue ? JSON.parse(e.newValue) : productsData;
-        setProducts(parsed.map(p => ({ ...p, inventory: p.inventory !== undefined ? p.inventory : 100 })));
-      }
-      if (e.key === 'ss_category_images') {
-        setCategoryImages(e.newValue ? JSON.parse(e.newValue) : defaultCategoryImages);
-      }
-      if (e.key === 'ss_orders') {
-        setOrders(e.newValue ? JSON.parse(e.newValue) : []);
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  const [products, setProducts] = useState(() => productsData.map(p => ({ ...p, inventory: 100 })));
+  const [categoryImages, setCategoryImages] = useState(defaultCategoryImages);
+  const [orders, setOrders] = useState([]);
 
   // --- Admin Desk Database Callbacks ---
   const handleAddProduct = (newProduct) => {
@@ -117,10 +59,8 @@ export default function AdminApp() {
   };
 
   const handleResetCatalog = () => {
-    setProducts(productsData);
+    setProducts(productsData.map(p => ({ ...p, inventory: 100 })));
     setCategoryImages(defaultCategoryImages);
-    localStorage.removeItem('ss_products');
-    localStorage.removeItem('ss_category_images');
   };
 
   // MPA Redirect back to the customer storefront

@@ -9,7 +9,6 @@ import AdminPortal from '../pages/AdminPortal';
 export default function AppRouter({
   products,
   categoryImages,
-  setCurrentPage,
   setSelectedCategories,
   setSelectedBrands,
   onAddToCart,
@@ -41,7 +40,6 @@ export default function AppRouter({
         <Home 
           products={products}
           categoryImages={categoryImages}
-          setCurrentPage={setCurrentPage}
           setSelectedCategories={setSelectedCategories}
           setSelectedBrands={setSelectedBrands}
           onAddToCart={onAddToCart}
@@ -82,13 +80,11 @@ export default function AppRouter({
           onRemoveItem={onRemoveItem}
           onOpenLoginModal={onOpenLoginModal}
           onClearCart={onClearCart}
-          setCurrentPage={setCurrentPage}
         />
       } />
       <Route path="/orders" element={
         <YourOrders 
           orders={orders}
-          setCurrentPage={setCurrentPage}
         />
       } />
       <Route path="/admin" element={
@@ -102,7 +98,6 @@ export default function AppRouter({
           onUpdateCategoryImages={onUpdateCategoryImages}
           onBulkAdjustPrices={onBulkAdjustPrices}
           onResetCatalog={onResetCatalog}
-          setCurrentPage={setCurrentPage}
         />
       } />
       {/* Wildcard redirect back to Home */}

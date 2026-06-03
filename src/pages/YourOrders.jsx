@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CartIcon } from '../components/Icons';
 
-export default function YourOrders({ orders = [], setCurrentPage }) {
+export default function YourOrders({ orders = [] }) {
+  const navigate = useNavigate();
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   const toggleOrderDetails = (orderId) => {
@@ -30,7 +32,7 @@ export default function YourOrders({ orders = [], setCurrentPage }) {
           <CartIcon size={64} className="empty-cart-svg" />
           <h2>No B2B Orders Found</h2>
           <p>You haven't placed any commercial orders yet. Once checked out, your wholesale tax invoices will appear here.</p>
-          <button className="primary-b2b-btn" onClick={() => setCurrentPage('browse')}>
+          <button className="primary-b2b-btn" onClick={() => navigate('/browse')}>
             Browse Wholesale Catalog
           </button>
         </div>
@@ -45,7 +47,7 @@ export default function YourOrders({ orders = [], setCurrentPage }) {
           <h2 className="page-main-title">Your B2B Order History</h2>
           <p className="page-main-subtitle">Access your past tax invoices, track wholesale dispatch details, and review shipment addresses.</p>
         </div>
-        <button className="secondary-b2b-btn" onClick={() => setCurrentPage('browse')}>
+        <button className="secondary-b2b-btn" onClick={() => navigate('/browse')}>
           ← Back to Catalog
         </button>
       </div>

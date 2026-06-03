@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StarIcon, ChevronRightIcon } from '../components/Icons';
 import { getTieredWholesalePrice } from '../util/productsData';
 
 export default function Home({ 
   products,            // dynamic state passed from App.jsx
   categoryImages,      // dynamic state passed from App.jsx
-  setCurrentPage, 
   setSelectedCategories, 
   setSelectedBrands,
   onAddToCart 
 }) {
+  const navigate = useNavigate();
   const [activeSlide, setActiveSlide] = useState(0);
   const [quantities, setQuantities] = useState({});
 
@@ -56,7 +57,7 @@ export default function Home({
     } else {
       setSelectedCategories([categoryName]); // show specific
     }
-    setCurrentPage('browse');
+    navigate('/browse');
   };
 
   // Get most bought products from dynamic prop, sorting out-of-stock to the bottom
@@ -223,7 +224,7 @@ export default function Home({
                   <span className="deal-brand">{product.brand}</span>
                   <h4 className="deal-name" onClick={() => {
                     setSelectedCategories([product.category]);
-                    setCurrentPage('browse');
+                    navigate('/browse');
                   }}>{product.name}</h4>
                   <span className="deal-pack">{product.packSize}</span>
                   <div className="price-pricing-flex" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '8px' }}>
@@ -315,7 +316,7 @@ export default function Home({
                   setSelectedBrands([brand.name]);
                   setSelectedCategories([]); // clear category
                 }
-                setCurrentPage('browse');
+                navigate('/browse');
               }}
               style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', width: '120px', transition: 'var(--transition-fast)' }}
             >
@@ -360,7 +361,7 @@ export default function Home({
                   <span className="product-brand-tag">{product.brand}</span>
                   <h3 className="product-name-heading" onClick={() => {
                     setSelectedCategories([product.category]);
-                    setCurrentPage('browse');
+                    navigate('/browse');
                   }}>{product.name}</h3>
                   <span className="product-pack-size">{product.packSize}</span>
                   

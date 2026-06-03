@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SearchIcon, ProfileIcon, CartIcon, PinIcon, CaretDownIcon, CloseIcon } from './Icons';
 
 // Instant local mapping for common commercial hubs to prevent delay
@@ -24,11 +25,11 @@ export default function Navbar({
   onOpenLoginModal,
   cart,
   currentPage,
-  setCurrentPage,
   searchQuery,
   setSearchQuery,
   setSelectedCategories
 }) {
+  const navigate = useNavigate();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [tempSearch, setTempSearch] = useState(searchQuery || '');
   const [showLocationPopup, setShowLocationPopup] = useState(false);
@@ -96,7 +97,7 @@ export default function Navbar({
     setSearchQuery(tempSearch);
     setIsSearchFocused(false);
     setIsMobileSearchOpen(false);
-    setCurrentPage('browse');
+    navigate('/browse');
   };
 
   const handleTrendingClick = (keyword) => {
@@ -104,18 +105,18 @@ export default function Navbar({
     setSearchQuery(keyword);
     setIsSearchFocused(false);
     setIsMobileSearchOpen(false);
-    setCurrentPage('browse');
+    navigate('/browse');
   };
 
   const handleLogoClick = () => {
     setTempSearch('');
     setSearchQuery('');
     if (setSelectedCategories) setSelectedCategories([]);
-    setCurrentPage('home');
+    navigate('/');
   };
 
   const handleCartClick = () => {
-    setCurrentPage('cart');
+    navigate('/cart');
   };
 
   // Async Pincode API Fetch Handler
@@ -279,10 +280,10 @@ export default function Navbar({
                 <div className="suggestion-section mt-2">
                   <h5>Quick Category Links</h5>
                   <ul className="quick-cat-suggest-list">
-                    <li onClick={() => { setSelectedCategories(["Sweets & Namkeen"]); setCurrentPage('browse'); }}>Sweets & Namkeen (Carton rates)</li>
-                    <li onClick={() => { setSelectedCategories(["Daily Use"]); setCurrentPage('browse'); }}>Toiletries & Soaps</li>
-                    <li onClick={() => { setSelectedCategories(["Home Essentials"]); setCurrentPage('browse'); }}>Cleaning Supplies</li>
-                    <li onClick={() => { setSelectedCategories(["Chocolates & Candies"]); setCurrentPage('browse'); }}>Chocolates & Candy jars</li>
+                    <li onClick={() => { setSelectedCategories(["Sweets & Namkeen"]); navigate('/browse'); }}>Sweets & Namkeen (Carton rates)</li>
+                    <li onClick={() => { setSelectedCategories(["Daily Use"]); navigate('/browse'); }}>Toiletries & Soaps</li>
+                    <li onClick={() => { setSelectedCategories(["Home Essentials"]); navigate('/browse'); }}>Cleaning Supplies</li>
+                    <li onClick={() => { setSelectedCategories(["Chocolates & Candies"]); navigate('/browse'); }}>Chocolates & Candy jars</li>
                   </ul>
                 </div>
               </div>
@@ -399,7 +400,7 @@ export default function Navbar({
                         className="dropdown-action-btn"
                         onClick={() => {
                           setProfileDropdownOpen(false);
-                          setCurrentPage('browse');
+                          navigate('/browse');
                           if (setSelectedCategories) setSelectedCategories([]);
                           setSearchQuery('');
                           setTempSearch('');
@@ -411,7 +412,7 @@ export default function Navbar({
                         className="dropdown-action-btn"
                         onClick={() => {
                           setProfileDropdownOpen(false);
-                          setCurrentPage('cart');
+                          navigate('/cart');
                         }}
                       >
                         My Wholesale Cart
@@ -420,7 +421,7 @@ export default function Navbar({
                         className="dropdown-action-btn"
                         onClick={() => {
                           setProfileDropdownOpen(false);
-                          setCurrentPage('orders');
+                          navigate('/orders');
                         }}
                       >
                         Your Orders
@@ -511,10 +512,10 @@ export default function Navbar({
 
               <h5 className="mt-4">Search by Segment</h5>
               <div className="mobile-search-categories-shortcuts">
-                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Sweets & Namkeen"]); setCurrentPage('browse'); setIsMobileSearchOpen(false); }}>Sweets & Namkeen</div>
-                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Daily Use"]); setCurrentPage('browse'); setIsMobileSearchOpen(false); }}>Daily Use (Toiletries)</div>
-                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Home Essentials"]); setCurrentPage('browse'); setIsMobileSearchOpen(false); }}>Cleaning Supplies</div>
-                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Chocolates & Candies"]); setCurrentPage('browse'); setIsMobileSearchOpen(false); }}>Chocolates & Candies</div>
+                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Sweets & Namkeen"]); navigate('/browse'); setIsMobileSearchOpen(false); }}>Sweets & Namkeen</div>
+                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Daily Use"]); navigate('/browse'); setIsMobileSearchOpen(false); }}>Daily Use (Toiletries)</div>
+                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Home Essentials"]); navigate('/browse'); setIsMobileSearchOpen(false); }}>Cleaning Supplies</div>
+                <div className="mob-cat-link" onClick={() => { setSelectedCategories(["Chocolates & Candies"]); navigate('/browse'); setIsMobileSearchOpen(false); }}>Chocolates & Candies</div>
               </div>
             </div>
 

@@ -11,52 +11,25 @@ import './App.css';
 const defaultCategoryImages = {
   "Chocolates & Candies": "cadbury_category.jpg",
   "Daily Use": "mop_category.jpg",
-  "Home Essentials": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=150&q=80",
+  "Home Essentials": "https://cdn.brandfetch.io/domain/springwel.in/fallback/lettermark/theme/dark/h/400/w/400/icon?c=1bfwsmEH20zzEfSNTed",
   "Preservatives": "chips_category.jpg",
   "Sweets & Namkeen": "rasgulla_category.jpg",
-  "Beverages": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=150&q=80",
-  "Grains & Masalas": "itc.png",
-  "Fresh & Dairy": "https://images.unsplash.com/photo-1528750955906-c8b4a3952f2d?auto=format&fit=crop&w=150&q=80",
-  "Snacks & Biscuits": "https://images.unsplash.com/photo-1558961312-50a49c93acfe?auto=format&fit=crop&w=150&q=80",
-  "Cosmetics & Hygiene": "unilever.png",
+  "Beverages": "https://www.logodesignlove.com/wp-content/uploads/2021/07/coca-cola-logo-arden-square-01.jpg",
+  "Grains & Masalas": "https://prithvienterprises.co.in/cdn/shop/collections/Aashirvaad_Logo.png?v=1746877542&width=750",
   "More": ""
 };
 
 export default function App() {
-  // --- Persistent User & Cart Session States ---
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('ss_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem('ss_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [user, setUser] = useState(null);
+  const [cart, setCart] = useState([]);
 
   // --- Dynamic B2B Catalog and Settings States ---
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('ss_products');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map(p => ({ ...p, inventory: p.inventory !== undefined ? p.inventory : 100 }));
-    }
-    return productsData.map(p => ({ ...p, inventory: 100 }));
-  });
-
-  const [categoryImages, setCategoryImages] = useState(() => {
-    const saved = localStorage.getItem('ss_category_images');
-    return saved ? JSON.parse(saved) : defaultCategoryImages;
-  });
+  const [products, setProducts] = useState(() => productsData.map(p => ({ ...p, inventory: 100 })));
+  const [categoryImages, setCategoryImages] = useState(defaultCategoryImages);
 
   // --- Orders & Saved Addresses B2B States ---
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('ss_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [orders, setOrders] = useState([]);
   const [addresses, setAddresses] = useState(() => {
-    const saved = localStorage.getItem('ss_addresses');
     const defaultAddr = {
       id: 'addr-default',
       name: 'Store Manager',
@@ -67,7 +40,7 @@ export default function App() {
       pincode: '124103',
       phone: '9988776655'
     };
-    return saved ? JSON.parse(saved) : [defaultAddr];
+    return [defaultAddr];
   });
 
   // --- Router & Filter Navigation States ---
@@ -75,13 +48,15 @@ export default function App() {
   const navigate = useNavigate();
 
   // Determine currentPage string based on URL path to keep existing code working seamlessly:
-  const currentPage = location.pathname === '/' ? 'home' : (location.pathname === '/browse' || location.pathname === '/Browse' ? 'browse' : (location.pathname === '/cart' ? 'cart' : (location.pathname === '/orders' ? 'orders' : (location.pathname === '/admin' ? 'admin' : 'home'))));
+  const currentPage = location.pathname === '/' ? 'home' : (location.pathname === '/browse' ? 'browse' : (location.pathname === '/cart' ? 'cart' : (location.pathname === '/orders' ? 'orders' : 'home')));
 
-  // Redirect/Navigate helper that components can still call:
-  const setCurrentPage = (page) => {
-    if (page === 'home') navigate('/');
-    else navigate('/' + page);
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+
+  // --- Modal Visibility Hooks ---
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginTriggeredByCheckout, setLoginTriggeredByCheckout] = useState(false);
 
   // --- Admin Desk Database Callbacks ---
   const handleAddProduct = (newProduct) => {
@@ -119,93 +94,9 @@ export default function App() {
   };
 
   const handleResetCatalog = () => {
-    setProducts(productsData);
+    setProducts(productsData.map(p => ({ ...p, inventory: 100 })));
     setCategoryImages(defaultCategoryImages);
-    localStorage.removeItem('ss_products');
-    localStorage.removeItem('ss_category_images');
   };
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
-
-  // --- Modal Visibility Hooks ---
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginTriggeredByCheckout, setLoginTriggeredByCheckout] = useState(false);
-
-  // Sync session states to LocalStorage
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('ss_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('ss_user');
-    }
-  }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem('ss_cart', JSON.stringify(cart));
-  }, [cart]);
-
-  // Sync catalog database to LocalStorage (so updates from separate admin app apply)
-  useEffect(() => {
-    try {
-      localStorage.setItem('ss_products', JSON.stringify(products));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        console.warn("Storage quota exceeded on storefront sync!");
-      }
-    }
-  }, [products]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        console.warn("Storage quota exceeded on category images storefront sync!");
-      }
-    }
-  }, [categoryImages]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('ss_orders', JSON.stringify(orders));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        console.warn("Storage quota exceeded on orders storefront sync!");
-      }
-    }
-  }, [orders]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('ss_addresses', JSON.stringify(addresses));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        console.warn("Storage quota exceeded on addresses storefront sync!");
-      }
-    }
-  }, [addresses]);
-
-  // Listen for storage events (allows instant storefront update when Admin panel updates localStorage in another tab!)
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'ss_products') {
-        const parsed = e.newValue ? JSON.parse(e.newValue) : productsData;
-        setProducts(parsed.map(p => ({ ...p, inventory: p.inventory !== undefined ? p.inventory : 100 })));
-      }
-      if (e.key === 'ss_category_images') {
-        setCategoryImages(e.newValue ? JSON.parse(e.newValue) : defaultCategoryImages);
-      }
-      if (e.key === 'ss_orders') {
-        setOrders(e.newValue ? JSON.parse(e.newValue) : []);
-      }
-      if (e.key === 'ss_addresses') {
-        setAddresses(e.newValue ? JSON.parse(e.newValue) : []);
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // --- Login / Profile Action callbacks ---
   const handleLoginSuccess = (userData) => {
@@ -216,7 +107,7 @@ export default function App() {
   const handleLogout = () => {
     setUser(null);
     setCart([]);
-    setCurrentPage('home');
+    navigate('/');
   };
 
   const openLoginModalWithContext = (triggeredByCheckout = false) => {
@@ -300,7 +191,6 @@ export default function App() {
         onOpenLoginModal={() => openLoginModalWithContext(false)}
         cart={cart}
         currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         setSelectedCategories={setSelectedCategories}
@@ -311,16 +201,13 @@ export default function App() {
         <AppRouter 
           products={products}
           categoryImages={categoryImages}
-          setCurrentPage={setCurrentPage}
           setSelectedCategories={setSelectedCategories}
           setSelectedBrands={setSelectedBrands}
           onAddToCart={handleAddToCart}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategories={selectedCategories}
-          setSelectedCategories={setSelectedCategories}
           selectedBrands={selectedBrands}
-          setSelectedBrands={setSelectedBrands}
           cart={cart}
           user={user}
           addresses={addresses}

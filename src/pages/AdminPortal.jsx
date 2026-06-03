@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { allCategories } from '../util/productsData';
 
 export default function AdminPortal({ 
@@ -10,9 +11,9 @@ export default function AdminPortal({
   onDeleteProduct, 
   onUpdateCategoryImages, 
   onBulkAdjustPrices,
-  onResetCatalog,
-  setCurrentPage 
+  onResetCatalog
 }) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders'
   
   // Product Form states
@@ -267,7 +268,7 @@ export default function AdminPortal({
           <h2 className="page-main-title">Sanjay Sales Admin Control Desk</h2>
           <p className="page-main-subtitle">Commercial panel to manage inventory products, adjust wholesale prices, and configure frontpage layouts.</p>
         </div>
-        <button className="secondary-b2b-btn" onClick={() => setCurrentPage('home')}>
+        <button className="secondary-b2b-btn" onClick={() => navigate('/')}>
           ← Back to Shop front
         </button>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrashIcon, CartIcon, CloseIcon } from '../components/Icons';
 import { getTieredWholesalePrice } from '../util/productsData';
 
@@ -11,9 +12,9 @@ export default function CartPage({
   onUpdateQuantity,
   onRemoveItem,
   onOpenLoginModal,
-  onClearCart,
-  setCurrentPage 
+  onClearCart
 }) {
+  const navigate = useNavigate();
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart', 'address', 'success'
   const [orderId, setOrderId] = useState('');
   
@@ -153,7 +154,7 @@ export default function CartPage({
   const handleCloseSuccess = () => {
     onClearCart();
     setCheckoutStep('cart');
-    setCurrentPage('home');
+    navigate('/');
   };
 
   const activeAddress = addresses.find(a => a.id === selectedAddressId) || addresses[0];
@@ -165,7 +166,7 @@ export default function CartPage({
           <CartIcon size={64} className="empty-cart-svg" />
           <h2>Your Wholesale Cart is Empty</h2>
           <p>You haven't added any products to your commercial order list yet.</p>
-          <button className="primary-b2b-btn" onClick={() => setCurrentPage('browse')}>
+          <button className="primary-b2b-btn" onClick={() => navigate('/browse')}>
             Browse Wholesale Catalog
           </button>
         </div>
@@ -277,7 +278,7 @@ export default function CartPage({
               </div>
 
               <div className="cart-actions-row">
-                <button className="secondary-b2b-btn" onClick={() => setCurrentPage('browse')}>
+                <button className="secondary-b2b-btn" onClick={() => navigate('/browse')}>
                   ← Continue Shopping
                 </button>
                 <button className="danger-text-btn" onClick={onClearCart}>
