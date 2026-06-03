@@ -4,6 +4,7 @@ import Home from '../pages/Home';
 import Browse from '../pages/Browse';
 import CartPage from '../pages/CartPage';
 import YourOrders from '../pages/YourOrders';
+import AdminPortal from '../pages/AdminPortal';
 
 export default function AppRouter({
   products,
@@ -25,7 +26,14 @@ export default function AppRouter({
   onRemoveItem,
   onOpenLoginModal,
   onClearCart,
-  orders
+  orders,
+  // Admin database state props
+  onAddProduct,
+  onUpdateProduct,
+  onDeleteProduct,
+  onUpdateCategoryImages,
+  onBulkAdjustPrices,
+  onResetCatalog
 }) {
   return (
     <Routes>
@@ -40,6 +48,18 @@ export default function AppRouter({
         />
       } />
       <Route path="/browse" element={
+        <Browse 
+          products={products}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
+          selectedBrands={selectedBrands}
+          setSelectedBrands={setSelectedBrands}
+          onAddToCart={onAddToCart}
+        />
+      } />
+      <Route path="/Browse" element={
         <Browse 
           products={products}
           searchQuery={searchQuery}
@@ -68,6 +88,20 @@ export default function AppRouter({
       <Route path="/orders" element={
         <YourOrders 
           orders={orders}
+          setCurrentPage={setCurrentPage}
+        />
+      } />
+      <Route path="/admin" element={
+        <AdminPortal 
+          products={products}
+          categoryImages={categoryImages}
+          orders={orders}
+          onAddProduct={onAddProduct}
+          onUpdateProduct={onUpdateProduct}
+          onDeleteProduct={onDeleteProduct}
+          onUpdateCategoryImages={onUpdateCategoryImages}
+          onBulkAdjustPrices={onBulkAdjustPrices}
+          onResetCatalog={onResetCatalog}
           setCurrentPage={setCurrentPage}
         />
       } />

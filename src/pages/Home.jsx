@@ -83,10 +83,11 @@ export default function Home({
 
   const resolveImgSrc = (src) => {
     if (!src) return '';
-    if (src.startsWith('/') && !src.startsWith('http') && !src.startsWith('data:')) {
-      return src.slice(1);
+    if (src.startsWith('http') || src.startsWith('data:')) {
+      return src;
     }
-    return src;
+    const cleanPath = src.startsWith('/') ? src : '/' + src;
+    return `/SanjaySales${cleanPath}`;
   };
 
   // Dynamic circular categories utilizing categoryImages state prop

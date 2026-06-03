@@ -75,12 +75,54 @@ export default function App() {
   const navigate = useNavigate();
 
   // Determine currentPage string based on URL path to keep existing code working seamlessly:
-  const currentPage = location.pathname === '/' ? 'home' : (location.pathname === '/browse' ? 'browse' : (location.pathname === '/cart' ? 'cart' : (location.pathname === '/orders' ? 'orders' : 'home')));
+  const currentPage = location.pathname === '/' ? 'home' : (location.pathname === '/browse' || location.pathname === '/Browse' ? 'browse' : (location.pathname === '/cart' ? 'cart' : (location.pathname === '/orders' ? 'orders' : (location.pathname === '/admin' ? 'admin' : 'home'))));
 
   // Redirect/Navigate helper that components can still call:
   const setCurrentPage = (page) => {
     if (page === 'home') navigate('/');
     else navigate('/' + page);
+  };
+
+  // --- Admin Desk Database Callbacks ---
+  const handleAddProduct = (newProduct) => {
+    const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    const productWithId = { ...newProduct, id: nextId };
+    setProducts(prevProducts => [...prevProducts, productWithId]);
+  };
+
+  const handleUpdateProduct = (updatedProduct) => {
+    setProducts(prevProducts =>
+      prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p)
+    );
+  };
+
+  const handleDeleteProduct = (productId) => {
+    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+  };
+
+  const handleUpdateCategoryImages = (updatedImagesMap) => {
+    setCategoryImages(updatedImagesMap);
+  };
+
+  const handleBulkAdjustPrices = (percentage) => {
+    setProducts(prevProducts =>
+      prevProducts.map(p => {
+        const factor = 1 + (percentage / 100);
+        let newWholesale = Math.round(p.wholesalePrice * factor * 10) / 10;
+        newWholesale = Math.max(1, Math.min(newWholesale, p.retailPrice - 1));
+        return {
+          ...p,
+          wholesalePrice: Math.round(newWholesale)
+        };
+      })
+    );
+  };
+
+  const handleResetCatalog = () => {
+    setProducts(productsData);
+    setCategoryImages(defaultCategoryImages);
+    localStorage.removeItem('ss_products');
+    localStorage.removeItem('ss_category_images');
   };
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -289,6 +331,12 @@ export default function App() {
           onOpenLoginModal={() => openLoginModalWithContext(true)}
           onClearCart={handleClearCart}
           orders={orders}
+          onAddProduct={handleAddProduct}
+          onUpdateProduct={handleUpdateProduct}
+          onDeleteProduct={handleDeleteProduct}
+          onUpdateCategoryImages={handleUpdateCategoryImages}
+          onBulkAdjustPrices={handleBulkAdjustPrices}
+          onResetCatalog={handleResetCatalog}
         />
       </div>
 
