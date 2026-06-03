@@ -126,7 +126,7 @@ export default function Home({
     },
     { 
       name: "Daily Use", 
-      icon: <img src={resolveImgSrc(categoryImages["Daily Use"] || "mop_category.jpg")} alt="Daily needs cleaning mops" className="category-icon-img" /> 
+      icon: <img src={resolveImgSrc(categoryImages["Daily Use"] || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR7kV9hA2yF0-BdwARpbVqum34JV7P2cR5fA&s")} alt="Daily needs cleaning mops" className="category-icon-img" /> 
     },
     { 
       name: "Home Essentials", 
