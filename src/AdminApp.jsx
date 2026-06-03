@@ -4,7 +4,7 @@ import { productsData } from './util/productsData';
 
 // Default Category Images Setup
 const defaultCategoryImages = {
-  "Chocolates & Candies": "cadbury_category.jpg",
+  "Chocolates & Candies": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Cadbury_logo_new.jpg/500px-Cadbury_logo_new.jpg",
   "Daily Use": "mop_category.jpg",
   "Home Essentials": "https://cdn.brandfetch.io/domain/springwel.in/fallback/lettermark/theme/dark/h/400/w/400/icon?c=1bfwsmEH20zzEfSNTed",
   "Preservatives": "chips_category.jpg",
