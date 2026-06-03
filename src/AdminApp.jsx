@@ -5,7 +5,7 @@ import { productsData } from './util/productsData';
 // Default Category Images Setup
 const defaultCategoryImages = {
   "Chocolates & Candies": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Cadbury_logo_new.jpg/500px-Cadbury_logo_new.jpg",
-  "Daily Use": "mop_category.jpg",
+  "Daily Use": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR7kV9hA2yF0-BdwARpbVqum34JV7P2cR5fA&s",
   "Home Essentials": "https://cdn.brandfetch.io/domain/springwel.in/fallback/lettermark/theme/dark/h/400/w/400/icon?c=1bfwsmEH20zzEfSNTed",
   "Preservatives": "chips_category.jpg",
   "Sweets & Namkeen": "rasgulla_category.jpg",
