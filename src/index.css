@@ -1612,6 +1612,15 @@ h1, h2, h3, h4, h5, h6 {
 .price-stack {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+}
+
+.price-pricing-flex, .price-actions-flex-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
 }
 
 .mrp-txt {
@@ -3257,6 +3266,37 @@ html, body {
   display: flex;
   gap: 12px;
   margin-top: 20px;
+}
+
+/* Center price, MRP, and quantity selector on mobile screens */
+@media (max-width: 768px) {
+  .price-checkout-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-align: center !important;
+  }
+  
+  .price-pricing-flex .price-stack,
+  .price-actions-flex-row .price-stack,
+  .price-checkout-row .price-stack {
+    align-items: center !important;
+    text-align: center !important;
+  }
+  
+  .price-pricing-flex .qty-selector-container,
+  .price-actions-flex-row .qty-selector-container,
+  .price-checkout-row .qty-selector-container {
+    margin: 0 auto !important;
+    width: fit-content !important;
+    justify-content: center !important;
+  }
+  
+  .mrp-txt, .retail-strike {
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+  }
 }
 
 

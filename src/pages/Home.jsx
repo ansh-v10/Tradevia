@@ -228,13 +228,13 @@ export default function Home({
                     navigate('/browse');
                   }}>{product.name}</h4>
                   <span className="deal-pack">{product.packSize}</span>
-                  <div className="price-pricing-flex" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '8px' }}>
-                    <div className="price-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <div className="price-pricing-flex">
+                    <div className="price-stack">
                       <span className="retail-strike">MRP ₹{product.retailPrice}</span>
                       <span className="wholesale-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)} <span className="ex-gst">ex. GST</span></span>
                     </div>
 
-                    <div className="qty-selector-container" style={{ display: 'flex', width: 'fit-content' }}>
+                    <div className="qty-selector-container">
                       <button 
                         className="qty-btn"
                         type="button"
@@ -391,13 +391,13 @@ export default function Home({
                     )}
                   </div>
 
-                  <div className="price-actions-flex-row" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-                    <div className="price-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <div className="price-actions-flex-row">
+                    <div className="price-stack">
                       <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
                       <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)} <span className="ex-gst">ex. GST</span></span>
                     </div>
 
-                    <div className="qty-selector-container" style={{ display: 'flex', width: 'fit-content' }}>
+                    <div className="qty-selector-container">
                       <button 
                         className="qty-btn"
                         type="button"
