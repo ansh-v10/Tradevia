@@ -169,6 +169,8 @@ export default function AdminPortal({
   const [inventory, setInventory] = useState('100');
   const [tier2Price, setTier2Price] = useState('');
   const [tier3Price, setTier3Price] = useState('');
+  const [tier2Moq, setTier2Moq] = useState('');
+  const [tier3Moq, setTier3Moq] = useState('');
   const [errors, setErrors] = useState({});
   const [actionSuccess, setActionSuccess] = useState('');
 
@@ -230,6 +232,8 @@ export default function AdminPortal({
     setInventory(product.inventory !== undefined ? product.inventory.toString() : '100');
     setTier2Price(product.tier2Price !== undefined && product.tier2Price !== null ? product.tier2Price.toString() : '');
     setTier3Price(product.tier3Price !== undefined && product.tier3Price !== null ? product.tier3Price.toString() : '');
+    setTier2Moq(product.tier2Moq !== undefined && product.tier2Moq !== null ? product.tier2Moq.toString() : '');
+    setTier3Moq(product.tier3Moq !== undefined && product.tier3Moq !== null ? product.tier3Moq.toString() : '');
     
     // Auto-detect image source type
     if (product.imageUrl && product.imageUrl.startsWith('data:')) {
@@ -262,6 +266,8 @@ export default function AdminPortal({
     setInventory('100');
     setTier2Price('');
     setTier3Price('');
+    setTier2Moq('');
+    setTier3Moq('');
     setErrors({});
   };
 
@@ -279,6 +285,8 @@ export default function AdminPortal({
     const stockQty = parseInt(inventory);
     const t2 = tier2Price !== '' ? parseFloat(tier2Price) : null;
     const t3 = tier3Price !== '' ? parseFloat(tier3Price) : null;
+    const t2Moq = tier2Moq !== '' ? parseInt(tier2Moq) : null;
+    const t3Moq = tier3Moq !== '' ? parseInt(tier3Moq) : null;
 
     if (isNaN(retail) || retail <= 0) tempErrors.retailPrice = "Enter valid retail price";
     if (isNaN(wholesale) || wholesale <= 0) tempErrors.wholesalePrice = "Enter valid wholesale price";
@@ -291,6 +299,13 @@ export default function AdminPortal({
     }
     if (t3 !== null && (isNaN(t3) || t3 <= 0 || (t2 !== null ? t3 >= t2 : t3 >= wholesale))) {
       tempErrors.tier3Price = "Tier 3 rate must be lower than Tier 2 rate / base wholesale price";
+    }
+
+    if (t2Moq !== null && (isNaN(t2Moq) || t2Moq <= minOrderQty)) {
+      tempErrors.tier2Moq = "Tier 2 MOQ must be greater than base MOQ";
+    }
+    if (t3Moq !== null && (isNaN(t3Moq) || t3Moq <= (t2Moq !== null ? t2Moq : minOrderQty))) {
+      tempErrors.tier3Moq = "Tier 3 MOQ must be greater than Tier 2 MOQ / base MOQ";
     }
 
     if (!imageUrl) tempErrors.imageUrl = "Product image file or web URL is required";
@@ -311,6 +326,8 @@ export default function AdminPortal({
       inventory: stockQty >= 0 ? stockQty : 100,
       tier2Price: t2,
       tier3Price: t3,
+      tier2Moq: t2Moq,
+      tier3Moq: t3Moq,
       rating: editingId ? (products.find(p => p.id === editingId)?.rating || 4.5) : 4.5,
       reviewsCount: editingId ? (products.find(p => p.id === editingId)?.reviewsCount || 100) : 100
     };
@@ -338,6 +355,8 @@ export default function AdminPortal({
     setInventory('100');
     setTier2Price('');
     setTier3Price('');
+    setTier2Moq('');
+    setTier3Moq('');
 
     setTimeout(() => setActionSuccess(''), 2500);
   };
@@ -846,9 +865,10 @@ export default function AdminPortal({
                   </div>
                 </div>
 
+                {/* Tier 2 Configuration */}
                 <div className="form-group-row-flex">
                   <div className="form-group">
-                    <label htmlFor="prod-t2">Tier 2 Rate (₹) (Qty &ge; MOQ+15)</label>
+                    <label htmlFor="prod-t2">Tier 2 Rate (₹)</label>
                     <input 
                       type="number" 
                       id="prod-t2"
@@ -860,7 +880,23 @@ export default function AdminPortal({
                     {errors.tier2Price && <span className="input-error-msg">{errors.tier2Price}</span>}
                   </div>
                   <div className="form-group">
-                    <label htmlFor="prod-t3">Tier 3 Rate (₹) (Qty &ge; MOQ+40)</label>
+                    <label htmlFor="prod-t2-moq">Tier 2 MOQ (Qty Threshold)</label>
+                    <input 
+                      type="number" 
+                      id="prod-t2-moq"
+                      value={tier2Moq}
+                      onChange={(e) => setTier2Moq(e.target.value)}
+                      placeholder="Leave blank for base MOQ + 15"
+                      className={errors.tier2Moq ? 'error-input' : ''}
+                    />
+                    {errors.tier2Moq && <span className="input-error-msg">{errors.tier2Moq}</span>}
+                  </div>
+                </div>
+
+                {/* Tier 3 Configuration */}
+                <div className="form-group-row-flex">
+                  <div className="form-group">
+                    <label htmlFor="prod-t3">Tier 3 Rate (₹)</label>
                     <input 
                       type="number" 
                       id="prod-t3"
@@ -870,6 +906,18 @@ export default function AdminPortal({
                       className={errors.tier3Price ? 'error-input' : ''}
                     />
                     {errors.tier3Price && <span className="input-error-msg">{errors.tier3Price}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="prod-t3-moq">Tier 3 MOQ (Qty Threshold)</label>
+                    <input 
+                      type="number" 
+                      id="prod-t3-moq"
+                      value={tier3Moq}
+                      onChange={(e) => setTier3Moq(e.target.value)}
+                      placeholder="Leave blank for base MOQ + 40"
+                      className={errors.tier3Moq ? 'error-input' : ''}
+                    />
+                    {errors.tier3Moq && <span className="input-error-msg">{errors.tier3Moq}</span>}
                   </div>
                 </div>
 

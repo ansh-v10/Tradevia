@@ -407,11 +407,18 @@ export function getTieredWholesalePrice(product, quantity) {
   const baseWholesale = product.wholesalePrice;
   const moq = product.moq || 10;
   
-  if (quantity >= moq + 40) {
+  const t2Moq = product.tier2Moq !== undefined && product.tier2Moq !== null && product.tier2Moq !== ""
+    ? parseInt(product.tier2Moq)
+    : moq + 15;
+  const t3Moq = product.tier3Moq !== undefined && product.tier3Moq !== null && product.tier3Moq !== ""
+    ? parseInt(product.tier3Moq)
+    : moq + 40;
+
+  if (quantity >= t3Moq) {
     return product.tier3Price !== undefined && product.tier3Price !== null && product.tier3Price !== ""
       ? parseFloat(product.tier3Price)
       : Math.round(baseWholesale * 0.9 * 10) / 10;
-  } else if (quantity >= moq + 15) {
+  } else if (quantity >= t2Moq) {
     return product.tier2Price !== undefined && product.tier2Price !== null && product.tier2Price !== ""
       ? parseFloat(product.tier2Price)
       : Math.round(baseWholesale * 0.95 * 10) / 10;

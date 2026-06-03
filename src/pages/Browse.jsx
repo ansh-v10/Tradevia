@@ -353,21 +353,34 @@ export default function Browse({
                     </div>
 
                     {/* Volume Price Breaks (ex. GST) */}
-                    <div className="tiered-pricing-breaks" style={{ fontSize: '11px', color: 'var(--color-text-muted)', backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', margin: '8px 0 12px', border: '1px dashed var(--color-border)' }}>
-                      <div style={{ fontWeight: '700', marginBottom: '4px', color: 'var(--color-text-main)', textAlign: 'left' }}>Volume Price Breaks (ex. GST):</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                        <span>MOQ ({product.moq || 10} - { (product.moq || 10) + 14 } packs):</span>
-                        <strong style={{ color: (parseInt(qty) || 0) < (product.moq || 10) + 15 ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/pack</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                        <span>Medium ({ (product.moq || 10) + 15 } - { (product.moq || 10) + 39 } packs):</span>
-                        <strong style={{ color: (parseInt(qty) || 0) >= (product.moq || 10) + 15 && (parseInt(qty) || 0) < (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 15)}/pack</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Bulk ({ (product.moq || 10) + 40 }+ packs):</span>
-                        <strong style={{ color: (parseInt(qty) || 0) >= (product.moq || 10) + 40 ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, (product.moq || 10) + 40)}/pack</strong>
-                      </div>
-                    </div>
+                    {(() => {
+                      const baseMoq = product.moq || 10;
+                      const t2Moq = product.tier2Moq !== undefined && product.tier2Moq !== null && product.tier2Moq !== ""
+                        ? parseInt(product.tier2Moq)
+                        : baseMoq + 15;
+                      const t3Moq = product.tier3Moq !== undefined && product.tier3Moq !== null && product.tier3Moq !== ""
+                        ? parseInt(product.tier3Moq)
+                        : baseMoq + 40;
+                      const currentQty = parseInt(qty) || 0;
+
+                      return (
+                        <div className="tiered-pricing-breaks" style={{ fontSize: '11px', color: 'var(--color-text-muted)', backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', margin: '8px 0 12px', border: '1px dashed var(--color-border)' }}>
+                          <div style={{ fontWeight: '700', marginBottom: '4px', color: 'var(--color-text-main)', textAlign: 'left' }}>Volume Price Breaks (ex. GST):</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                            <span>MOQ ({baseMoq}{t2Moq - 1 > baseMoq ? ` - ${t2Moq - 1}` : ''} packs):</span>
+                            <strong style={{ color: currentQty < t2Moq ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/pack</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                            <span>Medium ({t2Moq}{t3Moq - 1 > t2Moq ? ` - ${t3Moq - 1}` : ''} packs):</span>
+                            <strong style={{ color: currentQty >= t2Moq && currentQty < t3Moq ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, t2Moq)}/pack</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Bulk ({t3Moq}+ packs):</span>
+                            <strong style={{ color: currentQty >= t3Moq ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, t3Moq)}/pack</strong>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Stock Status Indicator */}
                     <div style={{ marginTop: '4px', marginBottom: '8px', fontSize: '12px', textAlign: 'left' }}>
