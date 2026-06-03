@@ -183,6 +183,10 @@ export default function App() {
     });
   };
 
+  const handleDeleteAddress = (addrId) => {
+    setAddresses((prev) => prev.filter((a) => a.id !== addrId));
+  };
+
   return (
     <div className="app-main-flex-wrapper">
       
@@ -213,8 +217,10 @@ export default function App() {
           selectedBrands={selectedBrands}
           cart={cart}
           user={user}
+          onUpdateUser={setUser}
           addresses={addresses}
           onAddAddress={handleAddAddress}
+          onDeleteAddress={handleDeleteAddress}
           onAddOrder={handleAddOrder}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveItem}

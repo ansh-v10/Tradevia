@@ -5,6 +5,7 @@ import Browse from '../pages/Browse';
 import CartPage from '../pages/CartPage';
 import YourOrders from '../pages/YourOrders';
 import AdminPortal from '../pages/AdminPortal';
+import YourAccount from '../pages/YourAccount';
 
 export default function AppRouter({
   products,
@@ -18,8 +19,10 @@ export default function AppRouter({
   selectedBrands,
   cart,
   user,
+  onUpdateUser,
   addresses,
   onAddAddress,
+  onDeleteAddress,
   onAddOrder,
   onUpdateQuantity,
   onRemoveItem,
@@ -85,6 +88,18 @@ export default function AppRouter({
       <Route path="/orders" element={
         <YourOrders 
           orders={orders}
+        />
+      } />
+      <Route path="/account" element={
+        <YourAccount 
+          user={user}
+          onUpdateUser={onUpdateUser}
+          addresses={addresses}
+          onAddAddress={onAddAddress}
+          onDeleteAddress={onDeleteAddress}
+          orders={orders}
+          cart={cart}
+          onOpenLoginModal={onOpenLoginModal}
         />
       } />
       <Route path="/admin" element={

@@ -52,6 +52,22 @@ export default function Navbar({
     }
   }, [profileDropdownOpen]);
 
+  const profileContainerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileContainerRef.current && !profileContainerRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
   const handleSaveField = (e) => {
     e.stopPropagation();
     if (editingField === 'email') {
@@ -305,6 +321,7 @@ export default function Navbar({
             
             {/* User Profile dropdown */}
             <div 
+              ref={profileContainerRef}
               className="user-profile-menu-container" 
               onMouseEnter={() => setProfileDropdownOpen(true)}
               onMouseLeave={() => setProfileDropdownOpen(false)}
@@ -396,6 +413,16 @@ export default function Navbar({
                         )}
                       </div>
                       <div className="dropdown-divider"></div>
+                      <button 
+                        className="dropdown-action-btn"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          navigate('/account');
+                        }}
+                        style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}
+                      >
+                        🔒 Your Account
+                      </button>
                       <button 
                         className="dropdown-action-btn"
                         onClick={() => {

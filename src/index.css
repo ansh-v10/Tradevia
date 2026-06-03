@@ -583,6 +583,16 @@ h1, h2, h3, h4, h5, h6 {
   animation: slideDownFade 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.profile-actions-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: transparent;
+}
+
 .dropdown-user-info {
   display: flex;
   flex-direction: column;
@@ -3363,6 +3373,26 @@ html, body {
     justify-content: center !important;
   }
 }
+
+/* 9. YOUR ACCOUNT PAGE & DASHBOARD */
+.account-page-wrapper {
+  animation: fadeIn 0.3s ease;
+}
+
+.account-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .account-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
 
 
 
