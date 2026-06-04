@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import AppRouter from './router/AppRouter';
 import LoginModal from './components/LoginModal';
 import { productsData } from './util/productsData';
+import { supabase } from './util/supabaseClient';
 import './App.css';
 
 // Default Categories Setup
@@ -97,6 +98,15 @@ export default function App() {
     setCategories(updatedCategories);
   };
 
+  // Sync orders and addresses to localStorage
+  useEffect(() => {
+    localStorage.setItem('ss_orders', JSON.stringify(orders));
+  }, [orders]);
+
+  useEffect(() => {
+    localStorage.setItem('ss_addresses', JSON.stringify(addresses));
+  }, [addresses]);
+
   const handleBulkAdjustPrices = (percentage) => {
     setProducts(prevProducts =>
       prevProducts.map(p => {
@@ -115,6 +125,58 @@ export default function App() {
     setProducts(productsData.map(p => ({ ...p, inventory: 100 })));
     setCategories(defaultCategories);
   };
+
+  // Listen for storage events (syncs across tabs when Admin panel updates localStorage)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'ss_orders') {
+        setOrders(e.newValue ? JSON.parse(e.newValue) : []);
+      }
+      if (e.key === 'ss_addresses') {
+        setAddresses(e.newValue ? JSON.parse(e.newValue) : []);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, category, price, moq, unit, description, image_url')
+        .order('id', { ascending: true });
+
+      if (error || !data?.length || !isMounted) {
+        return;
+      }
+
+      const mappedProducts = data.map((product) => ({
+        id: product.id,
+        name: product.name,
+        brand: product.description?.split(' | ')[0] || '',
+        category: product.category,
+        retailPrice: product.price,
+        wholesalePrice: product.price,
+        packSize: product.unit || '',
+        rating: 0,
+        reviewsCount: 0,
+        isMostBought: false,
+        moq: product.moq,
+        imageUrl: product.image_url || ''
+      }));
+
+      setProducts(mappedProducts);
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // --- Login / Profile Action callbacks ---
   const handleLoginSuccess = (userData) => {

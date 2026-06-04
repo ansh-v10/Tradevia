@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminPortal from './pages/AdminPortal';
 import { productsData } from './util/productsData';
+import { supabase } from './util/supabaseClient';
 
 // Default Category Images Setup
 const defaultCategoryImages = {
@@ -20,8 +21,64 @@ const defaultCategoryImages = {
 export default function AdminApp() {
   // --- Dynamic B2B Catalog and Settings States ---
   const [products, setProducts] = useState(() => productsData.map(p => ({ ...p, inventory: 100 })));
-  const [categoryImages, setCategoryImages] = useState(defaultCategoryImages);
+  const [categoryImages, setCategoryImages] = useState(() => {
+    const saved = localStorage.getItem('ss_category_images');
+    return saved ? JSON.parse(saved) : defaultCategoryImages;
+  });
   const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    localStorage.setItem('ss_category_images', JSON.stringify(categoryImages));
+  }, [categoryImages]);
+
+  // Sync across tabs/pages
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'ss_category_images') {
+        setCategoryImages(e.newValue ? JSON.parse(e.newValue) : defaultCategoryImages);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, category, price, moq, unit, description, image_url')
+        .order('id', { ascending: true });
+
+      if (error || !data?.length || !isMounted) {
+        return;
+      }
+
+      const mappedProducts = data.map((product) => ({
+        id: product.id,
+        name: product.name,
+        brand: product.description?.split(' | ')[0] || '',
+        category: product.category,
+        retailPrice: product.price,
+        wholesalePrice: product.price,
+        packSize: product.unit || '',
+        rating: 0,
+        reviewsCount: 0,
+        isMostBought: false,
+        moq: product.moq,
+        imageUrl: product.image_url || ''
+      }));
+
+      setProducts(mappedProducts);
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // --- Admin Desk Database Callbacks ---
   const handleAddProduct = (newProduct) => {
