@@ -332,7 +332,7 @@ export default function ProductDetails({
               const discountPercent = Math.round(((p.retailPrice - p.wholesalePrice) / p.retailPrice) * 100);
               return (
                 <div key={p.id} className="product-card-unit home-scroll-card">
-                  <div className="margin-overlay-badge">{margin}% Margin</div>
+                  <div className="margin-overlay-badge">{margin}% OFF</div>
                   {discountPercent > 18 && (
                     <div className="bestseller-ribbon" style={{ top: '34px' }}>Saver Deal</div>
                   )}
@@ -436,7 +436,7 @@ export default function ProductDetails({
               const cardQty = quantities[p.id] !== undefined ? quantities[p.id] : (p.moq || 10);
               return (
                 <div key={p.id} className="product-card-unit home-scroll-card">
-                  <div className="margin-overlay-badge">{margin}% Margin</div>
+                  <div className="margin-overlay-badge">{margin}% OFF</div>
                   <div className="bestseller-ribbon">Bestseller</div>
                   <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + p.id)}>
                     <img src={p.imageUrl} alt={p.name} className="product-card-img" />

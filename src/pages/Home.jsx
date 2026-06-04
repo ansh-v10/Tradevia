@@ -34,14 +34,16 @@ export default function Home({
       subtitle: "Kirana & Commercial Supply Hub",
       desc: "Get up to 25% extra profit margins by buying directly in bulk cartons. Free doorstep delivery on orders above ₹10,000.",
       badge: "DISTRIBUTOR DIRECT",
-      theme: "slide-blue"
+      theme: "slide-blue",
+      image: "distributor.jpg"
     },
     {
       title: "Save 18% GST Input Credit",
       subtitle: "100% Tax-Compliant Business Invoices",
       desc: "Get tax-compliant business invoices instantly with every purchase to claim Input Tax Credit.",
       badge: "GST BENEFIT",
-      theme: "slide-amber"
+      theme: "slide-amber",
+      image: "gst.jpg"
     },
     {
       title: "Premium Sweets & Namkeen",
@@ -152,7 +154,7 @@ export default function Home({
   return (
     <div className="home-container">
       {/* Hero Banner Slider */}
-      <section className="hero-slider-section">
+      <section className="hero-slider-section navbar-width-limiter">
         <div 
           className={`slider-viewport ${bannerSlides[activeSlide].theme}`}
           onTouchStart={handleTouchStart}
@@ -169,14 +171,25 @@ export default function Home({
             <ChevronLeftIcon size={24} />
           </button>
 
-          <div className="slide-content-wrap navbar-width-limiter">
-            <span className="slide-badge">{bannerSlides[activeSlide].badge}</span>
-            <h1 className="slide-title">{bannerSlides[activeSlide].title}</h1>
-            <h3 className="slide-subtitle">{bannerSlides[activeSlide].subtitle}</h3>
-            <p className="slide-desc">{bannerSlides[activeSlide].desc}</p>
-            <button className="slide-cta-btn" onClick={() => handleCategorySelect('More')}>
-              Explore Commercial Rates <ChevronRightIcon size={16} className="inline-chevron" />
-            </button>
+          <div className="slide-content-container">
+            <div className="slide-content-wrap">
+              <span className="slide-badge">{bannerSlides[activeSlide].badge}</span>
+              <h1 className="slide-title">{bannerSlides[activeSlide].title}</h1>
+              <h3 className="slide-subtitle">{bannerSlides[activeSlide].subtitle}</h3>
+              <p className="slide-desc">{bannerSlides[activeSlide].desc}</p>
+              <button className="slide-cta-btn" onClick={() => handleCategorySelect('More')}>
+                Explore Commercial Rates <ChevronRightIcon size={16} className="inline-chevron" />
+              </button>
+            </div>
+            {bannerSlides[activeSlide].image && (
+              <div className="slide-image-wrap">
+                <img 
+                  src={resolveImgSrc(bannerSlides[activeSlide].image)} 
+                  alt={bannerSlides[activeSlide].title} 
+                  className="slide-image" 
+                />
+              </div>
+            )}
           </div>
           
           {/* Right Arrow Button */}
@@ -241,10 +254,7 @@ export default function Home({
             const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
             return (
               <div key={product.id} className="product-card-unit home-scroll-card">
-                <div className="margin-overlay-badge">{margin}% Margin</div>
-                {product.discountPercent > 0 && (
-                  <div className="bestseller-ribbon" style={{ top: '34px' }}>{product.discountPercent}% OFF</div>
-                )}
+                <div className="margin-overlay-badge">{margin}% OFF</div>
                 <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
                   <img src={product.imageUrl} alt={product.name} className="product-card-img" />
                 </div>
@@ -382,7 +392,7 @@ export default function Home({
             const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
             return (
               <div key={product.id} className="product-card-unit home-scroll-card">
-                <div className="margin-overlay-badge">{margin}% Margin</div>
+                <div className="margin-overlay-badge">{margin}% OFF</div>
                 <div className="bestseller-ribbon">Bestseller</div>
                 <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
                   <img src={product.imageUrl} alt={product.name} className="product-card-img" />
@@ -505,7 +515,7 @@ export default function Home({
 
                 return (
                   <div key={product.id} className="product-card-unit home-scroll-card">
-                    <div className="margin-overlay-badge">{margin}% Margin</div>
+                    <div className="margin-overlay-badge">{margin}% OFF</div>
                     {discountPercent > 18 && (
                       <div className="bestseller-ribbon" style={{ top: '34px' }}>Saver Deal</div>
                     )}
