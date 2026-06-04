@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StarIcon, ChevronRightIcon, ChevronLeftIcon } from '../components/Icons';
-import { getTieredWholesalePrice } from '../util/productsData';
+import { 
+  getTieredWholesalePrice,
+  getPackMultiplier,
+  getPackContainerName
+} from '../util/productsData';
 import amul from '../assets/amul.jpg';
 
 export default function Home({ 
@@ -263,8 +267,10 @@ export default function Home({
 
                   <div className="price-actions-flex-row-blinkit">
                     <div className="price-stack">
-                      <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
-                      <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
+                      <span className="mrp-txt">MRP ₹{product.retailPrice} (₹{product.retailPrice * getPackMultiplier(product.packSize)} / {getPackContainerName(product.packSize)})</span>
+                      <span className="wholesale-deal-price" style={{ margin: 0 }}>
+                        ₹{getTieredWholesalePrice(product, qty)} <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>(₹{(getTieredWholesalePrice(product, qty) * getPackMultiplier(product.packSize)).toLocaleString('en-IN')} / {getPackContainerName(product.packSize)})</span>
+                      </span>
                     </div>
 
                     <div className="b2b-action-row-inline">
@@ -400,8 +406,10 @@ export default function Home({
 
                   <div className="price-actions-flex-row-blinkit">
                     <div className="price-stack">
-                      <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
-                      <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
+                      <span className="mrp-txt">MRP ₹{product.retailPrice} (₹{product.retailPrice * getPackMultiplier(product.packSize)} / {getPackContainerName(product.packSize)})</span>
+                      <span className="wholesale-deal-price" style={{ margin: 0 }}>
+                        ₹{getTieredWholesalePrice(product, qty)} <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>(₹{(getTieredWholesalePrice(product, qty) * getPackMultiplier(product.packSize)).toLocaleString('en-IN')} / {getPackContainerName(product.packSize)})</span>
+                      </span>
                     </div>
 
                     <div className="b2b-action-row-inline">
@@ -523,8 +531,10 @@ export default function Home({
 
                       <div className="price-actions-flex-row-blinkit">
                         <div className="price-stack">
-                          <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
-                          <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
+                          <span className="mrp-txt">MRP ₹{product.retailPrice} (₹{product.retailPrice * getPackMultiplier(product.packSize)} / {getPackContainerName(product.packSize)})</span>
+                          <span className="wholesale-deal-price" style={{ margin: 0 }}>
+                            ₹{getTieredWholesalePrice(product, qty)} <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>(₹{(getTieredWholesalePrice(product, qty) * getPackMultiplier(product.packSize)).toLocaleString('en-IN')} / {getPackContainerName(product.packSize)})</span>
+                          </span>
                         </div>
 
                         <div className="b2b-action-row-inline">

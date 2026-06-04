@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   allBrands,
-  getTieredWholesalePrice
+  getTieredWholesalePrice,
+  getPackMultiplier,
+  getPackContainerName
 } from '../util/productsData';
 import { 
   StarIcon, 
@@ -314,8 +316,10 @@ export default function Browse({
                     {/* Price Selector */}
                     <div className="price-checkout-row">
                       <div className="price-stack">
-                        <span className="wholesale-deal-price">₹{getTieredWholesalePrice(product, qty)}</span>
-                        <span className="price-gst-sub">excl. 18% GST</span>
+                        <span className="wholesale-deal-price">
+                          ₹{getTieredWholesalePrice(product, qty)} <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>(₹{(getTieredWholesalePrice(product, qty) * getPackMultiplier(product.packSize)).toLocaleString('en-IN')}/{getPackContainerName(product.packSize)})</span>
+                        </span>
+                        <span className="price-gst-sub">excl. 18% GST (MRP ₹{product.retailPrice}/unit, ₹{product.retailPrice * getPackMultiplier(product.packSize)}/{getPackContainerName(product.packSize)})</span>
                       </div>
                     </div>
 
@@ -329,21 +333,23 @@ export default function Browse({
                         ? parseInt(product.tier3Moq)
                         : baseMoq + 40;
                       const currentQty = parseInt(qty) || 0;
+                      const multiplier = getPackMultiplier(product.packSize);
+                      const container = getPackContainerName(product.packSize);
 
                       return (
                         <div className="tiered-pricing-breaks" style={{ fontSize: '11px', color: 'var(--color-text-muted)', backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', margin: '8px 0 12px', border: '1px dashed var(--color-border)' }}>
                           <div style={{ fontWeight: '700', marginBottom: '4px', color: 'var(--color-text-main)', textAlign: 'left' }}>Volume Price Breaks (ex. GST):</div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                             <span>MOQ ({baseMoq}{t2Moq - 1 > baseMoq ? ` - ${t2Moq - 1}` : ''} packs):</span>
-                            <strong style={{ color: currentQty < t2Moq ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/pack</strong>
+                            <strong style={{ color: currentQty < t2Moq ? 'var(--color-primary)' : 'inherit' }}>₹{product.wholesalePrice}/unit (₹{product.wholesalePrice * multiplier}/{container})</strong>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                             <span>Medium ({t2Moq}{t3Moq - 1 > t2Moq ? ` - ${t3Moq - 1}` : ''} packs):</span>
-                            <strong style={{ color: currentQty >= t2Moq && currentQty < t3Moq ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, t2Moq)}/pack</strong>
+                            <strong style={{ color: currentQty >= t2Moq && currentQty < t3Moq ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, t2Moq)}/unit (₹{getTieredWholesalePrice(product, t2Moq) * multiplier}/{container})</strong>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span>Bulk ({t3Moq}+ packs):</span>
-                            <strong style={{ color: currentQty >= t3Moq ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, t3Moq)}/pack</strong>
+                            <strong style={{ color: currentQty >= t3Moq ? 'var(--color-primary)' : 'inherit' }}>₹{getTieredWholesalePrice(product, t3Moq)}/unit (₹{getTieredWholesalePrice(product, t3Moq) * multiplier}/{container})</strong>
                           </div>
                         </div>
                       );

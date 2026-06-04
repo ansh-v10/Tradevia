@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTieredWholesalePrice } from '../util/productsData';
+import { 
+  getTieredWholesalePrice,
+  getPackMultiplier,
+  getPackContainerName
+} from '../util/productsData';
+
 
 export default function ProductDetails({
   products = [],
@@ -66,6 +71,9 @@ export default function ProductDetails({
   const marginPerUnit = product.retailPrice - activePrice;
   const marginPercent = Math.round((marginPerUnit / product.retailPrice) * 100);
   const totalSavings = (product.retailPrice - activePrice) * qty;
+
+  const multiplier = getPackMultiplier(product.packSize);
+  const container = getPackContainerName(product.packSize);
 
   const handleQtyChange = (val) => {
     if (val === '') {
@@ -170,10 +178,10 @@ export default function ProductDetails({
                 </span>
               </div>
               <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-success)', marginTop: '8px' }}>
-                Save ₹{marginPerUnit.toLocaleString('en-IN')} per pack
+                Save ₹{marginPerUnit.toLocaleString('en-IN')}/unit (₹{(marginPerUnit * multiplier).toLocaleString('en-IN')}/{container})
               </div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                (Standard Store MRP: ₹{product.retailPrice} | Base wholesale rate: ₹{product.wholesalePrice})
+                (Standard Store MRP: ₹{product.retailPrice}/unit (₹{product.retailPrice * multiplier}/{container}) | Base wholesale rate: ₹{product.wholesalePrice}/unit (₹{product.wholesalePrice * multiplier}/{container}))
               </div>
             </div>
           </div>
@@ -186,15 +194,15 @@ export default function ProductDetails({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: qty < t2Moq ? '700' : '400', color: qty < t2Moq ? 'var(--color-primary)' : 'var(--color-text-main)' }}>
                 <span>Base Tier ({moqVal} - {t2Moq - 1} packs):</span>
-                <span>₹{priceTier1} / pack</span>
+                <span>₹{priceTier1}/unit <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>(₹{priceTier1 * multiplier}/{container})</span></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: qty >= t2Moq && qty < t3Moq ? '700' : '400', color: qty >= t2Moq && qty < t3Moq ? 'var(--color-primary)' : 'var(--color-text-main)' }}>
                 <span>Medium Tier ({t2Moq} - {t3Moq - 1} packs):</span>
-                <span>₹{priceTier2} / pack <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 'bold' }}>(~5% Off)</span></span>
+                <span>₹{priceTier2}/unit <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>(₹{priceTier2 * multiplier}/{container})</span> <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 'bold' }}>(~5% Off)</span></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: qty >= t3Moq ? '700' : '400', color: qty >= t3Moq ? 'var(--color-primary)' : 'var(--color-text-main)' }}>
                 <span>Bulk Tier ({t3Moq}+ packs):</span>
-                <span>₹{priceTier3} / pack <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 'bold' }}>(~10% Off)</span></span>
+                <span>₹{priceTier3}/unit <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>(₹{priceTier3 * multiplier}/{container})</span> <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 'bold' }}>(~10% Off)</span></span>
               </div>
             </div>
             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', paddingTop: '8px', marginTop: '8px' }}>
@@ -350,8 +358,10 @@ export default function ProductDetails({
 
                     <div className="price-actions-flex-row-blinkit">
                       <div className="price-stack">
-                        <span className="mrp-txt">MRP ₹{p.retailPrice}</span>
-                        <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(p, cardQty)}</span>
+                        <span className="mrp-txt">MRP ₹{p.retailPrice} (₹{p.retailPrice * getPackMultiplier(p.packSize)} / {getPackContainerName(p.packSize)})</span>
+                        <span className="wholesale-deal-price" style={{ margin: 0 }}>
+                          ₹{getTieredWholesalePrice(p, cardQty)} <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>(₹{(getTieredWholesalePrice(p, cardQty) * getPackMultiplier(p.packSize)).toLocaleString('en-IN')} / {getPackContainerName(p.packSize)})</span>
+                        </span>
                       </div>
 
                       <div className="b2b-action-row-inline">
@@ -450,8 +460,10 @@ export default function ProductDetails({
 
                     <div className="price-actions-flex-row-blinkit">
                       <div className="price-stack">
-                        <span className="mrp-txt">MRP ₹{p.retailPrice}</span>
-                        <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(p, cardQty)}</span>
+                        <span className="mrp-txt">MRP ₹{p.retailPrice} (₹{p.retailPrice * getPackMultiplier(p.packSize)} / {getPackContainerName(p.packSize)})</span>
+                        <span className="wholesale-deal-price" style={{ margin: 0 }}>
+                          ₹{getTieredWholesalePrice(p, cardQty)} <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>(₹{(getTieredWholesalePrice(p, cardQty) * getPackMultiplier(p.packSize)).toLocaleString('en-IN')} / {getPackContainerName(p.packSize)})</span>
+                        </span>
                       </div>
 
                       <div className="b2b-action-row-inline">

@@ -425,3 +425,16 @@ export function getTieredWholesalePrice(product, quantity) {
   }
   return baseWholesale;
 }
+
+export function getPackMultiplier(packSizeStr) {
+  if (!packSizeStr) return 1;
+  const match = packSizeStr.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 1;
+}
+
+export function getPackContainerName(packSizeStr) {
+  if (!packSizeStr) return 'pack';
+  const firstWord = packSizeStr.split(' ')[0].toLowerCase();
+  if (firstWord === 'shrink') return 'pack';
+  return firstWord;
+}
