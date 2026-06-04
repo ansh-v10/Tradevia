@@ -322,132 +322,6 @@ export default function Home({
         </div>
       </section>
 
-      {/* Category Specific Dynamic Product Rows */}
-      {categoryProductsRows.map((cat) => {
-        const catProducts = products
-          .filter(p => p.category === cat.name)
-          .sort((a, b) => {
-            const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
-            const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
-            return isOutOfStockA - isOutOfStockB;
-          })
-          .slice(0, 8);
-
-        if (catProducts.length === 0) return null;
-
-        return (
-          <section key={cat.name} className="super-saver-section navbar-width-limiter" style={{ marginTop: '32px' }}>
-            <div className="section-header-flex">
-              <div>
-                <h2 className="section-title text-left">{cat.name}</h2>
-                <p className="section-subtitle text-left font-sm">Explore top wholesale deals in {cat.name.toLowerCase()}</p>
-              </div>
-              <button 
-                className="view-all-link-btn" 
-                onClick={() => {
-                  setSelectedCategories([cat.name]);
-                  navigate('/browse');
-                }}
-              >
-                View All →
-              </button>
-            </div>
-
-            <div className="products-horizontal-scroller">
-              {catProducts.map((product) => {
-                const margin = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
-                const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
-                const discountPercent = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
-
-                return (
-                  <div key={product.id} className="product-card-unit home-scroll-card">
-                    <div className="margin-overlay-badge">{margin}% Margin</div>
-                    {discountPercent > 18 && (
-                      <div className="bestseller-ribbon" style={{ top: '34px' }}>Saver Deal</div>
-                    )}
-                    <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
-                      <img src={product.imageUrl} alt={product.name} className="product-card-img" />
-                    </div>
-                    <div className="product-details-container">
-                      <h3 className="product-name-heading" onClick={() => navigate('/product/' + product.id)}>
-                        {product.name}
-                      </h3>
-                      
-                      <div className="divider-card" style={{ margin: '8px 0' }}></div>
-
-                      <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
-                        {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
-                          <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
-                        ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
-                          <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {product.inventory}</span>
-                        ) : (
-                          <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
-                        )}
-                      </div>
-
-                      <div className="price-actions-flex-row-blinkit">
-                        <div className="price-stack">
-                          <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
-                          <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
-                        </div>
-
-                        <div className="b2b-action-row-inline">
-                          <div className="qty-selector-container">
-                            <button 
-                              className="qty-btn"
-                              type="button"
-                              onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
-                              disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
-                            >
-                              -
-                            </button>
-                            <input 
-                              type="text" 
-                              className="qty-input"
-                              value={qty}
-                              onChange={(e) => {
-                                const valStr = e.target.value;
-                                const parsed = parseInt(valStr);
-                                handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
-                              }}
-                              onBlur={(e) => {
-                                const val = parseInt(e.target.value);
-                                const moqVal = product.moq || 10;
-                                if (isNaN(val) || val < moqVal) {
-                                  handleQuantityChange(product.id, moqVal);
-                                } else {
-                                  handleQuantityChange(product.id, val);
-                                }
-                              }}
-                            />
-                            <button 
-                              className="qty-btn"
-                              type="button"
-                              onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          <button 
-                            className="add-to-cart-b2b-btn" 
-                            onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
-                            disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
-                          >
-                            ADD
-                          </button>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
-
       {/* Featured B2B Brands */}
       <section className="brands-showcase-section navbar-width-limiter">
         <h2 className="section-title text-left">Direct Store Brands</h2>
@@ -583,6 +457,132 @@ export default function Home({
           })}
         </div>
       </section>
+
+      {/* Category Specific Dynamic Product Rows */}
+      {categoryProductsRows.map((cat) => {
+        const catProducts = products
+          .filter(p => p.category === cat.name)
+          .sort((a, b) => {
+            const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
+            const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
+            return isOutOfStockA - isOutOfStockB;
+          })
+          .slice(0, 8);
+
+        if (catProducts.length === 0) return null;
+
+        return (
+          <section key={cat.name} className="super-saver-section navbar-width-limiter" style={{ marginTop: '32px' }}>
+            <div className="section-header-flex">
+              <div>
+                <h2 className="section-title text-left">{cat.name}</h2>
+                <p className="section-subtitle text-left font-sm">Explore top wholesale deals in {cat.name.toLowerCase()}</p>
+              </div>
+              <button 
+                className="view-all-link-btn" 
+                onClick={() => {
+                  setSelectedCategories([cat.name]);
+                  navigate('/browse');
+                }}
+              >
+                View All →
+              </button>
+            </div>
+
+            <div className="products-horizontal-scroller">
+              {catProducts.map((product) => {
+                const margin = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
+                const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
+                const discountPercent = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
+
+                return (
+                  <div key={product.id} className="product-card-unit home-scroll-card">
+                    <div className="margin-overlay-badge">{margin}% Margin</div>
+                    {discountPercent > 18 && (
+                      <div className="bestseller-ribbon" style={{ top: '34px' }}>Saver Deal</div>
+                    )}
+                    <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
+                      <img src={product.imageUrl} alt={product.name} className="product-card-img" />
+                    </div>
+                    <div className="product-details-container">
+                      <h3 className="product-name-heading" onClick={() => navigate('/product/' + product.id)}>
+                        {product.name}
+                      </h3>
+                      
+                      <div className="divider-card" style={{ margin: '8px 0' }}></div>
+
+                      <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
+                        {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
+                          <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
+                        ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
+                          <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {product.inventory}</span>
+                        ) : (
+                          <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
+                        )}
+                      </div>
+
+                      <div className="price-actions-flex-row-blinkit">
+                        <div className="price-stack">
+                          <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
+                          <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
+                        </div>
+
+                        <div className="b2b-action-row-inline">
+                          <div className="qty-selector-container">
+                            <button 
+                              className="qty-btn"
+                              type="button"
+                              onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
+                              disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
+                            >
+                              -
+                            </button>
+                            <input 
+                              type="text" 
+                              className="qty-input"
+                              value={qty}
+                              onChange={(e) => {
+                                const valStr = e.target.value;
+                                const parsed = parseInt(valStr);
+                                handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                              }}
+                              onBlur={(e) => {
+                                const val = parseInt(e.target.value);
+                                const moqVal = product.moq || 10;
+                                if (isNaN(val) || val < moqVal) {
+                                  handleQuantityChange(product.id, moqVal);
+                                } else {
+                                  handleQuantityChange(product.id, val);
+                                }
+                              }}
+                            />
+                            <button 
+                              className="qty-btn"
+                              type="button"
+                              onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <button 
+                            className="add-to-cart-b2b-btn" 
+                            onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
+                            disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
+                          >
+                            ADD
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
 
       {/* Info Banners */}
       <section className="b2b-info-banners navbar-width-limiter">
