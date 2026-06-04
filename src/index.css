@@ -986,28 +986,56 @@ h1, h2, h3, h4, h5, h6 {
 .hero-slider-section {
   background-color: transparent;
   overflow: hidden;
-  margin-top: 24px;
+  width: 100%;
+  margin: 0;
 }
 
 .slider-viewport {
-  min-height: 360px;
+  height: 450px;
   display: flex;
   align-items: center;
-  padding: 40px 80px;
   transition: var(--transition-smooth);
   position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
   width: 100%;
+  overflow: hidden;
 }
 
-.slide-content-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.slide-bg-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  gap: 40px;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.slide-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.slide-left-gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0) 80%);
+  z-index: 2;
+}
+
+.slide-bottom-fade-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 160px;
+  background: linear-gradient(to bottom, transparent 0%, var(--color-bg-main) 100%);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* Visual color themes for sliders */
@@ -1024,64 +1052,49 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .slide-content-wrap {
-  flex: 1;
-  text-align: left;
+  position: relative;
+  z-index: 3;
   color: white;
-}
-
-.slide-image-wrap {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 440px;
-  height: 250px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.slide-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.slide-image:hover {
-  transform: scale(1.03);
-}
-
-@media (max-width: 992px) {
-  .slide-image-wrap {
-    max-width: 320px;
-    height: 200px;
-  }
+  padding-bottom: 60px;
+  text-align: left;
 }
 
 @media (max-width: 768px) {
   .hero-slider-section {
-    margin-top: 12px;
+    margin-top: 0;
   }
   .slider-viewport {
-    padding: 30px 40px;
-    min-height: auto;
+    height: 300px;
   }
-  .slide-content-container {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
+  .slide-bottom-fade-overlay {
+    height: 100px;
+  }
+  .slide-left-gradient-overlay {
+    background: rgba(0, 0, 0, 0.55);
   }
   .slide-content-wrap {
-    text-align: center;
-  }
-  .slide-image-wrap {
-    max-width: 100%;
-    height: 160px;
+    padding-bottom: 30px;
+    padding-left: 24px;
+    padding-right: 24px;
+    text-align: left;
   }
   .slide-title {
-    font-size: 32px;
+    font-size: 26px;
+    line-height: 1.2;
+  }
+  .slide-subtitle {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .slide-desc {
+    font-size: 13px;
+    max-width: 100%;
+    margin-bottom: 16px;
+  }
+  .slide-cta-btn {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
 

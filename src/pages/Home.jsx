@@ -154,13 +154,30 @@ export default function Home({
   return (
     <div className="home-container">
       {/* Hero Banner Slider */}
-      <section className="hero-slider-section navbar-width-limiter">
+      <section className="hero-slider-section">
         <div 
-          className={`slider-viewport ${bannerSlides[activeSlide].theme}`}
+          className="slider-viewport"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Background Image / Gradient */}
+          {bannerSlides[activeSlide].image ? (
+            <div className="slide-bg-wrap">
+              <img 
+                src={resolveImgSrc(bannerSlides[activeSlide].image)} 
+                alt="" 
+                className="slide-bg-image" 
+              />
+              <div className="slide-left-gradient-overlay"></div>
+            </div>
+          ) : (
+            <div className={`slide-bg-wrap ${bannerSlides[activeSlide].theme}`}></div>
+          )}
+
+          {/* Bottom Fade Gradient (Amazon-style) */}
+          <div className="slide-bottom-fade-overlay"></div>
+
           {/* Left Arrow Button */}
           <button 
             type="button" 
@@ -171,25 +188,14 @@ export default function Home({
             <ChevronLeftIcon size={24} />
           </button>
 
-          <div className="slide-content-container">
-            <div className="slide-content-wrap">
-              <span className="slide-badge">{bannerSlides[activeSlide].badge}</span>
-              <h1 className="slide-title">{bannerSlides[activeSlide].title}</h1>
-              <h3 className="slide-subtitle">{bannerSlides[activeSlide].subtitle}</h3>
-              <p className="slide-desc">{bannerSlides[activeSlide].desc}</p>
-              <button className="slide-cta-btn" onClick={() => handleCategorySelect('More')}>
-                Explore Commercial Rates <ChevronRightIcon size={16} className="inline-chevron" />
-              </button>
-            </div>
-            {bannerSlides[activeSlide].image && (
-              <div className="slide-image-wrap">
-                <img 
-                  src={resolveImgSrc(bannerSlides[activeSlide].image)} 
-                  alt={bannerSlides[activeSlide].title} 
-                  className="slide-image" 
-                />
-              </div>
-            )}
+          <div className="slide-content-wrap navbar-width-limiter">
+            <span className="slide-badge">{bannerSlides[activeSlide].badge}</span>
+            <h1 className="slide-title">{bannerSlides[activeSlide].title}</h1>
+            <h3 className="slide-subtitle">{bannerSlides[activeSlide].subtitle}</h3>
+            <p className="slide-desc">{bannerSlides[activeSlide].desc}</p>
+            <button className="slide-cta-btn" onClick={() => handleCategorySelect('More')}>
+              Explore Commercial Rates <ChevronRightIcon size={16} className="inline-chevron" />
+            </button>
           </div>
           
           {/* Right Arrow Button */}
