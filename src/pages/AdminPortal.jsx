@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../util/supabaseClient';
 
 export default function AdminPortal({ 
   products, 
@@ -18,6 +19,7 @@ export default function AdminPortal({
   // Admin Login/Signup Authentication States
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   
   const [registeredAdmins, setRegisteredAdmins] = useState(() => {
     const saved = localStorage.getItem('sanjay_sales_admins');
@@ -112,26 +114,79 @@ export default function AdminPortal({
   const [authError, setAuthError] = useState('');
   const [authSuccess, setAuthSuccess] = useState('');
 
-  const handleAuthSubmit = (e) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkAdminAccess = async (session) => {
+      if (!session?.user?.email) {
+        if (isMounted) {
+          setIsAdminAuthenticated(false);
+        }
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('is_admin');
+
+      if (!isMounted) return;
+
+      if (error || !data) {
+        await supabase.auth.signOut();
+        setIsAdminAuthenticated(false);
+        setAuthError('This account is not whitelisted for admin access.');
+        return;
+      }
+
+      setIsAdminAuthenticated(true);
+      setAuthError('');
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) return;
+      checkAdminAccess(data.session);
+      setIsAuthChecking(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      checkAdminAccess(session);
+      setIsAuthChecking(false);
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
     setAuthSuccess('');
 
     if (authMode === 'login') {
-      const match = registeredAdmins.find(
-        a => a.id.toLowerCase() === authId.trim().toLowerCase() && a.password === authPassword
-      );
-      if (match) {
-        setIsAdminAuthenticated(true);
-        setActionSuccess('Login Successful! Welcome to Admin Panel.');
-        setAuthId('');
-        setAuthPassword('');
-      } else {
-        setAuthError('Invalid Admin ID or Password. Please try again.');
+      const { error } = await supabase.auth.signInWithPassword({
+        email: authId.trim(),
+        password: authPassword
+      });
+
+      if (error) {
+        setAuthError(error.message);
+        return;
       }
+
+      const { data, error: adminError } = await supabase.rpc('is_admin');
+      if (adminError || !data) {
+        await supabase.auth.signOut();
+        setAuthError('This account is signed in, but it is not allowed to edit the catalog.');
+        return;
+      }
+
+      setIsAdminAuthenticated(true);
+      setActionSuccess('Login successful. Welcome to the admin panel.');
+      setAuthId('');
+      setAuthPassword('');
     } else {
       if (!authId.trim() || !authPassword) {
-        setAuthError('Please enter a valid Admin ID and Password.');
+        setAuthError('Please enter a valid email and password.');
         return;
       }
       const normalizedKey = authSecretKey.trim().toUpperCase();
@@ -139,15 +194,35 @@ export default function AdminPortal({
         setAuthError('Unauthorized registration! Invalid Admin Secret Security Code.');
         return;
       }
-      const exists = registeredAdmins.some(
-        a => a.id.toLowerCase() === authId.trim().toLowerCase()
-      );
-      if (exists) {
-        setAuthError('Admin ID already registered. Try logging in.');
+      const { data, error } = await supabase.auth.signUp({
+        email: authId.trim(),
+        password: authPassword
+      });
+
+      if (error) {
+        setAuthError(error.message);
         return;
       }
-      setRegisteredAdmins(prev => [...prev, { id: authId.trim(), password: authPassword }]);
-      setAuthSuccess('Admin Account Registered Successfully! You can now log in.');
+
+      const hasSession = Boolean(data.session);
+      if (!hasSession) {
+        setAuthSuccess('Admin account created. If email confirmation is enabled, confirm the email and then log in.');
+        setAuthMode('login');
+        setAuthId('');
+        setAuthPassword('');
+        setAuthSecretKey('');
+        return;
+      }
+
+      const { data: isAdminAllowed } = await supabase.rpc('is_admin');
+      if (!isAdminAllowed) {
+        await supabase.auth.signOut();
+        setAuthError('Account created, but this email is not whitelisted in the admins table.');
+        return;
+      }
+
+      setIsAdminAuthenticated(true);
+      setAuthSuccess('Admin Account Registered Successfully!');
       setAuthMode('login');
       setAuthSecretKey('');
       setAuthPassword('');
@@ -291,7 +366,7 @@ export default function AdminPortal({
   };
 
   // Submit product additions/edits
-  const handleProductSubmit = (e) => {
+  const handleProductSubmit = async (e) => {
     e.preventDefault();
     const tempErrors = {};
     if (!name) tempErrors.name = "Product name is required";
@@ -351,13 +426,19 @@ export default function AdminPortal({
       reviewsCount: editingId ? (products.find(p => p.id === editingId)?.reviewsCount || 100) : 100
     };
 
-    if (editingId) {
-      onUpdateProduct({ ...productPayload, id: editingId });
-      setActionSuccess("Product updated in wholesale catalog successfully!");
-      setEditingId(null);
-    } else {
-      onAddProduct(productPayload);
-      setActionSuccess("New product added to catalog successfully!");
+    try {
+      if (editingId) {
+        await onUpdateProduct({ ...productPayload, id: editingId });
+        setActionSuccess("Product updated in wholesale catalog successfully!");
+        setEditingId(null);
+      } else {
+        await onAddProduct(productPayload);
+        setActionSuccess("New product added to catalog successfully!");
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || 'Failed to save product to Supabase.');
+      return;
     }
 
     // Clear form
@@ -380,11 +461,16 @@ export default function AdminPortal({
     setTimeout(() => setActionSuccess(''), 2500);
   };
 
-  const handleDeleteClick = (productId, name) => {
+  const handleDeleteClick = async (productId, name) => {
     if (window.confirm(`Are you sure you want to delete "${name}" from the wholesale catalog?`)) {
-      onDeleteProduct(productId);
-      setActionSuccess("Product deleted successfully!");
-      setTimeout(() => setActionSuccess(''), 2000);
+      try {
+        await onDeleteProduct(productId);
+        setActionSuccess("Product deleted successfully!");
+        setTimeout(() => setActionSuccess(''), 2000);
+      } catch (error) {
+        console.error(error);
+        alert(error?.message || 'Failed to delete product from Supabase.');
+      }
     }
   };
 
@@ -450,23 +536,33 @@ export default function AdminPortal({
     }
   };
 
-  const handleBulkRateSubmit = (e) => {
+  const handleBulkRateSubmit = async (e) => {
     e.preventDefault();
     const percent = parseFloat(priceAdjPercent);
     if (isNaN(percent) || percent === 0) {
       alert("Please enter a valid non-zero percentage adjustment.");
       return;
     }
-    onBulkAdjustPrices(percent);
-    setBulkSuccess(`Wholesale rates adjusted globally by ${percent > 0 ? '+' : ''}${percent}%!`);
-    setTimeout(() => setBulkSuccess(''), 3000);
+    try {
+      await onBulkAdjustPrices(percent);
+      setBulkSuccess(`Wholesale rates adjusted globally by ${percent > 0 ? '+' : ''}${percent}%!`);
+      setTimeout(() => setBulkSuccess(''), 3000);
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || 'Failed to update wholesale rates in Supabase.');
+    }
   };
 
-  const handleResetCatalogSubmit = () => {
+  const handleResetCatalogSubmit = async () => {
     if (window.confirm("This will revert all product listings and category images to default distributor database. Continue?")) {
-      onResetCatalog();
-      setBulkSuccess("Wholesale database restored to factory settings!");
-      setTimeout(() => setBulkSuccess(''), 3000);
+      try {
+        await onResetCatalog();
+        setBulkSuccess("Wholesale database restored to factory settings!");
+        setTimeout(() => setBulkSuccess(''), 3000);
+      } catch (error) {
+        console.error(error);
+        alert(error?.message || 'Failed to reset the catalog in Supabase.');
+      }
     }
   };
 
@@ -475,6 +571,30 @@ export default function AdminPortal({
     const q = adminSearch.toLowerCase();
     return p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
   });
+
+  if (isAuthChecking) {
+    return (
+      <div className="admin-login-wrapper" style={{
+        minHeight: '80vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        backgroundColor: 'var(--color-bg-main)'
+      }}>
+        <div style={{
+          padding: '24px 28px',
+          borderRadius: '14px',
+          border: '1px solid var(--color-border)',
+          backgroundColor: 'var(--color-bg-card)',
+          color: 'var(--color-text-main)',
+          fontWeight: 700
+        }}>
+          Checking admin session...
+        </div>
+      </div>
+    );
+  }
 
   if (!isAdminAuthenticated) {
     return (
@@ -554,12 +674,12 @@ export default function AdminPortal({
 
             <div>
               <label htmlFor="admin-auth-id" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--color-text-main)', marginBottom: '6px' }}>
-                Admin ID / Username
+                Admin Email
               </label>
               <input 
                 id="admin-auth-id"
                 type="text" 
-                placeholder="e.g. admin"
+                placeholder="e.g. admin@example.com"
                 value={authId}
                 onChange={(e) => setAuthId(e.target.value)}
                 required
@@ -749,7 +869,8 @@ export default function AdminPortal({
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
             className="secondary-b2b-btn" 
-            onClick={() => {
+            onClick={async () => {
+              await supabase.auth.signOut();
               setIsAdminAuthenticated(false);
               setActionSuccess('Logged out successfully.');
             }}

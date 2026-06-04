@@ -1,7 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import AdminPortal from './pages/AdminPortal';
-import { productsData } from './util/productsData';
+import { productsData, allCategories } from './util/productsData';
 import { supabase } from './util/supabaseClient';
+
+const defaultCategories = allCategories.map((name) => ({
+  name,
+  imageUrl: '',
+  showOnHome: true,
+  showProductsOnHome: false
+}));
+
+const toProductPayload = (product) => ({
+  name: product.name,
+  category: product.category,
+  price: Number(product.wholesalePrice ?? product.retailPrice ?? 0),
+  moq: Number(product.moq ?? 10),
+  unit: product.packSize || '',
+  description: JSON.stringify({
+    brand: product.brand || '',
+    retailPrice: Number(product.retailPrice ?? product.wholesalePrice ?? 0),
+    wholesalePrice: Number(product.wholesalePrice ?? product.retailPrice ?? 0),
+    packSize: product.packSize || '',
+    rating: Number(product.rating ?? 0),
+    reviewsCount: Number(product.reviewsCount ?? 0),
+    isMostBought: Boolean(product.isMostBought)
+  }),
+  image_url: product.imageUrl || ''
+});
+
+const fromProductRow = (product) => {
+  let parsed = {};
+  try {
+    parsed = product.description ? JSON.parse(product.description) : {};
+  } catch (e) {
+    parsed = {};
+  }
+
+  const fallbackBrand = product.description?.split(' | ')[0] || '';
+
+  return {
+    id: product.id,
+    name: product.name,
+    brand: parsed.brand || fallbackBrand,
+    category: product.category,
+    retailPrice: parsed.retailPrice ?? product.price,
+    wholesalePrice: parsed.wholesalePrice ?? product.price,
+    packSize: parsed.packSize || product.unit || '',
+    rating: parsed.rating ?? 0,
+    reviewsCount: parsed.reviewsCount ?? 0,
+    isMostBought: parsed.isMostBought ?? false,
+    moq: product.moq,
+    inventory: 100,
+    imageUrl: product.image_url || ''
+  };
+};
 
 // Default Category Images Setup
 const defaultCategoryImages = {
@@ -21,6 +73,7 @@ const defaultCategoryImages = {
 export default function AdminApp() {
   // --- Dynamic B2B Catalog and Settings States ---
   const [products, setProducts] = useState(() => productsData.map(p => ({ ...p, inventory: 100 })));
+  const [categories, setCategories] = useState(() => defaultCategories);
   const [categoryImages, setCategoryImages] = useState(() => {
     const saved = localStorage.getItem('ss_category_images');
     return saved ? JSON.parse(saved) : defaultCategoryImages;
@@ -52,25 +105,13 @@ export default function AdminApp() {
         .order('id', { ascending: true });
 
       if (error || !data?.length || !isMounted) {
+        if (isMounted) {
+          setProducts(productsData.map((p) => ({ ...p, inventory: 100 })));
+        }
         return;
       }
 
-      const mappedProducts = data.map((product) => ({
-        id: product.id,
-        name: product.name,
-        brand: product.description?.split(' | ')[0] || '',
-        category: product.category,
-        retailPrice: product.price,
-        wholesalePrice: product.price,
-        packSize: product.unit || '',
-        rating: 0,
-        reviewsCount: 0,
-        isMostBought: false,
-        moq: product.moq,
-        imageUrl: product.image_url || ''
-      }));
-
-      setProducts(mappedProducts);
+      setProducts(data.map(fromProductRow));
     };
 
     loadProducts();
@@ -81,42 +122,88 @@ export default function AdminApp() {
   }, []);
 
   // --- Admin Desk Database Callbacks ---
-  const handleAddProduct = (newProduct) => {
-    const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-    const productWithId = { ...newProduct, id: nextId };
-    setProducts(prevProducts => [...prevProducts, productWithId]);
+  const refreshProducts = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, category, price, moq, unit, description, image_url')
+      .order('id', { ascending: true });
+
+    if (!error && data?.length) {
+      setProducts(data.map(fromProductRow));
+    }
   };
 
-  const handleUpdateProduct = (updatedProduct) => {
-    setProducts(prevProducts =>
-      prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p)
-    );
+  const handleAddProduct = async (newProduct) => {
+    const { error } = await supabase.from('products').insert(toProductPayload(newProduct));
+    if (error) {
+      throw error;
+    }
+    await refreshProducts();
   };
 
-  const handleDeleteProduct = (productId) => {
-    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+  const handleUpdateProduct = async (updatedProduct) => {
+    const { error } = await supabase
+      .from('products')
+      .update(toProductPayload(updatedProduct))
+      .eq('id', updatedProduct.id);
+
+    if (error) {
+      throw error;
+    }
+
+    await refreshProducts();
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    const { error } = await supabase.from('products').delete().eq('id', productId);
+    if (error) {
+      throw error;
+    }
+    await refreshProducts();
   };
 
   const handleUpdateCategoryImages = (updatedImagesMap) => {
     setCategoryImages(updatedImagesMap);
   };
 
-  const handleBulkAdjustPrices = (percentage) => {
-    setProducts(prevProducts =>
-      prevProducts.map(p => {
-        const factor = 1 + (percentage / 100);
-        let newWholesale = Math.round(p.wholesalePrice * factor * 10) / 10;
-        newWholesale = Math.max(1, Math.min(newWholesale, p.retailPrice - 1));
-        return {
-          ...p,
-          wholesalePrice: Math.round(newWholesale)
-        };
-      })
-    );
+  const handleBulkAdjustPrices = async (percentage) => {
+    const factor = 1 + (percentage / 100);
+    const updatedProducts = products.map((p) => {
+      let newWholesale = Math.round(p.wholesalePrice * factor * 10) / 10;
+      newWholesale = Math.max(1, Math.min(newWholesale, p.retailPrice - 1));
+      return {
+        ...p,
+        wholesalePrice: Math.round(newWholesale)
+      };
+    });
+
+    for (const product of updatedProducts) {
+      const { error } = await supabase
+        .from('products')
+        .update(toProductPayload(product))
+        .eq('id', product.id);
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    await refreshProducts();
   };
 
-  const handleResetCatalog = () => {
-    setProducts(productsData.map(p => ({ ...p, inventory: 100 })));
+  const handleResetCatalog = async () => {
+    const { error: deleteError } = await supabase.from('products').delete().not('id', 'is', null);
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    const rows = productsData.map(toProductPayload);
+    const { error: insertError } = await supabase.from('products').insert(rows);
+    if (insertError) {
+      throw insertError;
+    }
+
+        setCategories(defaultCategories);
     setCategoryImages(defaultCategoryImages);
   };
 
@@ -129,11 +216,12 @@ export default function AdminApp() {
     <div className="app-main-flex-wrapper" style={{ padding: '24px 0' }}>
       <AdminPortal 
         products={products}
-        categoryImages={categoryImages}
+        categories={categories}
         orders={orders}
         onAddProduct={handleAddProduct}
         onUpdateProduct={handleUpdateProduct}
         onDeleteProduct={handleDeleteProduct}
+        onUpdateCategories={setCategories}
         onUpdateCategoryImages={handleUpdateCategoryImages}
         onBulkAdjustPrices={handleBulkAdjustPrices}
         onResetCatalog={handleResetCatalog}

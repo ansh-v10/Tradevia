@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CloseIcon } from './Icons';
+import { supabase } from '../util/supabaseClient';
 
 export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login', checkoutPrompt = false }) {
   const [mode, setMode] = useState(initialMode); 
@@ -81,41 +82,45 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
     e.preventDefault();
     if (!validateForm()) return;
 
-    if (mode === 'signup') {
-      const userData = {
-        name: fullName,
-        businessName,
-        email: email || '',
-        mobile: mobileNumber ? mobileNumber.replace(/\s/g, '') : '',
-      };
-      
-      setSuccessMsg("Business Account registered successfully!");
-      setTimeout(() => {
-        onSuccess(userData);
-        onClose();
-      }, 1200);
+    (async () => {
+      try {
+        if (mode === 'signup') {
+          const emailToUse = email || `${mobileNumber ? `user+${mobileNumber}@sanjaysales.local` : ''}`;
+          const { data, error } = await supabase.auth.signUp({ email: emailToUse, password });
+          if (error) throw error;
 
-    } else {
-      const cleanIdentifier = loginIdentifier.replace(/\s/g, '');
-      const isMobile = /^\d+$/.test(cleanIdentifier);
-      
-      const demoBusinessName = isMobile 
-        ? "Retailer Depot (" + cleanIdentifier.slice(-4) + ")"
-        : cleanIdentifier.split('@')[0].toUpperCase() + " Retailers";
+          // create profile entry if signed up immediately
+          if (data?.user) {
+            await supabase.from('profiles').upsert({ id: data.user.id, email: emailToUse, name: fullName, business_name: businessName, mobile: mobileNumber });
+            const profile = { id: data.user.id, email: emailToUse, name: fullName, businessName, mobile: mobileNumber };
+            setSuccessMsg('Account created — logged in.');
+            setTimeout(() => { onSuccess(profile); onClose(); }, 800);
+          } else {
+            setSuccessMsg('Account created. Confirm email if required.');
+            setTimeout(() => { onClose(); }, 1200);
+          }
+        } else {
+          // login
+          const identifier = loginIdentifier.trim();
+          const isEmail = identifier.includes('@');
+          const signInEmail = isEmail ? identifier : `store+${identifier}@sanjaysales.local`;
+          const { data, error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
+          if (error) throw error;
 
-      const userData = {
-        name: fullName || (isMobile ? "Store Owner" : cleanIdentifier.split('@')[0].split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
-        businessName: businessName || demoBusinessName,
-        email: isMobile ? `store-${cleanIdentifier.slice(-4)}@sanjaysales.com` : cleanIdentifier,
-        mobile: isMobile ? cleanIdentifier : "9988776655",
-      };
-
-      setSuccessMsg("Logged in successfully!");
-      setTimeout(() => {
-        onSuccess(userData);
-        onClose();
-      }, 1000);
-    }
+          const user = data.user;
+          // fetch profile
+          const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single().maybeSingle();
+          const profile = profileData || { id: user.id, email: user.email };
+          setSuccessMsg('Logged in successfully!');
+          setTimeout(() => { onSuccess({ name: profile.name || '', businessName: profile.business_name || '', email: profile.email || user.email, mobile: profile.mobile || '' }); onClose(); }, 800);
+        }
+      } catch (err) {
+        console.error(err);
+        setErrors({ form: err.message });
+      }
+    })();
+    
+    return;
   };
 
   return (

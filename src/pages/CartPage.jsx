@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TrashIcon, CartIcon, CloseIcon } from '../components/Icons';
+import { supabase } from '../util/supabaseClient';
 import { getTieredWholesalePrice } from '../util/productsData';
 
 export default function CartPage({ 
@@ -112,8 +113,33 @@ export default function CartPage({
       address: chosenAddress
     };
 
-    onAddOrder(orderPayload);
-    setCheckoutStep('success');
+    (async () => {
+      try {
+        // create draft order in Supabase with status 'pending'
+        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: (await supabase.auth.getUser()).data.user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, items: orderPayload.items, address: orderPayload.address }]).select().single();
+        if (error) throw error;
+
+        // call serverless endpoint to create Stripe Checkout session
+        const resp = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: generatedId })
+        });
+
+        const js = await resp.json();
+        if (js?.url) {
+          window.location.href = js.url;
+          return;
+        }
+
+        // fallback: mark order locally
+        onAddOrder(orderPayload);
+        setCheckoutStep('success');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to initiate payment: ' + (err.message || ''));
+      }
+    })();
   };
 
   const handleSaveNewAddress = (e) => {

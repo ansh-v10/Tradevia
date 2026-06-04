@@ -154,16 +154,60 @@ export default function App() {
       }
 
       const mappedProducts = data.map((product) => ({
+        ...product,
         id: product.id,
         name: product.name,
-        brand: product.description?.split(' | ')[0] || '',
+        brand: (() => {
+          if (!product.description) return '';
+          try {
+            const parsed = JSON.parse(product.description);
+            return parsed.brand || '';
+          } catch (e) {
+            return product.description?.split(' | ')[0] || '';
+          }
+        })(),
         category: product.category,
-        retailPrice: product.price,
-        wholesalePrice: product.price,
+        retailPrice: (() => {
+          try {
+            const parsed = JSON.parse(product.description || '{}');
+            return parsed.retailPrice ?? product.price;
+          } catch (e) {
+            return product.price;
+          }
+        })(),
+        wholesalePrice: (() => {
+          try {
+            const parsed = JSON.parse(product.description || '{}');
+            return parsed.wholesalePrice ?? product.price;
+          } catch (e) {
+            return product.price;
+          }
+        })(),
         packSize: product.unit || '',
-        rating: 0,
-        reviewsCount: 0,
-        isMostBought: false,
+        rating: (() => {
+          try {
+            const parsed = JSON.parse(product.description || '{}');
+            return parsed.rating ?? 0;
+          } catch (e) {
+            return 0;
+          }
+        })(),
+        reviewsCount: (() => {
+          try {
+            const parsed = JSON.parse(product.description || '{}');
+            return parsed.reviewsCount ?? 0;
+          } catch (e) {
+            return 0;
+          }
+        })(),
+        isMostBought: (() => {
+          try {
+            const parsed = JSON.parse(product.description || '{}');
+            return parsed.isMostBought ?? false;
+          } catch (e) {
+            return false;
+          }
+        })(),
         moq: product.moq,
         imageUrl: product.image_url || ''
       }));
