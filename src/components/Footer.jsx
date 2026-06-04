@@ -9,10 +9,10 @@ export default function Footer() {
           
           {/* Logo & Description */}
           <div className="footer-col brand-info">
-            <span className="footer-logo">Sanjay<span className="logo-accent">Sales</span></span>
+            <span className="footer-logo">Trade<span className="logo-accent">via</span></span>
             <span className="logo-subtext">Commercial B2B Partner</span>
             <p className="brand-description">
-              Sanjay Sales is India's leading digital B2B wholesale platform. We supply kirana stores, department stores, caterers, offices, and small businesses with premium FMCG, daily essentials, and sweets at direct distributor prices.
+              Tradevia is India's leading digital B2B wholesale platform. We supply kirana stores, department stores, caterers, offices, and small businesses with premium FMCG, daily essentials, and sweets at direct distributor prices.
             </p>
             <div className="gst-trust-badge">
               <span className="badge-check">✓</span>
@@ -37,7 +37,7 @@ export default function Footer() {
           <div className="footer-col">
             <h4>B2B Cooperation</h4>
             <ul className="footer-links">
-              <li><a href="#about" onClick={(e) => e.preventDefault()}>About Sanjay Sales</a></li>
+              <li><a href="#about" onClick={(e) => e.preventDefault()}>About Tradevia</a></li>
               <li><a href="#bulk" onClick={(e) => e.preventDefault()}>Bulk Order Agreements</a></li>
               <li><a href="#gst" onClick={(e) => e.preventDefault()}>How to claim GST Input Tax</a></li>
               <li><a href="#partner" onClick={(e) => e.preventDefault()}>Become a Supply Partner</a></li>
@@ -50,10 +50,10 @@ export default function Footer() {
           <div className="footer-col contact-info">
             <h4>Corporate Desk</h4>
             <p className="contact-item">
-              <strong>Address:</strong> Sanjay Sales, Sabzi mandi, Jhajjar, Haryana Pincode: 124103
+              <strong>Address:</strong> Tradevia, Sabzi mandi, Jhajjar, Haryana Pincode: 124103
             </p>
             <p className="contact-item">
-              <strong>Email:</strong> wholesale@sanjaysales.com
+              <strong>Email:</strong> wholesale@tradevia.com
             </p>
             <p className="contact-item">
               <strong>Phone:</strong> +917496865205
@@ -74,7 +74,7 @@ export default function Footer() {
 
         <div className="footer-bottom-flex">
           <div className="copyright-text">
-            © 2026 Sanjay Sales Private Limited. All business names, logos and trademarks are properties of their respective owners.
+            © 2026 Tradevia Private Limited. All business names, logos and trademarks are properties of their respective owners.
           </div>
           <div className="payment-options">
             <span className="payment-label">Accepted Wholesale Payments:</span>

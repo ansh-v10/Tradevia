@@ -683,7 +683,7 @@ export default function CartPage({
             </div>
             
             <p className="tax-compliance-text">
-              * This is a simulated B2B tax invoice compliance sheet. Goods will be dispatched from our nearest Sanjay Sales Wholesale Hub within 24 business hours.
+              * This is a simulated B2B tax invoice compliance sheet. Goods will be dispatched from our nearest Tradevia Wholesale Hub within 24 business hours.
             </p>
           </div>
 

@@ -426,7 +426,7 @@ export default function ProductDetails({
           <div className="section-header-flex">
             <div>
               <h2 className="section-title text-left" style={{ fontSize: '22px', fontWeight: '800' }}>Kirana Bestsellers</h2>
-              <p className="section-subtitle text-left">Top-selling wholesale products in Sanjay Sales</p>
+              <p className="section-subtitle text-left">Top-selling wholesale products in Tradevia</p>
             </div>
           </div>
 

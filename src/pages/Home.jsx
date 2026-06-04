@@ -391,7 +391,7 @@ export default function Home({
       <section className="most-bought-section navbar-width-limiter">
         <div className="section-header-flex">
           <div>
-            <h2 className="section-title text-left">Bestsellers in Sanjay Sales</h2>
+            <h2 className="section-title text-left">Bestsellers in Tradevia</h2>
             <p className="section-subtitle text-left">Products with the highest commercial order frequency</p>
           </div>
           <button className="view-all-link-btn" onClick={() => handleCategorySelect('More')}>

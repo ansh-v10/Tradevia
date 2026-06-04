@@ -201,12 +201,12 @@ export default function Navbar({
         <div className="navbar-width-limiter top-bar-flex">
           <div className="top-bar-left">
             <span className="b2b-badge">WHOLESALE B2B</span>
-            <span className="text-muted text-sm">GST invoice benefits on all bulk purchases. Welcome to Sanjay Sales!</span>
+            <span className="text-muted text-sm">GST invoice benefits on all bulk purchases. Welcome to Tradevia!</span>
           </div>
           <div className="top-bar-right">
             <a href="tel:+917496865205" className="top-link" style={{ fontWeight: '700', color: 'var(--color-accent)' }}>📞 Order on Call: +917496865205</a>
             <span className="divider">|</span>
-            <a href="#help" onClick={(e) => { e.preventDefault(); alert("Customer Support:\nPhone: +917496865205\nEmail: wholesale@sanjaysales.com\nHours: Mon - Sat: 9:00 AM - 5:00 PM"); }} className="top-link">Support</a>
+            <a href="#help" onClick={(e) => { e.preventDefault(); alert("Customer Support:\nPhone: +917496865205\nEmail: wholesale@tradevia.com\nHours: Mon - Sat: 9:00 AM - 5:00 PM"); }} className="top-link">Support</a>
             <span className="divider">|</span>
             <a href="#store" onClick={(e) => { e.preventDefault(); alert("Operational in Jhajjar, Delhi only. Operational in other cities soon."); }} className="top-link">Wholesale Hubs</a>
           </div>
@@ -219,7 +219,7 @@ export default function Navbar({
           
           {/* Logo */}
           <div className="brand-logo-container" onClick={handleLogoClick}>
-            <span className="logo-text">Sanjay<span className="logo-accent">Sales</span></span>
+            <span className="logo-text">Trade<span className="logo-accent">via</span></span>
             <span className="logo-subtext">B2B Wholesale</span>
           </div>
 

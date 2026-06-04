@@ -628,7 +628,7 @@ export default function AdminPortal({
               display: 'inline-block',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}>
-              SANJAY SALES
+              TRADEVIA
             </span>
             <h3 style={{ marginTop: '16px', fontSize: '22px', fontWeight: '800', color: 'var(--color-text-main)' }}>
               Admin Control Panel
@@ -863,7 +863,7 @@ export default function AdminPortal({
     <div className="admin-page-wrapper navbar-width-limiter text-left">
       <div className="admin-header-row" style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 className="page-main-title">Sanjay Sales Admin Control Desk</h2>
+          <h2 className="page-main-title">Tradevia Admin Control Desk</h2>
           <p className="page-main-subtitle">Commercial panel to manage inventory products, adjust wholesale prices, and configure frontpage layouts.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -1522,7 +1522,7 @@ export default function AdminPortal({
           {/* Rate adjuster */}
           <div className="summary-card">
             <h3>Mass Rate Revision Desk</h3>
-            <p className="gst-disclaimer">Simulate instant percentage wholesale rate updates across the entire Sanjay Sales database.</p>
+            <p className="gst-disclaimer">Simulate instant percentage wholesale rate updates across the entire Tradevia database.</p>
             <div className="divider-card"></div>
 
             <form onSubmit={handleBulkRateSubmit} className="login-form">
