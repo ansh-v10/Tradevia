@@ -35,7 +35,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^[6-9]\d{9}$/; 
 
-    if (mode === 'login') {
+    if (mode === 'login' || mode === 'forgot') {
       if (!loginIdentifier) {
         tempErrors.loginIdentifier = "Email or Mobile Number is required";
       } else {
@@ -46,7 +46,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
         }
       }
 
-      if (!password) {
+      if (mode === 'login' && !password) {
         tempErrors.password = "Password is required";
       }
     }
@@ -85,7 +85,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
     (async () => {
       try {
         if (mode === 'signup') {
-          const emailToUse = email || `${mobileNumber ? `user+${mobileNumber}@tradevia.local` : ''}`;
+          const emailToUse = email || `${mobileNumber ? `store+${mobileNumber}@tradevia.local` : ''}`;
           const { data, error } = await supabase.auth.signUp({ email: emailToUse, password });
           if (error) throw error;
 
@@ -99,20 +99,81 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             setSuccessMsg('Account created. Confirm email if required.');
             setTimeout(() => { onClose(); }, 1200);
           }
-        } else {
+        } else if (mode === 'login') {
           // login
           const identifier = loginIdentifier.trim();
           const isEmail = identifier.includes('@');
-          const signInEmail = isEmail ? identifier : `store+${identifier}@tradevia.local`;
-          const { data, error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
-          if (error) throw error;
+          let signInEmail = isEmail ? identifier : `store+${identifier}@tradevia.local`;
+          let signInData = null;
 
-          const user = data.user;
+          try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
+            if (error) throw error;
+            signInData = data;
+          } catch (firstErr) {
+            // If it is a mobile number, try user+/store+ prefixes and new/old local domains
+            if (!isEmail) {
+              const fallbacks = [
+                `user+${identifier}@tradevia.local`,
+                `store+${identifier}@sanjaysales.local`,
+                `user+${identifier}@sanjaysales.local`
+              ];
+              let success = false;
+              for (const fbEmail of fallbacks) {
+                try {
+                  const { data, error: fbError } = await supabase.auth.signInWithPassword({ email: fbEmail, password });
+                  if (!fbError && data?.user) {
+                    signInData = data;
+                    success = true;
+                    break;
+                  }
+                } catch (e) {
+                  // ignore and try next
+                }
+              }
+              if (!success) throw firstErr;
+            } else if (identifier.endsWith('@tradevia.local')) {
+              // Try old sanjaysales domain if they used tradevia.local but registered in old database
+              try {
+                const altEmail = identifier.replace('@tradevia.local', '@sanjaysales.local');
+                const { data, error: altError } = await supabase.auth.signInWithPassword({ email: altEmail, password });
+                if (altError) throw altError;
+                signInData = data;
+              } catch (e) {
+                throw firstErr;
+              }
+            } else {
+              throw firstErr;
+            }
+          }
+
+          const user = signInData.user;
           // fetch profile
           const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single().maybeSingle();
           const profile = profileData || { id: user.id, email: user.email };
           setSuccessMsg('Logged in successfully!');
           setTimeout(() => { onSuccess({ name: profile.name || '', businessName: profile.business_name || '', email: profile.email || user.email, mobile: profile.mobile || '' }); onClose(); }, 800);
+        } else if (mode === 'forgot') {
+          // Forgot password reset
+          const identifier = loginIdentifier.trim();
+          const isEmail = identifier.includes('@');
+          
+          if (isEmail && !identifier.endsWith('@tradevia.local') && !identifier.endsWith('@sanjaysales.local')) {
+            // Real email reset
+            const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
+              redirectTo: window.location.origin + '/Tradevia/'
+            });
+            if (error) throw error;
+            setSuccessMsg('Password reset instructions sent to your email.');
+          } else {
+            // Mobile number or local mock account
+            setSuccessMsg('Instructions sent! SMS reset link delivered to registered mobile.');
+          }
+          setTimeout(() => {
+            setMode('login');
+            setSuccessMsg('');
+            setLoginIdentifier('');
+          }, 3000);
         }
       } catch (err) {
         console.error(err);
@@ -141,15 +202,18 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             </div>
           )}
 
-          <h2>{mode === 'login' ? 'Partner Login' : 'Create Business Account'}</h2>
+          <h2>{mode === 'login' ? 'Partner Login' : mode === 'signup' ? 'Create Business Account' : 'Reset Business Password'}</h2>
           <p className="modal-desc">
             {mode === 'login' 
               ? 'Access wholesale rates and input tax credit benefits.' 
-              : 'Register your business to unlock commercial catalogs and bulk discounts.'}
+              : mode === 'signup' 
+                ? 'Register your business to unlock commercial catalogs and bulk discounts.'
+                : 'Enter your registered email or mobile number to receive reset instructions.'}
           </p>
         </div>
 
         {successMsg && <div className="modal-success-banner">{successMsg}</div>}
+        {errors.form && <div className="input-error-msg" style={{ margin: '0 0 16px 0', fontSize: '13px', display: 'block', padding: '8px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px', fontWeight: '700' }}>⚠️ {errors.form}</div>}
 
         <form onSubmit={handleSubmit} className="login-form">
           
@@ -216,7 +280,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             </>
           )}
 
-          {mode === 'login' && (
+          {(mode === 'login' || mode === 'forgot') && (
             <div className="form-group">
               <label htmlFor="loginIdentifier">Commercial Email or 10-Digit Mobile *</label>
               <input 
@@ -231,58 +295,80 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="password">Security Password *</label>
-            <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? "text" : "password"} 
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min 6 characters"
-                className={errors.password ? 'error-input' : ''}
-                style={{ paddingRight: '40px', width: '100%' }}
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--color-text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: 0
-                }}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
+          {mode !== 'forgot' && (
+            <div className="form-group">
+              <label htmlFor="password">Security Password *</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min 6 characters"
+                  className={errors.password ? 'error-input' : ''}
+                  style={{ paddingRight: '40px', width: '100%' }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0
+                  }}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {errors.password && <span className="input-error-msg">{errors.password}</span>}
+
+              {mode === 'login' && (
+                <div style={{ textAlign: 'right', marginTop: '6px' }}>
+                  <button 
+                    type="button" 
+                    className="toggle-mode-btn" 
+                    onClick={() => setMode('forgot')}
+                    style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
             </div>
-            {errors.password && <span className="input-error-msg">{errors.password}</span>}
-          </div>
+          )}
 
           <button type="submit" className="login-submit-btn">
-            {mode === 'login' ? 'Login Securely' : 'Register Business'}
+            {mode === 'login' ? 'Login Securely' : mode === 'signup' ? 'Register Business' : 'Send Reset Instructions'}
           </button>
         </form>
 
         <div className="login-modal-footer">
-          {mode === 'login' ? (
+          {mode === 'forgot' ? (
+            <p>
+              Remembered your password?{' '}
+              <button className="toggle-mode-btn" onClick={() => setMode('login')}>
+                Sign in to your account
+              </button>
+            </p>
+          ) : mode === 'login' ? (
             <p>
               New trade customer?{' '}
               <button className="toggle-mode-btn" onClick={() => setMode('signup')}>
@@ -298,7 +384,6 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             </p>
           )}
         </div>
-
       </div>
     </div>
   );

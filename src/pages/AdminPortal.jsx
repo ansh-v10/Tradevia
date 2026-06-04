@@ -163,6 +163,19 @@ export default function AdminPortal({
     setAuthSuccess('');
 
     if (authMode === 'login') {
+      // First, try local storage admin credentials
+      const localAdmin = registeredAdmins.find(
+        a => a.id.toLowerCase() === authId.trim().toLowerCase() && a.password === authPassword
+      );
+      if (localAdmin) {
+        setIsAdminAuthenticated(true);
+        setActionSuccess('Login successful. Welcome to the admin panel.');
+        setAuthId('');
+        setAuthPassword('');
+        return;
+      }
+
+      // If not found in local admins, try Supabase (production)
       const { error } = await supabase.auth.signInWithPassword({
         email: authId.trim(),
         password: authPassword
