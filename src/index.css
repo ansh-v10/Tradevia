@@ -3204,16 +3204,45 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 50% !important;
     aspect-ratio: 1/1 !important;
     justify-content: center;
+    align-items: center;
     width: 42px;
     height: 42px;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+  }
+
+  .navbar-cart-widget .cart-svg {
+    color: #ffffff !important;
   }
   
   .profile-trigger-flex {
     padding: 8px !important;
     border-radius: 50% !important;
     justify-content: center;
+    align-items: center;
     width: 42px;
     height: 42px;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .order-on-call-trigger-flex {
+    padding: 8px !important;
+    border-radius: 50% !important;
+    justify-content: center;
+    align-items: center;
+    width: 42px;
+    height: 42px;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px dashed rgba(255, 255, 255, 0.3) !important;
+    display: flex !important;
+  }
+
+  .navbar-cart-widget:hover,
+  .profile-trigger-flex:hover,
+  .order-on-call-trigger-flex:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
   }
 
   .cart-item-details {
