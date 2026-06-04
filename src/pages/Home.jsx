@@ -35,7 +35,7 @@ export default function Home({
       desc: "Get up to 25% extra profit margins by buying directly in bulk cartons. Free doorstep delivery on orders above ₹10,000.",
       badge: "DISTRIBUTOR DIRECT",
       theme: "slide-blue",
-      image: "distributor.jpg"
+      image: "distribution.jpg"
     },
     {
       title: "Save 18% GST Input Credit",
@@ -125,7 +125,7 @@ export default function Home({
       return src;
     }
     const cleanPath = src.startsWith('/') ? src : '/' + src;
-    return `/SanjaySales${cleanPath}`;
+    return `/Tradevia${cleanPath}`;
   };
 
   // Dynamic circular categories utilizing dynamic categories prop

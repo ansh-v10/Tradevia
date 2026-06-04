@@ -334,7 +334,7 @@ export default function Navbar({
                 <h4>📞 Order directly on Call</h4>
                 <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '8px 0' }}></div>
                 <img 
-                  src="/SanjaySales/order_on_call.jpg" 
+                  src="/Tradevia/order_on_call.jpg" 
                   alt="Order on Call Support" 
                   style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', marginBottom: '8px' }} 
                 />

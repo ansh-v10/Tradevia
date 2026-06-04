@@ -1,4 +1,4 @@
-# Sanjay Sales - Kirana B2B Wholesale App
+# Tradevia - Kirana B2B Wholesale App
 
 A premium B2B wholesale platform for Kirana stores, department stores, and small businesses to purchase essentials, FMCG, and sweets at direct distributor rates.
 

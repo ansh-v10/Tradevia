@@ -29,7 +29,7 @@ export default function App() {
   // --- Dynamic B2B Catalog and Settings States ---
   const [products, setProducts] = useState(() => productsData.map(p => ({ ...p, inventory: 100 })));
   const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('sanjay_sales_categories');
+    const saved = localStorage.getItem('tradevia_sales_categories');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -43,7 +43,7 @@ export default function App() {
 
   // Sync categories to localStorage
   useEffect(() => {
-    localStorage.setItem('sanjay_sales_categories', JSON.stringify(categories));
+    localStorage.setItem('tradevia_sales_categories', JSON.stringify(categories));
   }, [categories]);
 
   // --- Orders & Saved Addresses B2B States ---

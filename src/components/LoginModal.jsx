@@ -85,7 +85,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
     (async () => {
       try {
         if (mode === 'signup') {
-          const emailToUse = email || `${mobileNumber ? `user+${mobileNumber}@sanjaysales.local` : ''}`;
+          const emailToUse = email || `${mobileNumber ? `user+${mobileNumber}@tradevia.local` : ''}`;
           const { data, error } = await supabase.auth.signUp({ email: emailToUse, password });
           if (error) throw error;
 
@@ -103,7 +103,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
           // login
           const identifier = loginIdentifier.trim();
           const isEmail = identifier.includes('@');
-          const signInEmail = isEmail ? identifier : `store+${identifier}@sanjaysales.local`;
+          const signInEmail = isEmail ? identifier : `store+${identifier}@tradevia.local`;
           const { data, error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
           if (error) throw error;
 
@@ -132,7 +132,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
         </button>
 
         <div className="login-modal-header">
-          <span className="modal-logo">Sanjay<span className="logo-accent">Sales</span></span>
+          <span className="modal-logo">Trade<span className="logo-accent">via</span></span>
           <span className="modal-tag">B2B Trade Member</span>
           
           {checkoutPrompt && (
@@ -162,7 +162,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
                   id="fullName"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Sanjay Patel"
+                  placeholder="e.g. Rajesh Patel"
                   className={errors.fullName ? 'error-input' : ''}
                 />
                 {errors.fullName && <span className="input-error-msg">{errors.fullName}</span>}
@@ -175,7 +175,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
                   id="businessName"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Sanjay Kirana & General Stores"
+                  placeholder="e.g. Rajesh Kirana & General Stores"
                   className={errors.businessName ? 'error-input' : ''}
                 />
                 {errors.businessName && <span className="input-error-msg">{errors.businessName}</span>}

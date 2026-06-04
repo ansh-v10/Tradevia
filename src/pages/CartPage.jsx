@@ -432,7 +432,7 @@ export default function CartPage({
                               type="text" 
                               value={newAddrName}
                               onChange={(e) => setNewAddrName(e.target.value)}
-                              placeholder="e.g. Sanjay Patel"
+                              placeholder="e.g. Rajesh Patel"
                               className={addressErrors.name ? 'error-input' : ''}
                             />
                             {addressErrors.name && <span className="input-error-msg">{addressErrors.name}</span>}
@@ -444,7 +444,7 @@ export default function CartPage({
                               type="text" 
                               value={newAddrBiz}
                               onChange={(e) => setNewAddrBiz(e.target.value)}
-                              placeholder="e.g. Sanjay Kirana Store"
+                              placeholder="e.g. Rajesh Kirana Store"
                             />
                           </div>
 

@@ -22,7 +22,7 @@ export default function AdminPortal({
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   
   const [registeredAdmins, setRegisteredAdmins] = useState(() => {
-    const saved = localStorage.getItem('sanjay_sales_admins');
+    const saved = localStorage.getItem('tradevia_sales_admins');
     const defaults = [
       { id: 'admin', password: 'admin' },
       { id: 'vansh2005', password: 'Vansh@2005' }
@@ -47,7 +47,7 @@ export default function AdminPortal({
   });
 
   useEffect(() => {
-    localStorage.setItem('sanjay_sales_admins', JSON.stringify(registeredAdmins));
+    localStorage.setItem('tradevia_sales_admins', JSON.stringify(registeredAdmins));
   }, [registeredAdmins]);
 
   // Manage Admins tab states
@@ -190,7 +190,7 @@ export default function AdminPortal({
         return;
       }
       const normalizedKey = authSecretKey.trim().toUpperCase();
-      if (normalizedKey !== 'SANJAY_ADMIN' && normalizedKey !== 'ADMIN' && normalizedKey !== 'SANJAY_ADMIN_SECRET') {
+      if (normalizedKey !== 'TRADEVIA_ADMIN' && normalizedKey !== 'ADMIN' && normalizedKey !== 'TRADEVIA_ADMIN_SECRET') {
         setAuthError('Unauthorized registration! Invalid Admin Secret Security Code.');
         return;
       }

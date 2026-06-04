@@ -30,8 +30,8 @@ export default async function handler(req, res) {
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5175'}/SanjaySales/?checkout=success&order=${orderId}`,
-      cancel_url: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5175'}/SanjaySales/?checkout=cancel&order=${orderId}`,
+      success_url: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5175'}/Tradevia/?checkout=success&order=${orderId}`,
+      cancel_url: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5175'}/Tradevia/?checkout=cancel&order=${orderId}`,
       metadata: { orderId }
     });
 
