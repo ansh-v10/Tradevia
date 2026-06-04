@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   allCategories, 
   allBrands,
@@ -22,6 +23,7 @@ export default function Browse({
   setSelectedBrands,
   onAddToCart 
 }) {
+  const navigate = useNavigate();
   const [sortOption, setSortOption] = useState('most-bought'); // 'alpha', 'price-low', 'price-high', 'most-bought'
   const [quantities, setQuantities] = useState({}); // { productId: qty }
   const [showInStockOnly, setShowInStockOnly] = useState(false);
@@ -281,14 +283,14 @@ export default function Browse({
                   )}
                   
                   {/* Product Image */}
-                  <div className="product-image-container">
+                  <div className="product-image-container" onClick={() => navigate('/product/' + product.id)} style={{ cursor: 'pointer' }}>
                     <img src={product.imageUrl} alt={product.name} className="product-card-img" />
                   </div>
 
                   {/* Product details */}
                   <div className="product-details-container">
                     <span className="product-brand-tag">{product.brand}</span>
-                    <h3 className="product-name-heading">{product.name}</h3>
+                    <h3 className="product-name-heading" onClick={() => navigate('/product/' + product.id)} style={{ cursor: 'pointer' }}>{product.name}</h3>
                     <span className="product-pack-size">{product.packSize}</span>
 
                     {/* Ratings */}
@@ -308,47 +310,11 @@ export default function Browse({
                       <span className="bulk-save-value">Save ₹{unitDiscount} per unit (MRP ₹{product.retailPrice})</span>
                     </div>
 
-                    {/* Price & Quantity Selector */}
+                    {/* Price Selector */}
                     <div className="price-checkout-row">
                       <div className="price-stack">
                         <span className="wholesale-deal-price">₹{getTieredWholesalePrice(product, qty)}</span>
                         <span className="price-gst-sub">excl. 18% GST</span>
-                      </div>
-
-                      {/* Quantity Incrementor */}
-                      <div className="qty-selector-container">
-                        <button 
-                          className="qty-btn"
-                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
-                          disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
-                        >
-                          -
-                        </button>
-                        <input 
-                          type="text" 
-                          className="qty-input"
-                          value={qty}
-                          onChange={(e) => {
-                            const valStr = e.target.value;
-                            const parsed = parseInt(valStr);
-                            handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
-                          }}
-                          onBlur={(e) => {
-                            const val = parseInt(e.target.value);
-                            const moqVal = product.moq || 10;
-                            if (isNaN(val) || val < moqVal) {
-                              handleQuantityChange(product.id, moqVal);
-                            } else {
-                              handleQuantityChange(product.id, val);
-                            }
-                          }}
-                        />
-                        <button 
-                          className="qty-btn"
-                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
-                        >
-                          +
-                        </button>
                       </div>
                     </div>
 
@@ -393,15 +359,52 @@ export default function Browse({
                       )}
                     </div>
 
-                    {/* Add to Cart button */}
-                    <button 
-                      className="add-to-cart-b2b-btn"
-                      onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
-                      disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
-                      style={(product.inventory !== undefined ? product.inventory : 100) <= 0 ? { backgroundColor: '#cbd5e1', cursor: 'not-allowed', color: '#64748b' } : {}}
-                    >
-                      {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? 'Out of Stock' : `Add Bulk Pack (${qty})`}
-                    </button>
+                    {/* Add to Cart button widget */}
+                    <div className="b2b-action-row-inline" style={{ marginTop: '12px' }}>
+                      <div className="qty-selector-container">
+                        <button 
+                          className="qty-btn"
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
+                          disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
+                        >
+                          -
+                        </button>
+                        <input 
+                          type="text" 
+                          className="qty-input"
+                          value={qty}
+                          onChange={(e) => {
+                            const valStr = e.target.value;
+                            const parsed = parseInt(valStr);
+                            handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            const moqVal = product.moq || 10;
+                            if (isNaN(val) || val < moqVal) {
+                              handleQuantityChange(product.id, moqVal);
+                            } else {
+                              handleQuantityChange(product.id, val);
+                            }
+                          }}
+                        />
+                        <button 
+                          className="qty-btn"
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                      
+                      <button 
+                        className="add-to-cart-b2b-btn"
+                        onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
+                        disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
+                        style={(product.inventory !== undefined ? product.inventory : 100) <= 0 ? { backgroundColor: '#cbd5e1', cursor: 'not-allowed', color: '#64748b' } : {}}
+                      >
+                        ADD
+                      </button>
+                    </div>
 
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import CartPage from '../pages/CartPage';
 import YourOrders from '../pages/YourOrders';
 import AdminPortal from '../pages/AdminPortal';
 import YourAccount from '../pages/YourAccount';
+import ProductDetails from '../pages/ProductDetails';
 
 export default function AppRouter({
   products,
@@ -99,6 +100,14 @@ export default function AppRouter({
           onDeleteAddress={onDeleteAddress}
           orders={orders}
           cart={cart}
+          onOpenLoginModal={onOpenLoginModal}
+        />
+      } />
+      <Route path="/product/:id" element={
+        <ProductDetails 
+          products={products}
+          cart={cart}
+          onAddToCart={onAddToCart}
           onOpenLoginModal={onOpenLoginModal}
         />
       } />

@@ -235,17 +235,17 @@ export default function Home({
         <h2 className="section-title text-left">Shop by Wholesale Category</h2>
         <p className="section-subtitle text-left">Select a segment to browse volume-based trade pricing</p>
         
-        <div className="categories-row-flex">
+        <div className="categories-blinkit-grid">
           {categoriesList.map((cat, idx) => (
             <div 
               key={idx} 
-              className={`category-circle-card ${cat.name === 'More' ? 'show-more-card' : ''}`}
+              className={`category-blinkit-card ${cat.name === 'More' ? 'show-more-card' : ''}`}
               onClick={() => handleCategorySelect(cat.name)}
             >
-              <div className="category-icon-wrapper">
+              <div className="category-blinkit-icon-wrap">
                 {cat.icon}
               </div>
-              <span className="category-circle-label">{cat.name}</span>
+              <span className="category-blinkit-label">{cat.name}</span>
             </div>
           ))}
         </div>
@@ -263,103 +263,88 @@ export default function Home({
           </button>
         </div>
 
-        <div className="products-grid-layout">
+        <div className="products-horizontal-scroller">
           {superSaverDeals.map((product) => {
             const margin = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
             const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
             return (
-              <div key={product.id} className="product-card-unit">
-                <div className="bestseller-ribbon">{product.discountPercent}% OFF</div>
-                <div className="product-image-container">
+              <div key={product.id} className="product-card-unit home-scroll-card">
+                <div className="margin-overlay-badge">{margin}% Margin</div>
+                {product.discountPercent > 0 && (
+                  <div className="bestseller-ribbon" style={{ top: '34px' }}>{product.discountPercent}% OFF</div>
+                )}
+                <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
                   <img src={product.imageUrl} alt={product.name} className="product-card-img" />
                 </div>
                 <div className="product-details-container">
-                  <span className="product-brand-tag">{product.brand}</span>
-                  <h3 className="product-name-heading" onClick={() => {
-                    setSelectedCategories([product.category]);
-                    navigate('/browse');
-                  }}>{product.name}</h3>
-                  <span className="product-pack-size">{product.packSize}</span>
+                  <h3 className="product-name-heading" onClick={() => navigate('/product/' + product.id)}>
+                    {product.name}
+                  </h3>
                   
-                  {/* Stars */}
-                  <div className="product-rating-row">
-                    <div className="stars-wrap">
-                      <StarIcon className="star-icon" />
-                      <span className="rating-val">{product.rating}</span>
-                    </div>
-                    <span className="reviews-cnt">({product.reviewsCount} reviews)</span>
-                  </div>
+                  <div className="divider-card" style={{ margin: '8px 0' }}></div>
 
-                  <div className="divider-card"></div>
-
-                  <div className="margin-indicator-label">
-                    Margin: <span className="margin-green">{margin}% Profit</span>
-                  </div>
-
-                  <div style={{ fontSize: '11px', textAlign: 'left', marginTop: '6px', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
                     {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
                       <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
                     ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
-                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left in stock : {product.inventory}</span>
+                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {product.inventory}</span>
                     ) : (
-                      <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock ({product.inventory !== undefined ? product.inventory : 100} packs)</span>
+                      <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
                     )}
                   </div>
 
-                  <div className="price-actions-flex-row">
+                  <div className="price-actions-flex-row-blinkit">
                     <div className="price-stack">
                       <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
-                      <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)} <span className="ex-gst">ex. GST</span></span>
+                      <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
                     </div>
 
-                    <div className="qty-selector-container">
+                    <div className="b2b-action-row-inline">
+                      <div className="qty-selector-container">
+                        <button 
+                          className="qty-btn"
+                          type="button"
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
+                          disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
+                        >
+                          -
+                        </button>
+                        <input 
+                          type="text" 
+                          className="qty-input"
+                          value={qty}
+                          onChange={(e) => {
+                            const valStr = e.target.value;
+                            const parsed = parseInt(valStr);
+                            handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            const moqVal = product.moq || 10;
+                            if (isNaN(val) || val < moqVal) {
+                              handleQuantityChange(product.id, moqVal);
+                            } else {
+                              handleQuantityChange(product.id, val);
+                            }
+                          }}
+                        />
+                        <button 
+                          className="qty-btn"
+                          type="button"
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+
                       <button 
-                        className="qty-btn"
-                        type="button"
-                        onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
-                        disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
-                        style={{ padding: '4px 8px' }}
+                        className="add-to-cart-b2b-btn" 
+                        onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
+                        disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
                       >
-                        -
-                      </button>
-                      <input 
-                        type="text" 
-                        className="qty-input"
-                        value={qty}
-                        onChange={(e) => {
-                          const valStr = e.target.value;
-                          const parsed = parseInt(valStr);
-                          handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
-                        }}
-                        onBlur={(e) => {
-                          const val = parseInt(e.target.value);
-                          const moqVal = product.moq || 10;
-                          if (isNaN(val) || val < moqVal) {
-                            handleQuantityChange(product.id, moqVal);
-                          } else {
-                            handleQuantityChange(product.id, val);
-                          }
-                        }}
-                        style={{ width: '30px', textAlign: 'center', border: 'none', fontWeight: 'bold' }}
-                      />
-                      <button 
-                        className="qty-btn"
-                        type="button"
-                        onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
-                        style={{ padding: '4px 8px' }}
-                      >
-                        +
+                        ADD
                       </button>
                     </div>
-
-                    <button 
-                      className="add-to-cart-b2b-btn" 
-                      onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
-                      disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
-                      style={(product.inventory !== undefined ? product.inventory : 100) <= 0 ? { backgroundColor: '#cbd5e1', cursor: 'not-allowed', color: '#64748b', padding: '8px', width: '100%' } : { padding: '8px', width: '100%' }}
-                    >
-                      {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? 'Out of Stock' : `Add Bulk (${qty})`}
-                    </button>
                   </div>
 
                 </div>
@@ -417,105 +402,87 @@ export default function Home({
           </button>
         </div>
 
-        <div className="products-grid-layout">
+        <div className="products-horizontal-scroller">
           {mostBoughtProducts.map((product) => {
             const margin = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
             const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
             return (
-              <div key={product.id} className="product-card-unit">
+              <div key={product.id} className="product-card-unit home-scroll-card">
+                <div className="margin-overlay-badge">{margin}% Margin</div>
                 <div className="bestseller-ribbon">Bestseller</div>
-                <div className="product-image-container">
+                <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
                   <img src={product.imageUrl} alt={product.name} className="product-card-img" />
                 </div>
                 <div className="product-details-container">
-                  <span className="product-brand-tag">{product.brand}</span>
-                  <h3 className="product-name-heading" onClick={() => {
-                    setSelectedCategories([product.category]);
-                    navigate('/browse');
-                  }}>{product.name}</h3>
-                  <span className="product-pack-size">{product.packSize}</span>
+                  <h3 className="product-name-heading" onClick={() => navigate('/product/' + product.id)}>
+                    {product.name}
+                  </h3>
                   
-                  {/* Stars */}
-                  <div className="product-rating-row">
-                    <div className="stars-wrap">
-                      <StarIcon className="star-icon" />
-                      <span className="rating-val">{product.rating}</span>
-                    </div>
-                    <span className="reviews-cnt">({product.reviewsCount} reviews)</span>
-                  </div>
+                  <div className="divider-card" style={{ margin: '8px 0' }}></div>
 
-                  <div className="divider-card"></div>
-
-                  <div className="margin-indicator-label">
-                    Margin: <span className="margin-green">{margin}% Profit</span>
-                  </div>
-
-                  <div style={{ fontSize: '11px', textAlign: 'left', marginTop: '6px', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
                     {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
                       <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
                     ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
-                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left in stock : {product.inventory}</span>
+                      <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {product.inventory}</span>
                     ) : (
-                      <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock ({product.inventory !== undefined ? product.inventory : 100} packs)</span>
+                      <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
                     )}
                   </div>
 
-                  <div className="price-actions-flex-row">
+                  <div className="price-actions-flex-row-blinkit">
                     <div className="price-stack">
                       <span className="mrp-txt">MRP ₹{product.retailPrice}</span>
-                      <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)} <span className="ex-gst">ex. GST</span></span>
+                      <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(product, qty)}</span>
                     </div>
 
-                    <div className="qty-selector-container">
+                    <div className="b2b-action-row-inline">
+                      <div className="qty-selector-container">
+                        <button 
+                          className="qty-btn"
+                          type="button"
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
+                          disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
+                        >
+                          -
+                        </button>
+                        <input 
+                          type="text" 
+                          className="qty-input"
+                          value={qty}
+                          onChange={(e) => {
+                            const valStr = e.target.value;
+                            const parsed = parseInt(valStr);
+                            handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            const moqVal = product.moq || 10;
+                            if (isNaN(val) || val < moqVal) {
+                              handleQuantityChange(product.id, moqVal);
+                            } else {
+                              handleQuantityChange(product.id, val);
+                            }
+                          }}
+                        />
+                        <button 
+                          className="qty-btn"
+                          type="button"
+                          onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+
                       <button 
-                        className="qty-btn"
-                        type="button"
-                        onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) - 1)}
-                        disabled={(parseInt(qty) || 0) <= (product.moq || 10)}
-                        style={{ padding: '4px 8px' }}
+                        className="add-to-cart-b2b-btn" 
+                        onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
+                        disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
                       >
-                        -
-                      </button>
-                      <input 
-                        type="text" 
-                        className="qty-input"
-                        value={qty}
-                        onChange={(e) => {
-                          const valStr = e.target.value;
-                          const parsed = parseInt(valStr);
-                          handleQuantityChange(product.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
-                        }}
-                        onBlur={(e) => {
-                          const val = parseInt(e.target.value);
-                          const moqVal = product.moq || 10;
-                          if (isNaN(val) || val < moqVal) {
-                            handleQuantityChange(product.id, moqVal);
-                          } else {
-                            handleQuantityChange(product.id, val);
-                          }
-                        }}
-                        style={{ width: '30px', textAlign: 'center', border: 'none', fontWeight: 'bold' }}
-                      />
-                      <button 
-                        className="qty-btn"
-                        type="button"
-                        onClick={() => handleQuantityChange(product.id, (parseInt(qty) || 10) + 1)}
-                        style={{ padding: '4px 8px' }}
-                      >
-                        +
+                        ADD
                       </button>
                     </div>
-
-                    <button 
-                      className="add-to-cart-b2b-btn" 
-                      onClick={() => onAddToCart(product, parseInt(qty) || product.moq || 10)}
-                      disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
-                      style={(product.inventory !== undefined ? product.inventory : 100) <= 0 ? { backgroundColor: '#cbd5e1', cursor: 'not-allowed', color: '#64748b', padding: '8px', width: '100%' } : { padding: '8px', width: '100%' }}
-                    >
-                      {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? 'Out of Stock' : `Add Bulk (${qty})`}
-                    </button>
                   </div>
-
                 </div>
               </div>
             );
