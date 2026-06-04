@@ -549,8 +549,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .call-icon-navbar {
-  font-size: 20px;
+  color: #ffffff;
   animation: pulse 2s infinite;
+  display: inline-block;
 }
 
 @keyframes pulse {
@@ -3207,8 +3208,8 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     width: 42px;
     height: 42px;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background-color: transparent !important;
+    border: none !important;
     color: #ffffff !important;
   }
 
@@ -3223,8 +3224,8 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     width: 42px;
     height: 42px;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background-color: transparent !important;
+    border: none !important;
   }
 
   .order-on-call-trigger-flex {
@@ -3234,15 +3235,20 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     width: 42px;
     height: 42px;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border: 1px dashed rgba(255, 255, 255, 0.3) !important;
+    background-color: transparent !important;
+    border: none !important;
     display: flex !important;
+    color: #ffffff !important;
+  }
+
+  .order-on-call-trigger-flex .call-icon-navbar {
+    color: #ffffff !important;
   }
 
   .navbar-cart-widget:hover,
   .profile-trigger-flex:hover,
   .order-on-call-trigger-flex:hover {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
   }
 
   .cart-item-details {

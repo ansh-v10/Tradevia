@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SearchIcon, ProfileIcon, CartIcon, PinIcon, CaretDownIcon, CloseIcon } from './Icons';
+import { SearchIcon, ProfileIcon, CartIcon, PinIcon, CaretDownIcon, CloseIcon, PhoneIcon } from './Icons';
 
 // Instant local mapping for common commercial hubs to prevent delay
 const pincodeFallback = {
@@ -324,7 +324,7 @@ export default function Navbar({
             {/* ORDER ON CALL Widget */}
             <div className="order-on-call-menu-container">
               <a href="tel:+917496865205" className="order-on-call-trigger-flex">
-                <span className="call-icon-navbar">📞</span>
+                <PhoneIcon className="call-icon-navbar" size={20} />
                 <div className="order-call-text-wrap">
                   <span className="order-call-title">ORDER ON CALL</span>
                   <span className="order-call-phone">+91 74968 65205</span>
