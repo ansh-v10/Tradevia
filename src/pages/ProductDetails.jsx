@@ -15,13 +15,27 @@ export default function ProductDetails({
   
   const [qty, setQty] = useState(product?.moq || 10);
   const [successMsg, setSuccessMsg] = useState('');
+  const [quantities, setQuantities] = useState({});
 
-  // Sync quantity MOQ when product changes
+  const handleQuantityChange = (productId, val) => {
+    setQuantities(prev => ({ ...prev, [productId]: val }));
+  };
+
+  // Sync quantity MOQ when product changes and scroll to top
   useEffect(() => {
     if (product) {
       setQty(product.moq || 10);
     }
-  }, [product]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [product, id]);
+
+  const relatedProducts = products
+    .filter((p) => p.category === product.category && p.id !== product.id)
+    .slice(0, 8);
+
+  const bestSellers = products
+    .filter((p) => p.isMostBought && p.id !== product.id)
+    .slice(0, 8);
 
   if (!product) {
     return (
@@ -284,15 +298,217 @@ export default function ProductDetails({
                 <span style={{ fontWeight: '600' }}>{moqVal} packs</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>GST Classification:</span>
+        <span style={{ color: 'var(--color-text-muted)' }}>GST Classification:</span>
                 <span style={{ fontWeight: '600' }}>18% Standard GST</span>
               </div>
             </div>
           </div>
-
         </div>
 
       </div>
+
+      {/* More from this category */}
+      {relatedProducts.length > 0 && (
+        <section className="super-saver-section" style={{ marginTop: '48px', padding: '0' }}>
+          <div className="section-header-flex">
+            <div>
+              <h2 className="section-title text-left" style={{ fontSize: '22px', fontWeight: '800' }}>More from {product.category}</h2>
+              <p className="section-subtitle text-left">Explore other wholesale deals in this segment</p>
+            </div>
+          </div>
+
+          <div className="products-horizontal-scroller">
+            {relatedProducts.map((p) => {
+              const margin = Math.round(((p.retailPrice - p.wholesalePrice) / p.retailPrice) * 100);
+              const cardQty = quantities[p.id] !== undefined ? quantities[p.id] : (p.moq || 10);
+              const discountPercent = Math.round(((p.retailPrice - p.wholesalePrice) / p.retailPrice) * 100);
+              return (
+                <div key={p.id} className="product-card-unit home-scroll-card">
+                  <div className="margin-overlay-badge">{margin}% Margin</div>
+                  {discountPercent > 18 && (
+                    <div className="bestseller-ribbon" style={{ top: '34px' }}>Saver Deal</div>
+                  )}
+                  <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + p.id)}>
+                    <img src={p.imageUrl} alt={p.name} className="product-card-img" />
+                  </div>
+                  <div className="product-details-container">
+                    <h3 className="product-name-heading" onClick={() => navigate('/product/' + p.id)}>
+                      {p.name}
+                    </h3>
+                    
+                    <div className="divider-card" style={{ margin: '8px 0' }}></div>
+
+                    <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
+                      {(p.inventory !== undefined ? p.inventory : 100) <= 0 ? (
+                        <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
+                      ) : (p.inventory !== undefined ? p.inventory : 100) < 10 ? (
+                        <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {p.inventory}</span>
+                      ) : (
+                        <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
+                      )}
+                    </div>
+
+                    <div className="price-actions-flex-row-blinkit">
+                      <div className="price-stack">
+                        <span className="mrp-txt">MRP ₹{p.retailPrice}</span>
+                        <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(p, cardQty)}</span>
+                      </div>
+
+                      <div className="b2b-action-row-inline">
+                        <div className="qty-selector-container">
+                          <button 
+                            className="qty-btn"
+                            type="button"
+                            onClick={() => handleQuantityChange(p.id, (parseInt(cardQty) || 10) - 1)}
+                            disabled={(parseInt(cardQty) || 0) <= (p.moq || 10)}
+                          >
+                            -
+                          </button>
+                          <input 
+                            type="text" 
+                            className="qty-input"
+                            value={cardQty}
+                            onChange={(e) => {
+                              const valStr = e.target.value;
+                              const parsed = parseInt(valStr);
+                              handleQuantityChange(p.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                            }}
+                            onBlur={(e) => {
+                              const val = parseInt(e.target.value);
+                              const moqVal = p.moq || 10;
+                              if (isNaN(val) || val < moqVal) {
+                                handleQuantityChange(p.id, moqVal);
+                              } else {
+                                handleQuantityChange(p.id, val);
+                              }
+                            }}
+                          />
+                          <button 
+                            className="qty-btn"
+                            type="button"
+                            onClick={() => handleQuantityChange(p.id, (parseInt(cardQty) || 10) + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button 
+                          className="add-to-cart-b2b-btn" 
+                          onClick={() => onAddToCart(p, parseInt(cardQty) || p.moq || 10)}
+                          disabled={(p.inventory !== undefined ? p.inventory : 100) <= 0}
+                        >
+                          ADD
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Best Sellers */}
+      {bestSellers.length > 0 && (
+        <section className="most-bought-section" style={{ marginTop: '48px', padding: '0' }}>
+          <div className="section-header-flex">
+            <div>
+              <h2 className="section-title text-left" style={{ fontSize: '22px', fontWeight: '800' }}>Kirana Bestsellers</h2>
+              <p className="section-subtitle text-left">Top-selling wholesale products in Sanjay Sales</p>
+            </div>
+          </div>
+
+          <div className="products-horizontal-scroller">
+            {bestSellers.map((p) => {
+              const margin = Math.round(((p.retailPrice - p.wholesalePrice) / p.retailPrice) * 100);
+              const cardQty = quantities[p.id] !== undefined ? quantities[p.id] : (p.moq || 10);
+              return (
+                <div key={p.id} className="product-card-unit home-scroll-card">
+                  <div className="margin-overlay-badge">{margin}% Margin</div>
+                  <div className="bestseller-ribbon">Bestseller</div>
+                  <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + p.id)}>
+                    <img src={p.imageUrl} alt={p.name} className="product-card-img" />
+                  </div>
+                  <div className="product-details-container">
+                    <h3 className="product-name-heading" onClick={() => navigate('/product/' + p.id)}>
+                      {p.name}
+                    </h3>
+                    
+                    <div className="divider-card" style={{ margin: '8px 0' }}></div>
+
+                    <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
+                      {(p.inventory !== undefined ? p.inventory : 100) <= 0 ? (
+                        <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
+                      ) : (p.inventory !== undefined ? p.inventory : 100) < 10 ? (
+                        <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {p.inventory}</span>
+                      ) : (
+                        <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
+                      )}
+                    </div>
+
+                    <div className="price-actions-flex-row-blinkit">
+                      <div className="price-stack">
+                        <span className="mrp-txt">MRP ₹{p.retailPrice}</span>
+                        <span className="wholesale-deal-price" style={{ margin: 0 }}>₹{getTieredWholesalePrice(p, cardQty)}</span>
+                      </div>
+
+                      <div className="b2b-action-row-inline">
+                        <div className="qty-selector-container">
+                          <button 
+                            className="qty-btn"
+                            type="button"
+                            onClick={() => handleQuantityChange(p.id, (parseInt(cardQty) || 10) - 1)}
+                            disabled={(parseInt(cardQty) || 0) <= (p.moq || 10)}
+                          >
+                            -
+                          </button>
+                          <input 
+                            type="text" 
+                            className="qty-input"
+                            value={cardQty}
+                            onChange={(e) => {
+                              const valStr = e.target.value;
+                              const parsed = parseInt(valStr);
+                              handleQuantityChange(p.id, valStr === '' ? '' : (isNaN(parsed) ? valStr : parsed));
+                            }}
+                            onBlur={(e) => {
+                              const val = parseInt(e.target.value);
+                              const moqVal = p.moq || 10;
+                              if (isNaN(val) || val < moqVal) {
+                                handleQuantityChange(p.id, moqVal);
+                              } else {
+                                handleQuantityChange(p.id, val);
+                              }
+                            }}
+                          />
+                          <button 
+                            className="qty-btn"
+                            type="button"
+                            onClick={() => handleQuantityChange(p.id, (parseInt(cardQty) || 10) + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button 
+                          className="add-to-cart-b2b-btn" 
+                          onClick={() => onAddToCart(p, parseInt(cardQty) || p.moq || 10)}
+                          disabled={(p.inventory !== undefined ? p.inventory : 100) <= 0}
+                        >
+                          ADD
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
     </div>
   );
