@@ -204,6 +204,8 @@ export default function Navbar({
             <span className="text-muted text-sm">GST invoice benefits on all bulk purchases. Welcome to Sanjay Sales!</span>
           </div>
           <div className="top-bar-right">
+            <a href="tel:+917496865205" className="top-link" style={{ fontWeight: '700', color: 'var(--color-accent)' }}>📞 Order on Call: +917496865205</a>
+            <span className="divider">|</span>
             <a href="#help" onClick={(e) => { e.preventDefault(); alert("Customer Support:\nPhone: +917496865205\nEmail: wholesale@sanjaysales.com\nHours: Mon - Sat: 9:00 AM - 5:00 PM"); }} className="top-link">Support</a>
             <span className="divider">|</span>
             <a href="#store" onClick={(e) => { e.preventDefault(); alert("Operational in Jhajjar, Delhi only. Operational in other cities soon."); }} className="top-link">Wholesale Hubs</a>
@@ -318,6 +320,32 @@ export default function Navbar({
 
           {/* Nav Actions */}
           <div className="nav-actions-container">
+
+            {/* ORDER ON CALL Widget */}
+            <div className="order-on-call-menu-container">
+              <a href="tel:+917496865205" className="order-on-call-trigger-flex">
+                <span className="call-icon-navbar">📞</span>
+                <div className="order-call-text-wrap">
+                  <span className="order-call-title">ORDER ON CALL</span>
+                  <span className="order-call-phone">+91 74968 65205</span>
+                </div>
+              </a>
+              <div className="order-on-call-dropdown">
+                <h4>📞 Order directly on Call</h4>
+                <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '8px 0' }}></div>
+                <img 
+                  src="/SanjaySales/order_on_call.jpg" 
+                  alt="Order on Call Support" 
+                  style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', marginBottom: '8px' }} 
+                />
+                <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: '1.4', margin: '0 0 10px', textTransform: 'none' }}>
+                  Skip the online checkout process! Simply call or WhatsApp our B2B representative at <strong>+917496865205</strong> to share your requirements and get instant commercial invoices.
+                </p>
+                <a href="tel:+917496865205" style={{ display: 'block', textDecoration: 'none', textAlign: 'center', backgroundColor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', padding: '8px 0', borderRadius: '4px', fontSize: '12px' }}>
+                  Call Representative Now
+                </a>
+              </div>
+            </div>
             
             {/* User Profile dropdown */}
             <div 

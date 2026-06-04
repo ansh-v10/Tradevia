@@ -522,6 +522,112 @@ h1, h2, h3, h4, h5, h6 {
   gap: 20px;
 }
 
+/* Order on Call Navbar Widget */
+.order-on-call-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  cursor: pointer;
+}
+
+.order-on-call-trigger-flex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  border: 1px dashed rgba(0, 47, 108, 0.2);
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.order-on-call-trigger-flex:hover {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: var(--color-accent);
+}
+
+.call-icon-navbar {
+  font-size: 20px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.order-call-text-wrap {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.order-call-title {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-accent-hover);
+  letter-spacing: 0.5px;
+}
+
+.order-call-phone {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* Dropdown styling */
+.order-on-call-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 260px;
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  z-index: 100;
+  display: none;
+  margin-top: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+.order-on-call-dropdown h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+  text-align: left;
+}
+
+/* Hover triggers dropdown */
+.order-on-call-menu-container:hover .order-on-call-dropdown {
+  display: block;
+}
+
+/* Bridge hover gap */
+.order-on-call-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  .order-call-text-wrap {
+    display: none !important;
+  }
+  .order-on-call-trigger-flex {
+    padding: 6px 8px;
+  }
+}
+
 .user-profile-menu-container {
   position: relative;
   cursor: pointer;

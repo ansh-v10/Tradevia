@@ -46,11 +46,12 @@ export default function Home({
       image: "gst.jpg"
     },
     {
-      title: "Premium Sweets & Namkeen",
-      subtitle: "Direct Haldiram's & Bikaji Distributor",
-      desc: "Stock your stores for festival seasons with fresh bulk packages of sweets, bhujia, and snacks at special prices.",
-      badge: "FESTIVE BULK",
-      theme: "slide-red"
+      title: "Order on Call",
+      subtitle: "Quick & Easy Offline Wholesale Orders",
+      desc: "Don't want to place orders online? Dial +917496865205 to place your bulk inventory order instantly on call or WhatsApp.",
+      badge: "ORDER ON CALL",
+      theme: "slide-red",
+      image: "order_on_call.jpg"
     }
   ];
 
@@ -193,9 +194,15 @@ export default function Home({
             <h1 className="slide-title">{bannerSlides[activeSlide].title}</h1>
             <h3 className="slide-subtitle">{bannerSlides[activeSlide].subtitle}</h3>
             <p className="slide-desc">{bannerSlides[activeSlide].desc}</p>
-            <button className="slide-cta-btn" onClick={() => handleCategorySelect('More')}>
-              Explore Commercial Rates <ChevronRightIcon size={16} className="inline-chevron" />
-            </button>
+            {bannerSlides[activeSlide].badge === 'ORDER ON CALL' ? (
+              <a href="tel:+917496865205" className="slide-cta-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
+                Call Now (+917496865205) <ChevronRightIcon size={16} className="inline-chevron" />
+              </a>
+            ) : (
+              <button className="slide-cta-btn" onClick={() => handleCategorySelect('More')}>
+                Explore Commercial Rates <ChevronRightIcon size={16} className="inline-chevron" />
+              </button>
+            )}
           </div>
           
           {/* Right Arrow Button */}
