@@ -539,7 +539,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 6px 12px;
   border-radius: var(--radius-sm);
   transition: var(--transition-fast);
-  border: 1px dashed rgba(0, 47, 108, 0.2);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
   background-color: rgba(245, 158, 11, 0.05);
 }
 
@@ -575,7 +575,7 @@ h1, h2, h3, h4, h5, h6 {
 .order-call-phone {
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #ffffff;
 }
 
 /* Dropdown styling */
