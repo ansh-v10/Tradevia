@@ -9,16 +9,16 @@ import './App.css';
 
 // Default Categories Setup
 const defaultCategories = [
-  { name: "Chocolates & Candies", showOnHome: true, imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Cadbury_logo_new.jpg/500px-Cadbury_logo_new.jpg" },
-  { name: "Daily Use", showOnHome: true, imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR7kV9hA2yF0-BdwARpbVqum34JV7P2cR5fA&s" },
-  { name: "Home Essentials", showOnHome: true, imageUrl: "https://cdn.brandfetch.io/domain/springwel.in/fallback/lettermark/theme/dark/h/400/w/400/icon?c=1bfwsmEH20zzEfSNTed" },
-  { name: "Preservatives", showOnHome: true, imageUrl: "chips_category.jpg" },
-  { name: "Sweets & Namkeen", showOnHome: true, imageUrl: "rasgulla_category.jpg" },
-  { name: "Beverages", showOnHome: true, imageUrl: "https://www.logodesignlove.com/wp-content/uploads/2021/07/coca-cola-logo-arden-square-01.jpg" },
-  { name: "Grains & Masalas", showOnHome: true, imageUrl: "https://prithvienterprises.co.in/cdn/shop/collections/Aashirvaad_Logo.png?v=1746877542&width=750" },
-  { name: "Fresh & Dairy", showOnHome: true, imageUrl: "https://animationvisarts.com/wp-content/uploads/2023/12/Frame-32-6.png" },
-  { name: "Snacks & Biscuits", showOnHome: true, imageUrl: "https://images.yourstory.com/cs/images/companies/4146603810349766400073541079337822789304320o-1611498760663.png?fm=auto&ar=1%3A1&mode=fill&fill=solid&fill-color=fff&format=auto&w=1920&q=85" },
-  { name: "Cosmetics & Hygiene", showOnHome: true, imageUrl: "https://i.pinimg.com/736x/da/78/1d/da781de9ad2bffefcedb6d872856900c.jpg" }
+  { name: "Chocolates & Candies", showOnHome: true, showProductsOnHome: true, imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Cadbury_logo_new.jpg/500px-Cadbury_logo_new.jpg" },
+  { name: "Daily Use", showOnHome: true, showProductsOnHome: false, imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR7kV9hA2yF0-BdwARpbVqum34JV7P2cR5fA&s" },
+  { name: "Home Essentials", showOnHome: true, showProductsOnHome: false, imageUrl: "https://cdn.brandfetch.io/domain/springwel.in/fallback/lettermark/theme/dark/h/400/w/400/icon?c=1bfwsmEH20zzEfSNTed" },
+  { name: "Preservatives", showOnHome: true, showProductsOnHome: false, imageUrl: "chips_category.jpg" },
+  { name: "Sweets & Namkeen", showOnHome: true, showProductsOnHome: true, imageUrl: "rasgulla_category.jpg" },
+  { name: "Beverages", showOnHome: true, showProductsOnHome: true, imageUrl: "https://www.logodesignlove.com/wp-content/uploads/2021/07/coca-cola-logo-arden-square-01.jpg" },
+  { name: "Grains & Masalas", showOnHome: true, showProductsOnHome: false, imageUrl: "https://prithvienterprises.co.in/cdn/shop/collections/Aashirvaad_Logo.png?v=1746877542&width=750" },
+  { name: "Fresh & Dairy", showOnHome: true, showProductsOnHome: true, imageUrl: "https://animationvisarts.com/wp-content/uploads/2023/12/Frame-32-6.png" },
+  { name: "Snacks & Biscuits", showOnHome: true, showProductsOnHome: false, imageUrl: "https://images.yourstory.com/cs/images/companies/4146603810349766400073541079337822789304320o-1611498760663.png?fm=auto&ar=1%3A1&mode=fill&fill=solid&fill-color=fff&format=auto&w=1920&q=85" },
+  { name: "Cosmetics & Hygiene", showOnHome: true, showProductsOnHome: false, imageUrl: "https://i.pinimg.com/736x/da/78/1d/da781de9ad2bffefcedb6d872856900c.jpg" }
 ];
 
 export default function App() {

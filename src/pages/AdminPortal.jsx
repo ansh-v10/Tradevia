@@ -183,6 +183,7 @@ export default function AdminPortal({
   const [newCatName, setNewCatName] = useState('');
   const [newCatImageUrl, setNewCatImageUrl] = useState('');
   const [newCatShowOnHome, setNewCatShowOnHome] = useState(true);
+  const [newCatShowProductsOnHome, setNewCatShowProductsOnHome] = useState(false);
 
   // Sync with categories prop
   useEffect(() => {
@@ -405,13 +406,15 @@ export default function AdminPortal({
     const newCat = {
       name: nameTrimmed,
       imageUrl: urlTrimmed,
-      showOnHome: newCatShowOnHome
+      showOnHome: newCatShowOnHome,
+      showProductsOnHome: newCatShowProductsOnHome
     };
 
     setLocalCategories(prev => [...prev, newCat]);
     setNewCatName('');
     setNewCatImageUrl('');
     setNewCatShowOnHome(true);
+    setNewCatShowProductsOnHome(false);
     
     setActionSuccess(`Category "${nameTrimmed}" added to local draft! Remember to save changes.`);
     setTimeout(() => setActionSuccess(''), 2500);
@@ -423,6 +426,10 @@ export default function AdminPortal({
 
   const handleLocalCatShowOnHomeToggle = (index, value) => {
     setLocalCategories(prev => prev.map((cat, i) => i === index ? { ...cat, showOnHome: value } : cat));
+  };
+
+  const handleLocalCatShowProductsOnHomeToggle = (index, value) => {
+    setLocalCategories(prev => prev.map((cat, i) => i === index ? { ...cat, showProductsOnHome: value } : cat));
   };
 
   const handleLocalCatDelete = (name) => {
@@ -1261,6 +1268,16 @@ export default function AdminPortal({
                   <span className="checkbox-text-label font-bold text-sm">Show on Homepage Category Bar</span>
                 </label>
 
+                <label className="checkbox-label-row mt-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input 
+                    type="checkbox"
+                    checked={newCatShowProductsOnHome}
+                    onChange={(e) => setNewCatShowProductsOnHome(e.target.checked)}
+                    className="custom-checkbox"
+                  />
+                  <span className="checkbox-text-label font-bold text-sm">Show Product Slider on Homepage</span>
+                </label>
+
                 <div className="admin-form-actions-row">
                   <button type="submit" className="checkout-proceed-btn" style={{ flex: 1 }}>
                     Add Category
@@ -1303,6 +1320,7 @@ export default function AdminPortal({
                       <th style={{ width: '180px' }}>Category Name</th>
                       <th>Image URL Path</th>
                       <th className="text-center" style={{ width: '110px' }}>Show on Home</th>
+                      <th className="text-center" style={{ width: '110px' }}>Product Slider</th>
                       <th className="text-center" style={{ width: '80px' }}>Action</th>
                     </tr>
                   </thead>
@@ -1342,6 +1360,14 @@ export default function AdminPortal({
                           />
                         </td>
                         <td className="text-center">
+                          <input 
+                            type="checkbox" 
+                            checked={cat.showProductsOnHome || false} 
+                            onChange={(e) => handleLocalCatShowProductsOnHomeToggle(idx, e.target.checked)}
+                            className="custom-checkbox"
+                          />
+                        </td>
+                        <td className="text-center">
                           <button 
                             type="button" 
                             className="pincode-btn" 
@@ -1355,7 +1381,7 @@ export default function AdminPortal({
                     ))}
                     {localCategories.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="text-center" style={{ padding: '24px 0', color: 'var(--color-text-muted)' }}>
+                        <td colSpan={5} className="text-center" style={{ padding: '24px 0', color: 'var(--color-text-muted)' }}>
                           No categories defined. Add one above.
                         </td>
                       </tr>
