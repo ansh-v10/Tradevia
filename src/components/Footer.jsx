@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
@@ -60,11 +59,6 @@ export default function Footer() {
             </p>
             <p className="contact-item">
               <strong>Hours:</strong> Mon - Sat: 9:00 AM - 5:00 PM (Kirana supply hours)
-            </p>
-            <p className="contact-item" style={{ marginTop: '16px' }}>
-              <Link to="/admin" style={{ color: 'var(--color-accent)', fontWeight: 'bold', textDecoration: 'underline' }}>
-                🔒 Admin Control Desk
-              </Link>
             </p>
           </div>
 
