@@ -50,7 +50,7 @@ const fromProductRow = (product) => {
     reviewsCount: parsed.reviewsCount ?? 0,
     isMostBought: parsed.isMostBought ?? false,
     moq: product.moq,
-    inventory: 100,
+    inventory: product.inventory ?? 100,
     imageUrl: product.image_url || ''
   };
 };
@@ -101,7 +101,7 @@ export default function AdminApp() {
     const loadProducts = async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, category, price, moq, unit, description, image_url')
+        .select('id, name, category, price, moq, unit, description, image_url, inventory')
         .order('id', { ascending: true });
 
       if (error || !data?.length || !isMounted) {
@@ -121,12 +121,46 @@ export default function AdminApp() {
     };
   }, []);
 
+  // Load all orders from Supabase (admin sees all via RLS)
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOrders = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error || !data?.length || !isMounted) {
+        return;
+      }
+
+      const mapped = data.map((o) => ({
+        id: o.id,
+        date: o.created_at,
+        items: o.items || [],
+        rawSubtotal: Number(o.raw_subtotal || 0),
+        gstAmount: Number(o.gst || 0),
+        bulkTierDiscount: Number(o.discount || 0),
+        grandTotal: Number(o.amount || 0),
+        address: o.address || {},
+        status: o.status || 'pending'
+      }));
+
+      if (isMounted) setOrders(mapped);
+    };
+
+    loadOrders();
+
+    return () => { isMounted = false; };
+  }, []);
+
   // --- Admin Desk Database Callbacks ---
   const refreshProducts = async () => {
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, category, price, moq, unit, description, image_url')
-      .order('id', { ascending: true });
+        .select('id, name, category, price, moq, unit, description, image_url, inventory')
+        .order('id', { ascending: true });
 
     if (!error && data?.length) {
       setProducts(data.map(fromProductRow));

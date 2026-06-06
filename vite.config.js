@@ -9,6 +9,18 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true
+      }
+    },
+    watch: {
+      usePolling: true,
+      interval: 300
+    }
+  },
   build: {
     rollupOptions: {
       input: {

@@ -146,7 +146,7 @@ export default function App() {
     const loadProducts = async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, category, price, moq, unit, description, image_url')
+        .select('id, name, category, price, moq, unit, description, image_url, inventory')
         .order('id', { ascending: true });
 
       if (error || !data?.length || !isMounted) {
@@ -157,6 +157,7 @@ export default function App() {
         ...product,
         id: product.id,
         name: product.name,
+        inventory: product.inventory ?? 100,
         brand: (() => {
           if (!product.description) return '';
           try {
@@ -289,6 +290,46 @@ export default function App() {
       })
     );
   };
+
+  // Load orders from Supabase when user changes
+  useEffect(() => {
+    if (!user?.email) {
+      const saved = localStorage.getItem('ss_orders');
+      if (saved) setOrders(JSON.parse(saved));
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadOrders = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error || !data?.length || !isMounted) {
+        return;
+      }
+
+      const mapped = data.map((o) => ({
+        id: o.id,
+        date: o.created_at,
+        items: o.items || [],
+        rawSubtotal: Number(o.raw_subtotal || 0),
+        gstAmount: Number(o.gst || 0),
+        bulkTierDiscount: Number(o.discount || 0),
+        grandTotal: Number(o.amount || 0),
+        address: o.address || {},
+        status: o.status || 'pending'
+      }));
+
+      if (isMounted) setOrders(mapped);
+    };
+
+    loadOrders();
+
+    return () => { isMounted = false; };
+  }, [user?.email]);
 
   const handleAddAddress = (newAddr) => {
     setAddresses((prev) => {

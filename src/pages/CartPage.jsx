@@ -18,6 +18,7 @@ export default function CartPage({
   const navigate = useNavigate();
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart', 'address', 'success'
   const [orderId, setOrderId] = useState('');
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '';
   
   // Selection state for shipping address
   const [selectedAddressId, setSelectedAddressId] = useState('');
@@ -116,25 +117,105 @@ export default function CartPage({
     (async () => {
       try {
         // create draft order in Supabase with status 'pending'
-        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: (await supabase.auth.getUser()).data.user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, items: orderPayload.items, address: orderPayload.address }]).select().single();
+        const user = (await supabase.auth.getUser()).data.user;
+        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, raw_subtotal: rawSubtotal, items: orderPayload.items, address: orderPayload.address }]).select().single();
         if (error) throw error;
 
-        // call serverless endpoint to create Stripe Checkout session
-        const resp = await fetch('/api/create-checkout', {
+        // create Razorpay order via serverless endpoint
+        const resp = await fetch(`${apiBase}/api/create-razorpay-order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: generatedId })
+          body: JSON.stringify({ orderId: generatedId, amount: grandTotal })
         });
 
-        const js = await resp.json();
-        if (js?.url) {
-          window.location.href = js.url;
-          return;
+        const rawText = await resp.text();
+        let js;
+        try {
+          js = JSON.parse(rawText);
+        } catch {
+          throw new Error(rawText || 'Failed to create payment order');
+        }
+        if (!js || !js.order_id) {
+          throw new Error(js?.error || 'Failed to create payment order');
         }
 
-        // fallback: mark order locally
-        onAddOrder(orderPayload);
-        setCheckoutStep('success');
+        // load Razorpay checkout script
+        const loadRzp = () => new Promise((resolve, reject) => {
+          if (window.Razorpay) return resolve();
+          const s = document.createElement('script');
+          s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.body.appendChild(s);
+        });
+
+        await loadRzp();
+
+        const options = {
+          key: js.key_id,
+          amount: js.amount,
+          currency: 'INR',
+          name: 'Sanjay Sales',
+          description: `Invoice ${generatedId}`,
+          order_id: js.order_id,
+          notes: {
+            orderId: generatedId
+          },
+          handler: async function (response) {
+            try {
+              // verify payment server-side and mark order paid
+              const verifyRes = await fetch(`${apiBase}/api/razorpay-verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: generatedId
+                })
+              });
+
+              const verifyText = await verifyRes.text();
+              let vj;
+              try {
+                vj = JSON.parse(verifyText);
+              } catch {
+                throw new Error(verifyText || 'Payment verification failed');
+              }
+              if (vj?.success) {
+                onAddOrder(orderPayload);
+                setCheckoutStep('success');
+              } else {
+                alert('Payment verification failed. We will confirm shortly.');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Verification error: ' + (err.message || ''));
+            }
+          },
+          prefill: {
+            name: activeAddress?.name || user?.email || 'Business Customer',
+            contact: activeAddress?.phone || user?.mobile || ''
+          },
+          modal: {
+            ondismiss: async function () {
+              try {
+                await fetch(`${apiBase}/api/razorpay-payment-failed`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orderId: generatedId, reason: 'checkout_dismissed' })
+                });
+              } catch (err) {
+                console.error('Failed to mark payment as failed', err);
+              }
+            }
+          },
+          theme: { color: '#3b82f6' }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
       } catch (err) {
         console.error(err);
         alert('Failed to initiate payment: ' + (err.message || ''));

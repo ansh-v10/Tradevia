@@ -305,21 +305,44 @@ export default function AdminPortal({
     }
   };
 
-  // FileReader handler for base64 conversions
-  const handleImageFileChange = (e) => {
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+
+  // Upload image to Supabase Storage via API server
+  const handleImageFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check size limit (localStorage max capacity ~5MB, we check up to 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("This file is too large. Please select an image file under 5 MB.");
-      e.target.value = ""; // clear input
+      e.target.value = "";
       return;
     }
 
+    // Read as base64 for preview
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageUrl(reader.result); // Base64 data string
+    reader.onloadend = async () => {
+      const base64Data = reader.result;
+      setImageUrl(base64Data); // temporary preview
+
+      // Upload to Supabase Storage via API
+      try {
+        const resp = await fetch(`${apiBase}/api/upload-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: file.name, base64Data })
+        });
+        const text = await resp.text();
+        let js;
+        try { js = JSON.parse(text); } catch { throw new Error(text || 'Upload failed'); }
+        if (js?.url) {
+          setImageUrl(js.url); // replace preview with permanent URL
+        } else {
+          throw new Error(js?.error || 'Upload failed');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Image upload failed: ' + (err.message || ''));
+      }
     };
     reader.readAsDataURL(file);
   };
