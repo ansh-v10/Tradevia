@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AppRouter from './router/AppRouter';
 import LoginModal from './components/LoginModal';
+import Toast from './components/Toast';
 import { productsData } from './util/productsData';
 import { supabase } from './util/supabaseClient';
 import './App.css';
@@ -294,6 +295,8 @@ export default function App() {
     setIsLoginModalOpen(true);
   };
 
+  const [cartMsg, setCartMsg] = useState('');
+
   // --- Cart Manipulation ---
   const handleAddToCart = (product, quantity) => {
     setCart((prevCart) => {
@@ -307,6 +310,7 @@ export default function App() {
       }
       return [...prevCart, { product, quantity }];
     });
+    setCartMsg(`Added ${quantity} x ${product.name} to cart`);
   };
 
   const handleUpdateQuantity = (productId, newQuantity) => {
@@ -540,6 +544,9 @@ export default function App() {
           onResetCatalog={handleResetCatalog}
         />
       </div>
+
+      {/* Toast Notification */}
+      <Toast message={cartMsg} onClose={() => setCartMsg('')} />
 
       {/* Login & SignUp Slide Modal */}
       <LoginModal 

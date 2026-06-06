@@ -23,7 +23,6 @@ export default function ProductDetails({
   const product = products.find((p) => p.id === parseInt(id));
   
   const [qty, setQty] = useState(product?.moq || 10);
-  const [successMsg, setSuccessMsg] = useState('');
   const [quantities, setQuantities] = useState({});
   const [reviews, setReviews] = useState([]);
   const [reviewRating, setReviewRating] = useState(0);
@@ -118,10 +117,6 @@ export default function ProductDetails({
     const finalQty = parseInt(qty) || moqVal;
     if (onAddToCart) {
       onAddToCart(product, finalQty);
-      setSuccessMsg(`Added ${finalQty} packs of ${product.name} to your wholesale cart!`);
-      setTimeout(() => {
-        setSuccessMsg('');
-      }, 3000);
     }
   };
 
@@ -345,12 +340,6 @@ export default function ProductDetails({
               *Minimum Order Quantity for this product is <strong>{moqVal} packs</strong>.
             </div>
           </div>
-
-          {successMsg && (
-            <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--color-success)', color: 'var(--color-success)', padding: '12px 16px', borderRadius: 'var(--radius-md)', fontWeight: 'bold', fontSize: '14px', animation: 'fadeIn 0.2s ease' }}>
-              {successMsg}
-            </div>
-          )}
 
           {/* Specs List */}
           <div style={{ marginTop: '12px' }}>
