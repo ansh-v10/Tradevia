@@ -1647,7 +1647,12 @@ export default function AdminPortal({
                       <div style={{ textAlign: 'right' }}>
                         <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'bold' }}>BILLING AMOUNT</span>
                         <span style={{ display: 'block', fontSize: '18px', fontWeight: '800', color: 'var(--color-primary)' }}>₹{order.grandTotal.toLocaleString('en-IN')}</span>
-                        <span className="invoice-status-paid" style={{ display: 'inline-block', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)', padding: '1px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '10px', marginTop: '4px' }}>PAID</span>
+                        <span style={{
+                          display: 'inline-block',
+                          backgroundColor: order.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                          color: order.status === 'paid' ? 'var(--color-success)' : '#b45309',
+                          padding: '1px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '10px', marginTop: '4px'
+                        }}>{(order.status || 'pending').toUpperCase()}</span>
                       </div>
                     </div>
 
