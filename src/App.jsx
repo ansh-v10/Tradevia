@@ -65,6 +65,8 @@ export default function App() {
   // --- Orders & Saved Addresses B2B States ---
   const [orders, setOrders] = useState([]);
   const [addresses, setAddresses] = useState(() => {
+    const saved = localStorage.getItem('ss_addresses');
+    if (saved) try { return JSON.parse(saved); } catch (_) {}
     const defaultAddr = {
       id: 'addr-default',
       name: 'Store Manager',
@@ -263,6 +265,7 @@ export default function App() {
     setUser(null);
     setCart([]);
     setOrders([]);
+    setAddresses([]);
     navigate('/');
   };
 
