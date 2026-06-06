@@ -153,7 +153,9 @@ export default function AdminApp() {
         bulkTierDiscount: Number(o.discount || 0),
         grandTotal: Number(o.amount || 0),
         address: o.address || {},
-        status: o.status || 'pending'
+        status: o.status || 'pending',
+        trackingNumber: o.tracking_number || null,
+        shippedAt: o.shipped_at || null
       }));
 
       if (isMounted) setOrders(mapped);

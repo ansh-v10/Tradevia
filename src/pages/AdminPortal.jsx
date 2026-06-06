@@ -14,6 +14,7 @@ export default function AdminPortal({
   onResetCatalog
 }) {
   const navigate = useNavigate();
+  const [trackingInputs, setTrackingInputs] = useState({});
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns'
   const [returns, setReturns] = useState([]);
   const [returnsLoaded, setReturnsLoaded] = useState(false);
@@ -1671,8 +1672,8 @@ export default function AdminPortal({
                         <span style={{ display: 'block', fontSize: '18px', fontWeight: '800', color: 'var(--color-primary)' }}>₹{order.grandTotal.toLocaleString('en-IN')}</span>
                         <span style={{
                           display: 'inline-block',
-                          backgroundColor: order.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                          color: order.status === 'paid' ? 'var(--color-success)' : '#b45309',
+                          backgroundColor: order.status === 'paid' || order.status === 'shipped' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                          color: order.status === 'paid' || order.status === 'shipped' ? 'var(--color-success)' : '#b45309',
                           padding: '1px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '10px', marginTop: '4px'
                         }}>{(order.status || 'pending').toUpperCase()}</span>
                       </div>
@@ -1682,6 +1683,40 @@ export default function AdminPortal({
                       <div style={{ fontSize: '12px', textAlign: 'left' }}>
                         <strong>Delivery Destination:</strong> {order.address?.addressLine}, {order.address?.city}, {order.address?.state} - {order.address?.pincode}
                       </div>
+
+                      {/* Tracking info */}
+                      {order.trackingNumber && (
+                        <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-success)' }}>
+                          <strong>Tracking:</strong> {order.trackingNumber}
+                          {order.shippedAt && <> (shipped {new Date(order.shippedAt).toLocaleDateString('en-IN')})</>}
+                        </div>
+                      )}
+
+                      {/* Mark as shipped */}
+                      {order.status === 'paid' && (
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                          <input
+                            type="text"
+                            value={trackingInputs[order.id] || ''}
+                            onChange={(e) => setTrackingInputs((p) => ({ ...p, [order.id]: e.target.value }))}
+                            placeholder="Tracking number"
+                            style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '12px', maxWidth: '250px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const tracking = (trackingInputs[order.id] || '').trim();
+                              if (!tracking) return;
+                              await supabase.rpc('mark_order_shipped', { order_id: order.id, tracking });
+                              setTrackingInputs((p) => ({ ...p, [order.id]: '' }));
+                              if (window.onAdminOrderUpdate) window.onAdminOrderUpdate();
+                            }}
+                            style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Mark Shipped
+                          </button>
+                        </div>
+                      )}
 
                       <div style={{ marginTop: '8px' }}>
                         <strong style={{ display: 'block', fontSize: '12px', textAlign: 'left', marginBottom: '4px' }}>Items Summary ({itemsCount} units):</strong>

@@ -133,11 +133,14 @@ export default function YourOrders({ orders = [] }) {
                     <div style={{ textAlign: 'right', fontSize: '13px' }}>
                       <strong style={{ fontSize: '14px', display: 'block', marginBottom: '6px' }}>Wholesale Invoice Details:</strong>
                       <p style={{ margin: '2px 0' }}>Status: <span style={{
-                        backgroundColor: order.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                        color: order.status === 'paid' ? 'var(--color-success)' : '#b45309',
+                        backgroundColor: order.status === 'paid' || order.status === 'shipped' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                        color: order.status === 'paid' || order.status === 'shipped' ? 'var(--color-success)' : '#b45309',
                         padding: '2px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '11px'
                       }}>{(order.status || 'pending').toUpperCase()}</span></p>
-                      <p style={{ margin: '2px 0' }}>Fulfillment: <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{order.status === 'paid' ? 'Dispatching (Within 24 Hours)' : 'Awaiting Payment'}</span></p>
+                      <p style={{ margin: '2px 0' }}>Fulfillment: <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{order.status === 'shipped' ? 'Shipped' : order.status === 'paid' ? 'Dispatching (Within 24 Hours)' : 'Awaiting Payment'}</span></p>
+                      {order.trackingNumber && (
+                        <p style={{ margin: '2px 0', fontSize: '12px' }}>Tracking: <strong>{order.trackingNumber}</strong></p>
+                      )}
                       <p style={{ margin: '2px 0' }}>Nearest Hub: <span style={{ fontWeight: '600' }}>Jhajjar B2B Hub</span></p>
                     </div>
                   </div>
