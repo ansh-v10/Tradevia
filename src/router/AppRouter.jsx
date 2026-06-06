@@ -9,6 +9,7 @@ import YourAccount from '../pages/YourAccount';
 import ProductDetails from '../pages/ProductDetails';
 import WishlistPage from '../pages/WishlistPage';
 import ProfilePage from '../pages/ProfilePage';
+import BulkOrderPage from '../pages/BulkOrderPage';
 
 export default function AppRouter({
   products,
@@ -153,6 +154,7 @@ export default function AppRouter({
           onResetCatalog={onResetCatalog}
         />
       } />
+      <Route path="/bulk-order" element={<BulkOrderPage products={products} onAddToCart={onAddToCart} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

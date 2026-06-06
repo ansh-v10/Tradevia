@@ -27,6 +27,14 @@ export default function AdminPortal({
   const [customerOrdersLoaded, setCustomerOrdersLoaded] = useState(false);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
+  const [adminToast, setAdminToast] = useState({ show: false, message: '', type: 'success' });
+
+  const Spinner = () => (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+      <div style={{ width: '32px', height: '32px', border: '3px solid #e2e8f0', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   useEffect(() => {
     if (activeTab === 'returns' && !returnsLoaded) {
@@ -94,6 +102,13 @@ export default function AdminPortal({
     if (!error) setReturns((prev) => prev.map((r) => r.id === returnId ? { ...r, status: newStatus } : r));
   };
   
+  const handleMarkDelivered = async (orderId) => {
+    await supabase.rpc('mark_order_delivered', { order_id: orderId });
+    if (window.onAdminOrderUpdate) window.onAdminOrderUpdate();
+    setAdminToast({ show: true, message: 'Order marked as delivered!', type: 'success' });
+    setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
+  };
+
   // Admin Login/Signup Authentication States
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
@@ -131,17 +146,22 @@ export default function AdminPortal({
         prev.map(a => a.id.toLowerCase() === editingAdminId.toLowerCase() ? { id: a.id, password: cleanPassword } : a)
       );
       setActionSuccess(`Password for admin "${editingAdminId}" updated successfully!`);
+      setAdminToast({ show: true, message: `Password for admin "${editingAdminId}" updated successfully!`, type: 'success' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       setEditingAdminId(null);
     } else {
       const exists = registeredAdmins.some(
         a => a.id.toLowerCase() === cleanId.toLowerCase()
       );
       if (exists) {
-        alert("This Admin ID is already registered.");
+        setAdminToast({ show: true, message: "This Admin ID is already registered.", type: 'error' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
         return;
       }
       setRegisteredAdmins(prev => [...prev, { id: cleanId, password: cleanPassword }]);
       setActionSuccess(`Admin "${cleanId}" registered successfully!`);
+      setAdminToast({ show: true, message: `Admin "${cleanId}" registered successfully!`, type: 'success' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
     }
     setAdminAccId('');
     setAdminAccPassword('');
@@ -162,12 +182,15 @@ export default function AdminPortal({
 
   const handleDeleteAdminClick = (adminId) => {
     if (registeredAdmins.length <= 1) {
-      alert("Cannot delete the last admin account! At least one administrator account must exist.");
+      setAdminToast({ show: true, message: "Cannot delete the last admin account! At least one administrator account must exist.", type: 'error' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       return;
     }
     if (window.confirm(`Are you sure you want to delete admin account "${adminId}"?`)) {
       setRegisteredAdmins(prev => prev.filter(a => a.id.toLowerCase() !== adminId.toLowerCase()));
       setActionSuccess(`Admin account "${adminId}" deleted successfully!`);
+      setAdminToast({ show: true, message: `Admin account "${adminId}" deleted successfully!`, type: 'success' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       setTimeout(() => setActionSuccess(''), 2000);
     }
   };
@@ -243,6 +266,8 @@ export default function AdminPortal({
           console.warn('Using local admin authentication (insecure — for development only)');
           setIsAdminAuthenticated(true);
           setActionSuccess('Login successful (dev mode).');
+          setAdminToast({ show: true, message: 'Login successful (dev mode).', type: 'success' });
+          setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
           setAuthId('');
           setAuthPassword('');
           return;
@@ -260,6 +285,8 @@ export default function AdminPortal({
 
       setIsAdminAuthenticated(true);
       setActionSuccess('Login successful. Welcome to the admin panel.');
+      setAdminToast({ show: true, message: 'Login successful. Welcome to the admin panel.', type: 'success' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       setAuthId('');
       setAuthPassword('');
     } else {
@@ -378,7 +405,8 @@ export default function AdminPortal({
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("This file is too large. Please select an image file under 5 MB.");
+      setAdminToast({ show: true, message: "This file is too large. Please select an image file under 5 MB.", type: 'error' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       e.target.value = "";
       return;
     }
@@ -406,7 +434,8 @@ export default function AdminPortal({
         }
       } catch (err) {
         console.error(err);
-        alert('Image upload failed: ' + (err.message || ''));
+        setAdminToast({ show: true, message: 'Image upload failed: ' + (err.message || ''), type: 'error' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       }
     };
     reader.readAsDataURL(file);
@@ -531,14 +560,19 @@ export default function AdminPortal({
       if (editingId) {
         await onUpdateProduct({ ...productPayload, id: editingId });
         setActionSuccess("Product updated in wholesale catalog successfully!");
+        setAdminToast({ show: true, message: "Product updated in wholesale catalog successfully!", type: 'success' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
         setEditingId(null);
       } else {
         await onAddProduct(productPayload);
         setActionSuccess("New product added to catalog successfully!");
+        setAdminToast({ show: true, message: "New product added to catalog successfully!", type: 'success' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       }
     } catch (error) {
       console.error(error);
-      alert(error?.message || 'Failed to save product to Supabase.');
+      setAdminToast({ show: true, message: error?.message || 'Failed to save product to Supabase.', type: 'error' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       return;
     }
 
@@ -567,10 +601,13 @@ export default function AdminPortal({
       try {
         await onDeleteProduct(productId);
         setActionSuccess("Product deleted successfully!");
+        setAdminToast({ show: true, message: "Product deleted successfully!", type: 'success' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
         setTimeout(() => setActionSuccess(''), 2000);
       } catch (error) {
         console.error(error);
-        alert(error?.message || 'Failed to delete product from Supabase.');
+        setAdminToast({ show: true, message: error?.message || 'Failed to delete product from Supabase.', type: 'error' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       }
     }
   };
@@ -586,7 +623,8 @@ export default function AdminPortal({
       c => c.name.toLowerCase() === nameTrimmed.toLowerCase()
     );
     if (exists) {
-      alert(`Category "${nameTrimmed}" already exists.`);
+      setAdminToast({ show: true, message: `Category "${nameTrimmed}" already exists.`, type: 'error' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       return;
     }
 
@@ -604,6 +642,8 @@ export default function AdminPortal({
     setNewCatShowProductsOnHome(false);
     
     setActionSuccess(`Category "${nameTrimmed}" added to local draft! Remember to save changes.`);
+    setAdminToast({ show: true, message: `Category "${nameTrimmed}" added!`, type: 'success' });
+    setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
     setTimeout(() => setActionSuccess(''), 2500);
   };
 
@@ -628,6 +668,8 @@ export default function AdminPortal({
   const handleSaveCategoriesConfig = () => {
     onUpdateCategories(localCategories);
     setBulkSuccess("Wholesale categories updated successfully!");
+    setAdminToast({ show: true, message: "Wholesale categories updated successfully!", type: 'success' });
+    setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
     setTimeout(() => setBulkSuccess(''), 2000);
   };
 
@@ -641,16 +683,20 @@ export default function AdminPortal({
     e.preventDefault();
     const percent = parseFloat(priceAdjPercent);
     if (isNaN(percent) || percent === 0) {
-      alert("Please enter a valid non-zero percentage adjustment.");
+      setAdminToast({ show: true, message: "Please enter a valid non-zero percentage adjustment.", type: 'error' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       return;
     }
     try {
       await onBulkAdjustPrices(percent);
       setBulkSuccess(`Wholesale rates adjusted globally by ${percent > 0 ? '+' : ''}${percent}%!`);
+      setAdminToast({ show: true, message: `Wholesale rates adjusted globally by ${percent > 0 ? '+' : ''}${percent}%!`, type: 'success' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       setTimeout(() => setBulkSuccess(''), 3000);
     } catch (error) {
       console.error(error);
-      alert(error?.message || 'Failed to update wholesale rates in Supabase.');
+      setAdminToast({ show: true, message: error?.message || 'Failed to update wholesale rates in Supabase.', type: 'error' });
+      setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
     }
   };
 
@@ -659,10 +705,13 @@ export default function AdminPortal({
       try {
         await onResetCatalog();
         setBulkSuccess("Wholesale database restored to factory settings!");
+        setAdminToast({ show: true, message: "Wholesale database restored to factory settings!", type: 'success' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
         setTimeout(() => setBulkSuccess(''), 3000);
       } catch (error) {
         console.error(error);
-        alert(error?.message || 'Failed to reset the catalog in Supabase.');
+        setAdminToast({ show: true, message: error?.message || 'Failed to reset the catalog in Supabase.', type: 'error' });
+        setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
       }
     }
   };
@@ -683,16 +732,7 @@ export default function AdminPortal({
         padding: '20px',
         backgroundColor: 'var(--color-bg-main)'
       }}>
-        <div style={{
-          padding: '24px 28px',
-          borderRadius: '14px',
-          border: '1px solid var(--color-border)',
-          backgroundColor: 'var(--color-bg-card)',
-          color: 'var(--color-text-main)',
-          fontWeight: 700
-        }}>
-          Checking admin session...
-        </div>
+        <Spinner />
       </div>
     );
   }
@@ -974,6 +1014,8 @@ export default function AdminPortal({
               await supabase.auth.signOut();
               setIsAdminAuthenticated(false);
               setActionSuccess('Logged out successfully.');
+              setAdminToast({ show: true, message: 'Logged out successfully.', type: 'success' });
+              setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
             }}
             style={{ backgroundColor: '#fee2e2', color: 'var(--color-danger)', borderColor: '#fca5a5' }}
           >
@@ -1043,7 +1085,29 @@ export default function AdminPortal({
 
       {/* TAB 1: PRODUCT CATALOG MANAGEMENT */}
       {activeTab === 'products' && (
-        <div className="admin-grid-layout mt-6">
+        <>
+          {(() => {
+            const outOfStock = products.filter(p => (p.inventory !== undefined ? p.inventory : 100) <= 0).length;
+            const lowStock = products.filter(p => {
+              const inv = p.inventory !== undefined ? p.inventory : 100;
+              return inv > 0 && inv < 10;
+            }).length;
+            if (outOfStock === 0 && lowStock === 0) return null;
+            const parts = [];
+            if (outOfStock > 0) parts.push(`${outOfStock} product${outOfStock > 1 ? 's' : ''} out of stock`);
+            if (lowStock > 0) parts.push(`${lowStock} product${lowStock > 1 ? 's' : ''} low in stock`);
+            return (
+              <div style={{
+                width: '100%', marginTop: '16px', marginBottom: '16px', padding: '12px 16px',
+                backgroundColor: '#fefce8', border: '1px solid #fde68a',
+                borderRadius: '8px', color: '#92400e', fontSize: '13px',
+                fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px'
+              }}>
+                ⚠️ {parts.join(' · ')}
+              </div>
+            );
+          })()}
+          <div className="admin-grid-layout mt-6">
           
           {/* Left Form: Add/Edit products */}
           <div className="admin-form-column">
@@ -1459,7 +1523,7 @@ export default function AdminPortal({
           </div>
 
         </div>
-      )}
+      </>)}
 
       {/* TAB 2: WHOLESALE CATEGORIES MANAGER */}
       {activeTab === 'categories' && (
@@ -1736,8 +1800,8 @@ export default function AdminPortal({
                         <span style={{ display: 'block', fontSize: '18px', fontWeight: '800', color: 'var(--color-primary)' }}>₹{order.grandTotal.toLocaleString('en-IN')}</span>
                         <span style={{
                           display: 'inline-block',
-                          backgroundColor: order.status === 'paid' || order.status === 'shipped' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                          color: order.status === 'paid' || order.status === 'shipped' ? 'var(--color-success)' : '#b45309',
+                          backgroundColor: order.status === 'paid' || order.status === 'shipped' || order.status === 'delivered' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                          color: order.status === 'paid' || order.status === 'shipped' || order.status === 'delivered' ? 'var(--color-success)' : '#b45309',
                           padding: '1px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '10px', marginTop: '4px'
                         }}>{(order.status || 'pending').toUpperCase()}</span>
                       </div>
@@ -1754,6 +1818,23 @@ export default function AdminPortal({
                           <strong>Tracking:</strong> {order.trackingNumber}
                           {order.courier && <> via {order.courier}</>}
                           {order.shippedAt && <> (shipped {new Date(order.shippedAt).toLocaleDateString('en-IN')})</>}
+                        </div>
+                      )}
+
+                      {order.status === 'delivered' && order.delivered_at && (
+                        <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-success)' }}>
+                          <strong>Delivered:</strong> {new Date(order.delivered_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                      {order.status === 'shipped' && (
+                        <div style={{ marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkDelivered(order.id)}
+                            style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Mark Delivered
+                          </button>
                         </div>
                       )}
 
@@ -1780,7 +1861,11 @@ export default function AdminPortal({
                             onClick={async () => {
                               const tracking = (trackingInputs[order.id] || '').trim();
                               const courier = courierInputs[order.id] || '';
-                              if (!tracking || !courier) return alert('Enter tracking number and select courier.');
+                              if (!tracking || !courier) {
+                                setAdminToast({ show: true, message: 'Enter tracking number and select courier.', type: 'error' });
+                                setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
+                                return;
+                              }
                               await supabase.rpc('mark_order_shipped', { order_id: order.id, tracking, courier_name: courier });
                               setTrackingInputs((p) => ({ ...p, [order.id]: '' }));
                               setCourierInputs((p) => ({ ...p, [order.id]: '' }));
@@ -1916,7 +2001,7 @@ export default function AdminPortal({
                   </span>
                 </h4>
                 {!customerOrdersLoaded ? (
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Loading orders...</p>
+                  <Spinner />
                 ) : customerOrders.length === 0 ? (
                   <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No orders placed yet.</p>
                 ) : (
@@ -1967,7 +2052,7 @@ export default function AdminPortal({
           <p className="gst-disclaimer">Revenue breakdown and top-selling products from paid orders.</p>
           <div className="divider-card"></div>
           {!analyticsData ? (
-            <p style={{ padding: '20px 0', color: 'var(--color-text-muted)', fontSize: '13px' }}>Loading analytics...</p>
+            <Spinner />
           ) : analyticsData.totalOrders === 0 ? (
             <p style={{ padding: '20px 0', color: 'var(--color-text-muted)', fontSize: '13px' }}>No paid orders yet.</p>
           ) : (
@@ -2134,6 +2219,20 @@ export default function AdminPortal({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {adminToast.show && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+          padding: '14px 20px', borderRadius: '10px', fontSize: '14px',
+          fontWeight: '600', backdropFilter: 'blur(12px)',
+          backgroundColor: adminToast.type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(16, 185, 129, 0.9)',
+          color: 'white', boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          maxWidth: '380px'
+        }}>
+          {adminToast.message}
         </div>
       )}
 

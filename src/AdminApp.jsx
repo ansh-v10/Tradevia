@@ -156,6 +156,8 @@ export default function AdminApp() {
         status: o.status || 'pending',
         trackingNumber: o.tracking_number || null,
         shippedAt: o.shipped_at || null,
+        cancelledAt: o.cancelled_at || null,
+        deliveredAt: o.delivered_at || null,
         couponDiscount: Number(o.coupon_discount || 0),
         couponCode: o.coupon_code || null
       }));

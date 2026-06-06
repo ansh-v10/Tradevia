@@ -29,6 +29,9 @@ export default function ProductDetails({
   const [reviewComment, setReviewComment] = useState('');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState('');
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyMsg, setNotifyMsg] = useState('');
 
   const handleQuantityChange = (productId, val) => {
     setQuantities(prev => ({ ...prev, [productId]: val }));
@@ -80,11 +83,13 @@ export default function ProductDetails({
     ? parseInt(product.tier3Moq)
     : moqVal + 40;
 
-  const priceTier1 = product.wholesalePrice;
-  const priceTier2 = getTieredWholesalePrice(product, t2Moq);
-  const priceTier3 = getTieredWholesalePrice(product, t3Moq);
+  const variantAdjust = selectedVariant?.priceAdjust || 0;
 
-  const activePrice = getTieredWholesalePrice(product, qty);
+  const priceTier1 = product.wholesalePrice + variantAdjust;
+  const priceTier2 = getTieredWholesalePrice(product, t2Moq) + variantAdjust;
+  const priceTier3 = getTieredWholesalePrice(product, t3Moq) + variantAdjust;
+
+  const activePrice = getTieredWholesalePrice(product, qty) + variantAdjust;
   const totalCost = activePrice * qty;
   const marginPerUnit = product.retailPrice - activePrice;
   const marginPercent = Math.round((marginPerUnit / product.retailPrice) * 100);
@@ -116,8 +121,17 @@ export default function ProductDetails({
   const handleAddToCartClick = () => {
     const finalQty = parseInt(qty) || moqVal;
     if (onAddToCart) {
-      onAddToCart(product, finalQty);
+      onAddToCart({ ...product, selectedVariant: selectedVariant?.name || null }, finalQty);
     }
+  };
+
+  const handleNotifyMe = async () => {
+    const { data: { user: u } } = await supabase.auth.getUser();
+    const email = u?.email || notifyEmail;
+    if (!email) { setNotifyMsg('Please enter an email'); return; }
+    const { error } = await supabase.from('back_in_stock_requests').insert({ product_id: product.id, email });
+    if (error) { setNotifyMsg(error.message); return; }
+    setNotifyMsg("We'll notify you when back in stock!");
   };
 
   const handleSubmitReview = async (e) => {
@@ -208,6 +222,21 @@ export default function ProductDetails({
               <span>•</span>
               <span>Category: <strong>{product.category}</strong></span>
             </div>
+            {product.variants && product.variants.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: '600' }}>Variant:</span>
+                {product.variants.map((v, i) => (
+                  <label key={i} style={{
+                    padding: '4px 12px', borderRadius: '4px', border: `1px solid ${selectedVariant?.name === v.name ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    backgroundColor: selectedVariant?.name === v.name ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
+                    cursor: 'pointer', fontSize: '13px', fontWeight: selectedVariant?.name === v.name ? '700' : '400'
+                  }}>
+                    <input type="radio" name="variant" value={v.name} checked={selectedVariant?.name === v.name} onChange={() => setSelectedVariant(v)} style={{ display: 'none' }} />
+                    {v.name}{v.priceAdjust ? ` (+₹${v.priceAdjust})` : ''}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="divider-card" style={{ margin: '4px 0' }}></div>
@@ -314,27 +343,51 @@ export default function ProductDetails({
                 </button>
               </div>
 
-              {/* ADD Button */}
-              <button 
-                className="add-to-cart-b2b-btn"
-                onClick={handleAddToCartClick}
-                disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
-                style={{ 
-                  height: '44px', 
-                  flex: '1', 
-                  fontSize: '15px', 
-                  fontWeight: '800', 
-                  borderRadius: '6px',
-                  backgroundColor: (product.inventory !== undefined ? product.inventory : 100) <= 0 ? '#cbd5e1' : 'var(--color-primary)', 
-                  color: (product.inventory !== undefined ? product.inventory : 100) <= 0 ? '#64748b' : 'white', 
-                  cursor: (product.inventory !== undefined ? product.inventory : 100) <= 0 ? 'not-allowed' : 'pointer', 
-                  border: 'none',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? 'OUT OF STOCK' : 'ADD'}
-              </button>
+              {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: '1' }}>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={notifyEmail}
+                    onChange={(e) => setNotifyEmail(e.target.value)}
+                    style={{ height: '44px', flex: '1', borderRadius: '6px', border: '1px solid var(--color-border)', padding: '0 12px', fontSize: '13px', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    onClick={handleNotifyMe}
+                    className="pincode-btn"
+                    style={{ height: '44px', fontSize: '13px', fontWeight: '700', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', padding: '0 16px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                  >
+                    Notify Me
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className="add-to-cart-b2b-btn"
+                  onClick={handleAddToCartClick}
+                  disabled={(product.inventory !== undefined ? product.inventory : 100) <= 0}
+                  style={{ 
+                    height: '44px', 
+                    flex: '1', 
+                    fontSize: '15px', 
+                    fontWeight: '800', 
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--color-primary)', 
+                    color: 'white', 
+                    cursor: 'pointer', 
+                    border: 'none',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                >
+                  ADD
+                </button>
+              )}
             </div>
+            
+            {notifyMsg && (
+              <div style={{ fontSize: '12px', color: notifyMsg.includes('notify') ? 'var(--color-success)' : '#dc2626', fontWeight: '600', marginTop: '8px' }}>
+                {notifyMsg}
+              </div>
+            )}
             
             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '8px', textAlign: 'left' }}>
               *Minimum Order Quantity for this product is <strong>{moqVal} packs</strong>.

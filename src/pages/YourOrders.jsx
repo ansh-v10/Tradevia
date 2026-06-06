@@ -10,6 +10,19 @@ export default function YourOrders({ orders = [] }) {
   const [returnForm, setReturnForm] = useState({ orderId: null, reason: '', details: '' });
   const [returnMsg, setReturnMsg] = useState('');
   const [returnLoading, setReturnLoading] = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelMsg, setCancelMsg] = useState('');
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    setCancellingId(orderId);
+    setCancelMsg('');
+    const { error } = await supabase.rpc('cancel_order_and_restore', { order_id: orderId });
+    setCancellingId(null);
+    if (error) { setCancelMsg(error.message); return; }
+    setCancelMsg('Order cancelled successfully!');
+    setTimeout(() => window.location.reload(), 1500);
+  };
 
   const handleReturnSubmit = async (e, orderId) => {
     e.preventDefault();
@@ -134,11 +147,11 @@ export default function YourOrders({ orders = [] }) {
                     <div style={{ textAlign: 'right', fontSize: '13px' }}>
                       <strong style={{ fontSize: '14px', display: 'block', marginBottom: '6px' }}>Wholesale Invoice Details:</strong>
                       <p style={{ margin: '2px 0' }}>Status: <span style={{
-                        backgroundColor: order.status === 'paid' || order.status === 'shipped' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                        color: order.status === 'paid' || order.status === 'shipped' ? 'var(--color-success)' : '#b45309',
+                        backgroundColor: order.status === 'paid' || order.status === 'shipped' || order.status === 'delivered' ? 'rgba(16, 185, 129, 0.1)' : order.status === 'cancelled' ? 'rgba(220, 38, 38, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                        color: order.status === 'paid' || order.status === 'shipped' || order.status === 'delivered' ? 'var(--color-success)' : order.status === 'cancelled' ? '#dc2626' : '#b45309',
                         padding: '2px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '11px'
                       }}>{(order.status || 'pending').toUpperCase()}</span></p>
-                      <p style={{ margin: '2px 0' }}>Fulfillment: <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{order.status === 'shipped' ? 'Shipped' : order.status === 'paid' ? 'Dispatching (Within 24 Hours)' : 'Awaiting Payment'}</span></p>
+                      <p style={{ margin: '2px 0' }}>Fulfillment: <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{order.status === 'delivered' ? 'Delivered' : order.status === 'shipped' ? 'Shipped' : order.status === 'paid' ? 'Dispatching (Within 24 Hours)' : 'Awaiting Payment'}</span></p>
                       {order.trackingNumber && (
                         <p style={{ margin: '2px 0', fontSize: '12px' }}>
                           Tracking: <strong>{order.trackingNumber}</strong>
@@ -214,8 +227,23 @@ export default function YourOrders({ orders = [] }) {
                     </div>
                   </div>
 
+                    {/* Cancel Order */}
+                    {(order.status === 'pending' || order.status === 'paid') && (
+                      <div style={{ marginTop: '12px', borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+                        {cancelMsg && <p style={{ color: cancelMsg.includes('success') ? 'var(--color-success)' : '#dc2626', fontWeight: '600', marginBottom: '8px', fontSize: '13px' }}>{cancelMsg}</p>}
+                        <button
+                          onClick={() => handleCancelOrder(order.id)}
+                          disabled={cancellingId === order.id}
+                          className="pincode-btn"
+                          style={{ backgroundColor: 'transparent', color: '#dc2626', border: '1px solid #dc2626', fontSize: '12px', padding: '6px 14px' }}
+                        >
+                          {cancellingId === order.id ? 'Cancelling...' : 'Cancel Order'}
+                        </button>
+                      </div>
+                    )}
+
                     {/* Return / Refund */}
-                    {(order.status === 'paid' || order.status === 'shipped') && (
+                    {(order.status === 'paid' || order.status === 'shipped' || order.status === 'delivered') && (
                       <div style={{ marginTop: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
                         {returnForm.orderId === order.id ? (
                           <form onSubmit={(e) => handleReturnSubmit(e, order.id)} style={{ fontSize: '13px' }}>

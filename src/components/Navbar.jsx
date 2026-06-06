@@ -491,6 +491,15 @@ export default function Navbar({
                         className="dropdown-action-btn"
                         onClick={() => {
                           setProfileDropdownOpen(false);
+                          navigate('/bulk-order');
+                        }}
+                      >
+                        📋 Bulk Order Upload
+                      </button>
+                      <button 
+                        className="dropdown-action-btn"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
                           navigate('/orders');
                         }}
                       >
