@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TrashIcon, CartIcon, CloseIcon } from '../components/Icons';
 import { supabase } from '../util/supabaseClient';
 import { getTieredWholesalePrice } from '../util/productsData';
+import { generateInvoicePDF } from '../util/generateInvoice';
 
 export default function CartPage({ 
   cart, 
@@ -768,9 +769,24 @@ export default function CartPage({
             </p>
           </div>
 
-          <button className="primary-b2b-btn" onClick={handleCloseSuccess}>
-            Back to Wholesale Home
-          </button>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
+            <button className="primary-b2b-btn" onClick={() => generateInvoicePDF({
+              orderId,
+              user,
+              address: activeAddress,
+              cart,
+              rawSubtotal,
+              gstAmount,
+              bulkTierDiscount,
+              grandTotal,
+              getPrice: getTieredWholesalePrice
+            })}>
+              Download Invoice (PDF)
+            </button>
+            <button className="primary-b2b-btn" onClick={handleCloseSuccess}>
+              Back to Wholesale Home
+            </button>
+          </div>
         </div>
       )}
     </div>
