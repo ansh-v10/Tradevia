@@ -40,6 +40,16 @@ export default function App() {
         });
       }
     });
+
+    // Listen for password recovery event (user clicked reset link from email)
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setLoginModalMode('resetPassword');
+        setIsLoginModalOpen(true);
+      }
+    });
+
+    return () => authListener?.subscription?.unsubscribe();
   }, []);
 
   // --- Dynamic B2B Catalog and Settings States ---
@@ -93,6 +103,7 @@ export default function App() {
 
   // --- Modal Visibility Hooks ---
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalMode, setLoginModalMode] = useState('login');
   const [loginTriggeredByCheckout, setLoginTriggeredByCheckout] = useState(false);
 
   // --- Admin Desk Database Callbacks ---
@@ -270,6 +281,7 @@ export default function App() {
   };
 
   const openLoginModalWithContext = (triggeredByCheckout = false) => {
+    setLoginModalMode('login');
     setLoginTriggeredByCheckout(triggeredByCheckout);
     setIsLoginModalOpen(true);
   };
@@ -500,9 +512,10 @@ export default function App() {
         onClose={() => {
           setIsLoginModalOpen(false);
           setLoginTriggeredByCheckout(false);
+          setLoginModalMode('login');
         }}
         onSuccess={handleLoginSuccess}
-        initialMode="login"
+        initialMode={loginModalMode}
         checkoutPrompt={loginTriggeredByCheckout}
       />
 

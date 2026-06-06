@@ -51,20 +51,22 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
       }
     }
 
-    if (mode === 'signup') {
-      if (!fullName) tempErrors.fullName = "Contact Person Name is required";
-      if (!businessName) tempErrors.businessName = "Business Name is required";
-      
-      if (!mobileNumber && !email) {
-        tempErrors.contact = "Either Mobile Number or Email Address is required";
-      }
+    if (mode === 'signup' || mode === 'resetPassword') {
+      if (mode === 'signup') {
+        if (!fullName) tempErrors.fullName = "Contact Person Name is required";
+        if (!businessName) tempErrors.businessName = "Business Name is required";
+        
+        if (!mobileNumber && !email) {
+          tempErrors.contact = "Either Mobile Number or Email Address is required";
+        }
 
-      if (mobileNumber && !mobileRegex.test(mobileNumber.replace(/\s/g, ''))) {
-        tempErrors.mobileNumber = "Enter a valid 10-digit mobile number (e.g. 9876543210)";
-      }
+        if (mobileNumber && !mobileRegex.test(mobileNumber.replace(/\s/g, ''))) {
+          tempErrors.mobileNumber = "Enter a valid 10-digit mobile number (e.g. 9876543210)";
+        }
 
-      if (email && !emailRegex.test(email)) {
-        tempErrors.email = "Invalid email format";
+        if (email && !emailRegex.test(email)) {
+          tempErrors.email = "Invalid email format";
+        }
       }
 
       if (!password) {
@@ -84,6 +86,26 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
 
     (async () => {
       try {
+        if (mode === 'resetPassword') {
+          const { error } = await supabase.auth.updateUser({ password });
+          if (error) throw error;
+          setSuccessMsg('Password updated successfully. You are now logged in.');
+          setTimeout(async () => {
+            const { data: { user: u } } = await supabase.auth.getUser();
+            if (u?.id) {
+              const { data: profile } = await supabase.from('profiles').select('*').eq('id', u.id).maybeSingle();
+              onSuccess({
+                name: profile?.name || '',
+                businessName: profile?.business_name || '',
+                email: profile?.email || u.email,
+                mobile: profile?.mobile || ''
+              });
+            }
+            onClose();
+          }, 1200);
+          return;
+        }
+
         if (mode === 'signup') {
           const emailToUse = email || `${mobileNumber ? `store+${mobileNumber}@tradevia.local` : ''}`;
           const { data, error } = await supabase.auth.signUp({ email: emailToUse, password });
@@ -161,7 +183,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
           if (isEmail && !identifier.endsWith('@tradevia.local') && !identifier.endsWith('@sanjaysales.local')) {
             // Real email reset
             const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
-              redirectTo: window.location.origin + '/Tradevia/'
+              redirectTo: window.location.origin
             });
             if (error) throw error;
             setSuccessMsg('Password reset instructions sent to your email.');
@@ -202,13 +224,15 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
             </div>
           )}
 
-          <h2>{mode === 'login' ? 'Partner Login' : mode === 'signup' ? 'Create Business Account' : 'Reset Business Password'}</h2>
+          <h2>{mode === 'login' ? 'Partner Login' : mode === 'signup' ? 'Create Business Account' : mode === 'resetPassword' ? 'Set New Password' : 'Reset Business Password'}</h2>
           <p className="modal-desc">
             {mode === 'login' 
               ? 'Access wholesale rates and input tax credit benefits.' 
               : mode === 'signup' 
                 ? 'Register your business to unlock commercial catalogs and bulk discounts.'
-                : 'Enter your registered email or mobile number to receive reset instructions.'}
+                : mode === 'resetPassword'
+                  ? 'Choose a new password for your business account.'
+                  : 'Enter your registered email or mobile number to receive reset instructions.'}
           </p>
         </div>
 
@@ -297,7 +321,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
 
           {mode !== 'forgot' && (
             <div className="form-group">
-              <label htmlFor="password">Security Password *</label>
+              <label htmlFor="password">{mode === 'resetPassword' ? 'New Password *' : 'Security Password *'}</label>
               <div style={{ position: 'relative' }}>
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -356,7 +380,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
           )}
 
           <button type="submit" className="login-submit-btn">
-            {mode === 'login' ? 'Login Securely' : mode === 'signup' ? 'Register Business' : 'Send Reset Instructions'}
+            {mode === 'login' ? 'Login Securely' : mode === 'signup' ? 'Register Business' : mode === 'resetPassword' ? 'Update Password' : 'Send Reset Instructions'}
           </button>
         </form>
 
@@ -366,6 +390,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
               Remembered your password?{' '}
               <button className="toggle-mode-btn" onClick={() => setMode('login')}>
                 Sign in to your account
+              </button>
+            </p>
+          ) : mode === 'resetPassword' ? (
+            <p>
+              Changed your mind?{' '}
+              <button className="toggle-mode-btn" onClick={() => setMode('login')}>
+                Sign in instead
               </button>
             </p>
           ) : mode === 'login' ? (
