@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../util/supabaseClient';
 
 export default function YourAccount({
   user,
@@ -21,6 +22,8 @@ export default function YourAccount({
   const [editEmail, setEditEmail] = useState(user?.email || '');
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
+  const [verifyMsg, setVerifyMsg] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
   // Address Add Form states
   const [showAddAddressForm, setShowAddAddressForm] = useState(false);
@@ -160,9 +163,44 @@ export default function YourAccount({
     );
   }
 
+  const handleResendVerification = async () => {
+    setVerifyMsg('');
+    setVerifyLoading(true);
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (u?.email) {
+      const { error } = await supabase.auth.resend({ type: 'signup', email: u.email });
+      if (error) setVerifyMsg(error.message);
+      else setVerifyMsg('Verification email sent! Check your inbox.');
+    } else {
+      setVerifyMsg('No email found on account.');
+    }
+    setVerifyLoading(false);
+    setTimeout(() => setVerifyMsg(''), 5000);
+  };
+
   return (
     <div className="account-page-wrapper navbar-width-limiter" style={{ padding: '32px 0 64px', textAlign: 'left' }}>
       
+      {/* Email verification banner */}
+      {user && !user.emailConfirmed && (
+        <div style={{ backgroundColor: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ fontSize: '13px', color: '#92400e' }}>
+            <strong>Email not verified.</strong> Please check your inbox and click the confirmation link. Some features may be limited.
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {verifyMsg && <span style={{ fontSize: '12px', color: verifyMsg.includes('sent') ? 'var(--color-success)' : '#dc2626' }}>{verifyMsg}</span>}
+            <button
+              type="button"
+              disabled={verifyLoading}
+              onClick={handleResendVerification}
+              style={{ fontSize: '12px', fontWeight: '600', padding: '6px 14px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              {verifyLoading ? 'Sending...' : 'Resend Email'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="admin-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
         <div>

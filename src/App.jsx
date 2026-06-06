@@ -32,11 +32,8 @@ export default function App() {
       if (data?.session?.user) {
         const u = data.session.user;
         supabase.from('profiles').select('*').eq('id', u.id).maybeSingle().then(({ data: profile }) => {
-          if (profile) {
-            setUser({ id: u.id, email: profile.email || u.email, name: profile.name || '', businessName: profile.business_name || '', mobile: profile.mobile || '' });
-          } else {
-            setUser({ id: u.id, email: u.email, name: '', businessName: '', mobile: '' });
-          }
+          const base = { id: u.id, email: profile?.email || u.email, name: profile?.name || '', businessName: profile?.business_name || '', mobile: profile?.mobile || '' };
+          setUser({ ...base, emailConfirmed: !!u.email_confirmed_at });
         });
       }
     });
@@ -253,8 +250,9 @@ export default function App() {
   }, []);
 
   // --- Login / Profile Action callbacks ---
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
+  const handleLoginSuccess = async (userData) => {
+    const { data: { user: u } } = await supabase.auth.getUser();
+    setUser({ ...userData, emailConfirmed: !!u?.email_confirmed_at });
     setIsLoginModalOpen(false);
   };
 

@@ -113,7 +113,7 @@ export default function Navbar({
     setSearchQuery(tempSearch);
     setIsSearchFocused(false);
     setIsMobileSearchOpen(false);
-    navigate('/browse');
+    navigate(tempSearch ? `/browse?q=${encodeURIComponent(tempSearch)}` : '/browse');
   };
 
   const handleTrendingClick = (keyword) => {
@@ -121,7 +121,7 @@ export default function Navbar({
     setSearchQuery(keyword);
     setIsSearchFocused(false);
     setIsMobileSearchOpen(false);
-    navigate('/browse');
+    navigate(`/browse?q=${encodeURIComponent(keyword)}`);
   };
 
   const handleLogoClick = () => {
@@ -379,7 +379,12 @@ export default function Navbar({
                         
                         {/* Email display / addition */}
                         {user.email ? (
-                          <span className="user-email-text" style={{ display: 'block', fontSize: '11px' }}>✉ {user.email}</span>
+                          <span className="user-email-text" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
+                            ✉ {user.email}
+                            {user.emailConfirmed === false && (
+                              <span style={{ fontSize: '9px', backgroundColor: '#fef3c7', color: '#92400e', padding: '1px 5px', borderRadius: '3px', fontWeight: '600', lineHeight: '1.4' }}>Unverified</span>
+                            )}
+                          </span>
                         ) : (
                           editingField === 'email' ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }} onClick={e => e.stopPropagation()}>
