@@ -62,6 +62,11 @@ export default function CartPage({
     }
   }, [user]);
 
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const totalItems = cart.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
   
   // Calculations
@@ -69,11 +74,36 @@ export default function CartPage({
     const qty = parseInt(item.quantity) || 0;
     return acc + (getTieredWholesalePrice(item.product, qty) * qty);
   }, 0);
-  const gstAmount = Math.round(rawSubtotal * 0.18); // 18% GST for FMCG/Beverages/Toiletries
-  
-  // Extra bulk tier discount (e.g. 5% off if subtotal is above 10,000)
+  const gstAmount = Math.round(rawSubtotal * 0.18);
   const bulkTierDiscount = rawSubtotal > 10000 ? Math.round(rawSubtotal * 0.05) : 0;
-  const grandTotal = rawSubtotal + gstAmount - bulkTierDiscount;
+
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.type === 'percentage'
+      ? Math.round(rawSubtotal * (appliedCoupon.value / 100))
+      : Math.min(appliedCoupon.value, rawSubtotal)
+    : 0;
+  const grandTotal = Math.max(0, rawSubtotal + gstAmount - bulkTierDiscount - couponDiscount);
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    setCouponLoading(true);
+    const c = couponCode.trim().toUpperCase();
+    if (!c) { setCouponError('Enter a coupon code'); setCouponLoading(false); return; }
+    const { data, error } = await supabase.from('coupons').select('*').eq('code', c).maybeSingle();
+    if (error || !data) { setCouponError('Invalid coupon code'); setCouponLoading(false); return; }
+    if (!data.is_active) { setCouponError('This coupon is no longer active'); setCouponLoading(false); return; }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) { setCouponError('This coupon has expired'); setCouponLoading(false); return; }
+    if (data.usage_limit > 0 && data.used_count >= data.usage_limit) { setCouponError('This coupon has reached its usage limit'); setCouponLoading(false); return; }
+    if (rawSubtotal < data.min_order_value) { setCouponError(`Minimum order value is ₹${data.min_order_value}`); setCouponLoading(false); return; }
+    setAppliedCoupon(data);
+    setCouponLoading(false);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
 
   const handleCheckoutBtn = () => {
     if (!user) {
@@ -111,6 +141,8 @@ export default function CartPage({
       rawSubtotal,
       gstAmount,
       bulkTierDiscount,
+      couponDiscount,
+      couponCode: appliedCoupon?.code || null,
       grandTotal,
       address: chosenAddress
     };
@@ -121,6 +153,11 @@ export default function CartPage({
         const user = (await supabase.auth.getUser()).data.user;
         const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, raw_subtotal: rawSubtotal, items: orderPayload.items, address: orderPayload.address }]).select().single();
         if (error) throw error;
+
+        // increment coupon usage count
+        if (appliedCoupon?.id) {
+          supabase.rpc('increment_coupon_used', { cid: appliedCoupon.id });
+        }
 
         // create Razorpay order via serverless endpoint
         const resp = await fetch(`${apiBase}/api/create-razorpay-order`, {
@@ -425,6 +462,33 @@ export default function CartPage({
                     <span>- ₹{bulkTierDiscount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
+
+                {appliedCoupon && (
+                  <div className="summary-row discount-row" style={{ color: 'var(--color-success)' }}>
+                    <span>Coupon ({appliedCoupon.code}):</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      - ₹{couponDiscount.toLocaleString('en-IN')}
+                      <button type="button" onClick={handleRemoveCoupon} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '14px', padding: 0 }}>×</button>
+                    </span>
+                  </div>
+                )}
+
+                {/* Coupon input */}
+                {!appliedCoupon && (
+                  <div style={{ display: 'flex', gap: '8px', margin: '12px 0', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Coupon code"
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--color-border)', fontSize: '13px', height: '36px', boxSizing: 'border-box' }}
+                    />
+                    <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} style={{ height: '36px', padding: '0 14px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      {couponLoading ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+                {couponError && <p style={{ color: '#dc2626', fontSize: '11px', margin: '4px 0 0', fontWeight: '500' }}>{couponError}</p>}
 
                 <div className="divider-card"></div>
 
@@ -758,6 +822,12 @@ export default function CartPage({
                   <span>- ₹{bulkTierDiscount.toLocaleString('en-IN')}</span>
                 </div>
               )}
+              {appliedCoupon && (
+                <div className="invoice-total-row text-green">
+                  <span>Coupon ({appliedCoupon.code}):</span>
+                  <span>- ₹{couponDiscount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="invoice-total-row grand-row">
                 <span>Final Billing Amount (incl. Tax):</span>
                 <span>₹{grandTotal.toLocaleString('en-IN')}</span>
@@ -778,6 +848,8 @@ export default function CartPage({
               rawSubtotal,
               gstAmount,
               bulkTierDiscount,
+              couponDiscount,
+              couponCode: appliedCoupon?.code,
               grandTotal,
               getPrice: getTieredWholesalePrice
             })}>

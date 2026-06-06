@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 
-export function generateInvoicePDF({ orderId, user, address, cart, rawSubtotal, gstAmount, bulkTierDiscount, grandTotal, getPrice }) {
+export function generateInvoicePDF({ orderId, user, address, cart, rawSubtotal, gstAmount, bulkTierDiscount, couponDiscount = 0, couponCode, grandTotal, getPrice }) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = 190;
   let y = 20;
@@ -112,6 +112,11 @@ export function generateInvoicePDF({ orderId, user, address, cart, rawSubtotal, 
   if (bulkTierDiscount > 0) {
     normal('Bulk Savings:', 9, totX);
     doc.text(`-₹${bulkTierDiscount.toLocaleString('en-IN')}`, pageW + 10, y - 5, { align: 'right' });
+    y += 5;
+  }
+  if (couponDiscount > 0) {
+    normal(`Coupon${couponCode ? ` (${couponCode})` : ''}:`, 9, totX);
+    doc.text(`-₹${couponDiscount.toLocaleString('en-IN')}`, pageW + 10, y - 5, { align: 'right' });
     y += 5;
   }
   doc.setFont('helvetica', 'bold');
