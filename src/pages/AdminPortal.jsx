@@ -20,6 +20,9 @@ export default function AdminPortal({
   const [returnsLoaded, setReturnsLoaded] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [customersLoaded, setCustomersLoaded] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [customerOrders, setCustomerOrders] = useState([]);
+  const [customerOrdersLoaded, setCustomerOrdersLoaded] = useState(false);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
 
@@ -71,6 +74,18 @@ export default function AdminPortal({
       })();
     }
   }, [activeTab, returnsLoaded, customersLoaded, analyticsLoaded]);
+
+  const loadCustomerOrders = async (userId) => {
+    setSelectedCustomerId(userId);
+    setCustomerOrdersLoaded(false);
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (data) setCustomerOrders(data);
+    setCustomerOrdersLoaded(true);
+  };
 
   const handleUpdateReturnStatus = async (returnId, newStatus) => {
     const { error } = await supabase.from('returns').update({ status: newStatus }).eq('id', returnId);
@@ -1861,22 +1876,72 @@ export default function AdminPortal({
                 </thead>
                 <tbody>
                   {customers.map((c) => (
-                    <tr key={c.id}>
-                      <td><strong>{c.name || '-'}</strong></td>
-                      <td>{c.business_name || '-'}</td>
-                      <td>{c.email || '-'}</td>
-                      <td>{c.mobile || '-'}</td>
-                      <td>{c.gstin || '-'}</td>
-                      <td className="text-center"><span className="b2b-badge">{c.ordersCount}</span></td>
-                      <td>{c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+                      <tr key={c.id} style={{ cursor: 'pointer', backgroundColor: selectedCustomerId === c.id ? '#f0f7ff' : undefined }} onClick={() => loadCustomerOrders(c.id)}>
+                        <td><strong>{c.name || '-'}</strong></td>
+                        <td>{c.business_name || '-'}</td>
+                        <td>{c.email || '-'}</td>
+                        <td>{c.mobile || '-'}</td>
+                        <td>{c.gstin || '-'}</td>
+                        <td className="text-center"><span className="b2b-badge">{c.ordersCount}</span></td>
+                        <td>{c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {selectedCustomerId && (
+              <div style={{ marginTop: '24px', borderTop: '2px solid var(--color-border)', paddingTop: '16px' }}>
+                <h4 style={{ margin: '0 0 12px', fontSize: '14px' }}>
+                  Order History — {customers.find(c => c.id === selectedCustomerId)?.name || selectedCustomerId}
+                  <span style={{ fontWeight: 'normal', color: 'var(--color-text-muted)', marginLeft: '8px', fontSize: '13px' }}>
+                    ({customerOrdersLoaded ? customerOrders.length : 'loading...'} orders)
+                  </span>
+                </h4>
+                {!customerOrdersLoaded ? (
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Loading orders...</p>
+                ) : customerOrders.length === 0 ? (
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No orders placed yet.</p>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="invoice-table" style={{ width: '100%', fontSize: '12px' }}>
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Date</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                          <th>Items</th>
+                          <th>Coupon</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customerOrders.map((o) => (
+                          <tr key={o.id}>
+                            <td style={{ fontSize: '11px' }}>{o.id}</td>
+                            <td>{new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                            <td>₹{(o.amount || 0).toLocaleString('en-IN')}</td>
+                            <td><span className="b2b-badge" style={{ backgroundColor: o.status === 'paid' ? '#dcfce7' : o.status === 'shipped' ? '#dbeafe' : '#fef3c7', color: o.status === 'paid' ? '#16a34a' : o.status === 'shipped' ? '#2563eb' : '#92400e' }}>{(o.status || 'pending').toUpperCase()}</span></td>
+                            <td>{(o.items || []).length}</td>
+                            <td>{o.coupon_code || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {customerOrders.length > 1 && (
+                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                        <strong>Order Frequency:</strong> {customerOrders.length} order{customerOrders.length > 1 ? 's' : ''} · 
+                        First: {new Date(customerOrders[customerOrders.length - 1].created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · 
+                        Last: {new Date(customerOrders[0].created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · 
+                        Total Spent: ₹{customerOrders.reduce((s, o) => s + (o.amount || 0), 0).toLocaleString('en-IN')}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
       {/* TAB 8: ANALYTICS */}
       {activeTab === 'analytics' && (
