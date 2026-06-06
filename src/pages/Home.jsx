@@ -9,11 +9,13 @@ import {
 import amul from '../assets/amul.jpg';
 
 export default function Home({ 
-  products,            // dynamic state passed from App.jsx
-  categories,          // dynamic state passed from App.jsx
+  products,
+  categories,
   setSelectedCategories, 
   setSelectedBrands,
-  onAddToCart 
+  onAddToCart,
+  wishlist = [],
+  onToggleWishlist
 }) {
   const navigate = useNavigate();
   const [activeSlide, setActiveSlide] = useState(0);

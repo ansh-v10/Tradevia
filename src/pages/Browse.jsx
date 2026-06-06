@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   allBrands,
   getTieredWholesalePrice,
@@ -15,7 +15,7 @@ import {
 } from '../components/Icons';
 
 export default function Browse({ 
-  products, // dynamic state array passed from App.jsx
+  products,
   searchQuery, 
   setSearchQuery, 
   selectedCategories, 
@@ -23,10 +23,13 @@ export default function Browse({
   selectedBrands,
   setSelectedBrands,
   onAddToCart,
+  wishlist = [],
+  onToggleWishlist,
   categories
 }) {
   const categoriesList = categories ? categories.map(c => c.name) : [];
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sortOption, setSortOption] = useState('most-bought'); // 'alpha', 'price-low', 'price-high', 'most-bought'
   const [quantities, setQuantities] = useState({}); // { productId: qty }
   const [showInStockOnly, setShowInStockOnly] = useState(false);
@@ -37,6 +40,14 @@ export default function Browse({
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Read ?q= from URL on mount and sync searchQuery
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && q !== searchQuery) {
+      setSearchQuery(q);
+    }
   }, []);
 
   const handleCategoryToggle = (category) => {
@@ -221,10 +232,11 @@ export default function Browse({
           {/* Header Controls Bar */}
           <div className="catalog-header-controls">
             <div className="catalog-title-wrap">
-              <h2>Commercial Catalog</h2>
+              <h2>{searchQuery ? `Search: "${searchQuery}"` : 'Commercial Catalog'}</h2>
               <p className="catalog-counter-text">
-                Showing <strong>{filteredProducts.length}</strong> items 
-                {selectedCategories.length > 0 && ` in ${selectedCategories.join(', ')}`}
+                <strong>{filteredProducts.length}</strong> result{filteredProducts.length !== 1 ? 's' : ''}
+                {searchQuery && ' found'}
+                {!searchQuery && selectedCategories.length > 0 && ` in ${selectedCategories.join(', ')}`}
               </p>
             </div>
 
@@ -277,12 +289,26 @@ export default function Browse({
               const unitDiscount = product.retailPrice - product.wholesalePrice;
               
               return (
-                <div key={product.id} className="product-card-unit">
+                <div key={product.id} className="product-card-unit" style={{ position: 'relative' }}>
                   {product.isMostBought && (
                     <span className="card-tag bestseller-tag">Bestseller</span>
                   )}
                   {unitDiscount > 30 && (
                     <span className="card-tag saver-tag">Super Saver</span>
+                  )}
+
+                  {/* Wishlist heart */}
+                  {onToggleWishlist && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
+                      style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, background: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
+                      aria-label={wishlist.includes(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.includes(product.id) ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                    </button>
                   )}
                   
                   {/* Product Image */}

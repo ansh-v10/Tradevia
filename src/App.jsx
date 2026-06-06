@@ -71,6 +71,11 @@ export default function App() {
 
   // --- Orders & Saved Addresses B2B States ---
   const [orders, setOrders] = useState([]);
+  const [wishlist, setWishlist] = useState(() => {
+    const saved = localStorage.getItem('ss_wishlist');
+    if (saved) try { return JSON.parse(saved); } catch (_) {}
+    return [];
+  });
   const [addresses, setAddresses] = useState(() => {
     const saved = localStorage.getItem('ss_addresses');
     if (saved) try { return JSON.parse(saved); } catch (_) {}
@@ -124,10 +129,14 @@ export default function App() {
     setCategories(updatedCategories);
   };
 
-  // Sync orders and addresses to localStorage
+  // Sync orders, wishlist, and addresses to localStorage
   useEffect(() => {
     localStorage.setItem('ss_orders', JSON.stringify(orders));
   }, [orders]);
+
+  useEffect(() => {
+    localStorage.setItem('ss_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
 
   useEffect(() => {
     localStorage.setItem('ss_addresses', JSON.stringify(addresses));
@@ -275,6 +284,7 @@ export default function App() {
     setCart([]);
     setOrders([]);
     setAddresses([]);
+    setWishlist([]);
     navigate('/');
   };
 
@@ -394,11 +404,32 @@ export default function App() {
       }
     };
 
+    const loadWishlist = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase.from('wishlists').select('product_id').eq('user_id', user.id);
+      if (!error && data) {
+        setWishlist(data.map((w) => w.product_id));
+      }
+    };
+
     loadOrders();
     loadAddresses();
+    loadWishlist();
 
     return () => { isMounted = false; };
   }, [user?.email]);
+
+  const handleToggleWishlist = async (productId) => {
+    const exists = wishlist.includes(productId);
+    if (user?.id && exists) {
+      await supabase.from('wishlists').delete().eq('user_id', user.id).eq('product_id', productId);
+    } else if (user?.id && !exists) {
+      await supabase.from('wishlists').insert({ user_id: user.id, product_id: productId });
+    }
+    setWishlist((prev) =>
+      exists ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+  };
 
   const handleAddAddress = async (newAddr) => {
     if (user?.id) {
@@ -495,6 +526,8 @@ export default function App() {
           onOpenLoginModal={() => openLoginModalWithContext(true)}
           onClearCart={handleClearCart}
           orders={orders}
+          wishlist={wishlist}
+          onToggleWishlist={handleToggleWishlist}
           onAddProduct={handleAddProduct}
           onUpdateProduct={handleUpdateProduct}
           onDeleteProduct={handleDeleteProduct}

@@ -486,6 +486,15 @@ export default function Navbar({
                       >
                         Your Orders
                       </button>
+                      <button 
+                        className="dropdown-action-btn"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          navigate('/wishlist');
+                        }}
+                      >
+                        Wishlist
+                      </button>
                       <div className="dropdown-divider"></div>
                       <button 
                         className="dropdown-logout-btn"

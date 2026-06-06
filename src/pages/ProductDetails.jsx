@@ -13,7 +13,9 @@ export default function ProductDetails({
   products = [],
   cart = [],
   onAddToCart,
-  onOpenLoginModal
+  onOpenLoginModal,
+  wishlist = [],
+  onToggleWishlist
 }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -186,9 +188,23 @@ export default function ProductDetails({
           
           {/* Header Specs */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {product.brand} Wholesale
-            </span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {product.brand} Wholesale
+              </span>
+              {onToggleWishlist && (
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(product.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                  aria-label={wishlist.includes(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill={wishlist.includes(product.id) ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </button>
+              )}
+            </div>
             <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--color-text-main)', margin: '0 0 4px', fontFamily: 'var(--font-display)', lineHeight: '1.2' }}>
               {product.name}
             </h1>

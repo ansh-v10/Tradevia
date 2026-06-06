@@ -7,6 +7,7 @@ import YourOrders from '../pages/YourOrders';
 import AdminPortal from '../pages/AdminPortal';
 import YourAccount from '../pages/YourAccount';
 import ProductDetails from '../pages/ProductDetails';
+import WishlistPage from '../pages/WishlistPage';
 
 export default function AppRouter({
   products,
@@ -30,6 +31,8 @@ export default function AppRouter({
   onOpenLoginModal,
   onClearCart,
   orders,
+  wishlist,
+  onToggleWishlist,
   // Admin database state props
   onAddProduct,
   onUpdateProduct,
@@ -47,6 +50,8 @@ export default function AppRouter({
           setSelectedCategories={setSelectedCategories}
           setSelectedBrands={setSelectedBrands}
           onAddToCart={onAddToCart}
+          wishlist={wishlist}
+          onToggleWishlist={onToggleWishlist}
         />
       } />
       <Route path="/browse" element={
@@ -60,6 +65,8 @@ export default function AppRouter({
           selectedBrands={selectedBrands}
           setSelectedBrands={setSelectedBrands}
           onAddToCart={onAddToCart}
+          wishlist={wishlist}
+          onToggleWishlist={onToggleWishlist}
         />
       } />
       <Route path="/Browse" element={
@@ -73,6 +80,8 @@ export default function AppRouter({
           selectedBrands={selectedBrands}
           setSelectedBrands={setSelectedBrands}
           onAddToCart={onAddToCart}
+          wishlist={wishlist}
+          onToggleWishlist={onToggleWishlist}
         />
       } />
       <Route path="/cart" element={
@@ -111,6 +120,16 @@ export default function AppRouter({
           cart={cart}
           onAddToCart={onAddToCart}
           onOpenLoginModal={onOpenLoginModal}
+          wishlist={wishlist}
+          onToggleWishlist={onToggleWishlist}
+        />
+      } />
+      <Route path="/wishlist" element={
+        <WishlistPage 
+          products={products}
+          wishlist={wishlist}
+          onToggleWishlist={onToggleWishlist}
+          onAddToCart={onAddToCart}
         />
       } />
       <Route path="/admin" element={
@@ -126,7 +145,6 @@ export default function AppRouter({
           onResetCatalog={onResetCatalog}
         />
       } />
-      {/* Wildcard redirect back to Home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
