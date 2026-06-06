@@ -25,7 +25,11 @@ const defaultCategories = [
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('ss_cart');
+    if (saved) try { return JSON.parse(saved); } catch (_) {}
+    return [];
+  });
 
   // Restore Supabase session on page load
   useEffect(() => {
@@ -130,7 +134,11 @@ export default function App() {
     setCategories(updatedCategories);
   };
 
-  // Sync orders, wishlist, and addresses to localStorage
+  // Sync cart, orders, wishlist, and addresses to localStorage
+  useEffect(() => {
+    localStorage.setItem('ss_cart', JSON.stringify(cart));
+  }, [cart]);
+
   useEffect(() => {
     localStorage.setItem('ss_orders', JSON.stringify(orders));
   }, [orders]);
@@ -165,6 +173,9 @@ export default function App() {
   // Listen for storage events (syncs across tabs when Admin panel updates localStorage)
   useEffect(() => {
     const handleStorageChange = (e) => {
+      if (e.key === 'ss_cart') {
+        setCart(e.newValue ? JSON.parse(e.newValue) : []);
+      }
       if (e.key === 'ss_orders') {
         setOrders(e.newValue ? JSON.parse(e.newValue) : []);
       }
