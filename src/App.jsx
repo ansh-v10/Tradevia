@@ -118,24 +118,50 @@ export default function App() {
   const [loginTriggeredByCheckout, setLoginTriggeredByCheckout] = useState(false);
 
   // --- Admin Desk Database Callbacks ---
-  const handleAddProduct = (newProduct) => {
+  const productToSupabase = (p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    price: p.wholesalePrice || 0,
+    moq: p.moq || 10,
+    unit: p.packSize || '',
+    description: JSON.stringify({
+      brand: p.brand || '',
+      retailPrice: p.retailPrice || 0,
+      wholesalePrice: p.wholesalePrice || 0,
+      packSize: p.packSize || '',
+      isMostBought: p.isMostBought || false,
+      rating: p.rating || 4.5,
+      reviewsCount: p.reviewsCount || 0,
+      tier2Price: p.tier2Price || null,
+      tier3Price: p.tier3Price || null,
+      tier2Moq: p.tier2Moq || null,
+      tier3Moq: p.tier3Moq || null
+    }),
+    image_url: p.imageUrl || p.image_url || '',
+    inventory: p.inventory !== undefined ? p.inventory : 100
+  });
+
+  const handleAddProduct = async (newProduct) => {
     const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
     const productWithId = { ...newProduct, id: nextId };
     setProducts(prevProducts => [...prevProducts, productWithId]);
+    const { error } = await supabase.from('products').insert(productToSupabase(productWithId));
+    if (error) console.error('Failed to save product to Supabase:', error.message);
   };
 
-  const handleUpdateProduct = (updatedProduct) => {
+  const handleUpdateProduct = async (updatedProduct) => {
     setProducts(prevProducts =>
       prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p)
     );
+    const { error } = await supabase.from('products').update(productToSupabase(updatedProduct)).eq('id', updatedProduct.id);
+    if (error) console.error('Failed to update product in Supabase:', error.message);
   };
 
-  const handleDeleteProduct = (productId) => {
+  const handleDeleteProduct = async (productId) => {
     setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
-  };
-
-  const handleUpdateCategories = (updatedCategories) => {
-    setCategories(updatedCategories);
+    const { error } = await supabase.from('products').delete().eq('id', productId);
+    if (error) console.error('Failed to delete product from Supabase:', error.message);
   };
 
   // Sync cart, orders, wishlist, and addresses to localStorage
@@ -155,23 +181,37 @@ export default function App() {
     localStorage.setItem('ss_addresses', JSON.stringify(addresses));
   }, [addresses]);
 
-  const handleBulkAdjustPrices = (percentage) => {
-    setProducts(prevProducts =>
-      prevProducts.map(p => {
-        const factor = 1 + (percentage / 100);
-        let newWholesale = Math.round(p.wholesalePrice * factor * 10) / 10;
-        newWholesale = Math.max(1, Math.min(newWholesale, p.retailPrice - 1));
-        return {
-          ...p,
-          wholesalePrice: Math.round(newWholesale)
-        };
-      })
-    );
+  const handleBulkAdjustPrices = async (percentage) => {
+    const factor = 1 + (percentage / 100);
+    const updatedProducts = products.map(p => {
+      let newWholesale = Math.round(p.wholesalePrice * factor * 10) / 10;
+      newWholesale = Math.max(1, Math.min(newWholesale, p.retailPrice - 1));
+      return { ...p, wholesalePrice: Math.round(newWholesale) };
+    });
+    setProducts(updatedProducts);
+    for (const p of updatedProducts) {
+      const { error } = await supabase.from('products').update(productToSupabase(p)).eq('id', p.id);
+      if (error) console.error('Bulk update failed for product', p.id, error.message);
+    }
   };
 
-  const handleResetCatalog = () => {
+  const handleResetCatalog = async () => {
     setProducts(productsData.map(p => ({ ...p, inventory: 100 })));
     setCategories(defaultCategories);
+    const { data: existing } = await supabase.from('products').select('id');
+    if (existing && existing.length > 0) {
+      const { error } = await supabase.from('products').delete().in('id', existing.map(p => p.id));
+      if (error) console.error('Failed to clear products:', error.message);
+    }
+    for (const p of productsData) {
+      const { error } = await supabase.from('products').insert(productToSupabase({ ...p, id: p.id }));
+      if (error) console.error('Failed to restore product:', error.message);
+    }
+  };
+
+  const handleUpdateCategories = async (updatedCategories) => {
+    setCategories(updatedCategories);
+    localStorage.setItem('tradevia_sales_categories', JSON.stringify(updatedCategories));
   };
 
   // Listen for storage events (syncs across tabs when Admin panel updates localStorage)
@@ -261,6 +301,18 @@ export default function App() {
           }
         })(),
         moq: product.moq,
+        tier2Price: (() => {
+          try { const p = JSON.parse(product.description || '{}'); return p.tier2Price ?? null; } catch (e) { return null; }
+        })(),
+        tier3Price: (() => {
+          try { const p = JSON.parse(product.description || '{}'); return p.tier3Price ?? null; } catch (e) { return null; }
+        })(),
+        tier2Moq: (() => {
+          try { const p = JSON.parse(product.description || '{}'); return p.tier2Moq ?? null; } catch (e) { return null; }
+        })(),
+        tier3Moq: (() => {
+          try { const p = JSON.parse(product.description || '{}'); return p.tier3Moq ?? null; } catch (e) { return null; }
+        })(),
         imageUrl: product.image_url || ''
       }));
 
