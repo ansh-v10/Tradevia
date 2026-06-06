@@ -42,11 +42,19 @@ export default function Browse({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Read ?q= from URL on mount and sync searchQuery
+  // Read URL params on mount
   useEffect(() => {
     const q = searchParams.get('q');
     if (q && q !== searchQuery) {
       setSearchQuery(q);
+    }
+    const cat = searchParams.get('category');
+    if (cat && !selectedCategories.includes(cat)) {
+      setSelectedCategories([cat]);
+    }
+    const brand = searchParams.get('brand');
+    if (brand && !selectedBrands.includes(brand)) {
+      setSelectedBrands([brand]);
     }
   }, []);
 

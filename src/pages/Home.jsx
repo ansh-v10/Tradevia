@@ -92,11 +92,11 @@ export default function Home({
   // Set category filter and route to browse
   const handleCategorySelect = (categoryName) => {
     if (categoryName === 'More' || categoryName === 'Show More') {
-      setSelectedCategories([]); // show all
+      setSelectedCategories([]);
     } else {
-      setSelectedCategories([categoryName]); // show specific
+      setSelectedCategories([categoryName]);
     }
-    navigate('/browse');
+    navigate(categoryName && categoryName !== 'More' && categoryName !== 'Show More' ? `/browse?category=${encodeURIComponent(categoryName)}` : '/browse');
   };
 
   // Get most bought products from dynamic prop, sorting out-of-stock to the bottom
@@ -368,9 +368,9 @@ export default function Home({
                   setSelectedCategories([]);
                 } else {
                   setSelectedBrands([brand.name]);
-                  setSelectedCategories([]); // clear category
+                  setSelectedCategories([]);
                 }
-                navigate('/browse');
+                navigate(brand.name === 'More' ? '/browse' : `/browse?brand=${encodeURIComponent(brand.name)}`);
               }}
               style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', width: '120px', transition: 'var(--transition-fast)' }}
             >
