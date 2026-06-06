@@ -360,12 +360,71 @@ export default function App() {
       if (isMounted) setOrders(mapped);
     };
 
+    const loadAddresses = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error || !data?.length) return;
+      const mapped = data.map((a) => ({
+        id: a.id,
+        name: a.name,
+        businessName: a.business_name || '',
+        addressLine: a.address_line,
+        city: a.city,
+        state: a.state,
+        pincode: a.pincode,
+        phone: a.phone
+      }));
+      if (isMounted) {
+        setAddresses(mapped);
+        localStorage.setItem('ss_addresses', JSON.stringify(mapped));
+      }
+    };
+
     loadOrders();
+    loadAddresses();
 
     return () => { isMounted = false; };
   }, [user?.email]);
 
-  const handleAddAddress = (newAddr) => {
+  const handleAddAddress = async (newAddr) => {
+    if (user?.id) {
+      const { data, error } = await supabase.from('addresses').insert({
+        user_id: user.id,
+        name: newAddr.name,
+        business_name: newAddr.businessName || '',
+        address_line: newAddr.addressLine,
+        city: newAddr.city,
+        state: newAddr.state,
+        pincode: newAddr.pincode,
+        phone: newAddr.phone
+      }).select().single();
+
+      if (!error && data) {
+        const addr = {
+          id: data.id,
+          name: data.name,
+          businessName: data.business_name || '',
+          addressLine: data.address_line,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
+          phone: data.phone
+        };
+        setAddresses((prev) => {
+          const isDuplicate = prev.some(
+            (a) => a.addressLine === addr.addressLine && a.pincode === addr.pincode && a.city === addr.city
+          );
+          if (isDuplicate) return prev;
+          return [...prev, addr];
+        });
+        return;
+      }
+    }
+
     setAddresses((prev) => {
       const isDuplicate = prev.some(
         (a) =>
@@ -379,7 +438,10 @@ export default function App() {
     });
   };
 
-  const handleDeleteAddress = (addrId) => {
+  const handleDeleteAddress = async (addrId) => {
+    if (user?.id) {
+      await supabase.from('addresses').delete().eq('id', addrId).eq('user_id', user.id);
+    }
     setAddresses((prev) => prev.filter((a) => a.id !== addrId));
   };
 
