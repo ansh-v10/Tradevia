@@ -5,6 +5,8 @@ import {
   getPackMultiplier,
   getPackContainerName
 } from '../util/productsData';
+import { supabase } from '../util/supabaseClient';
+import { StarIcon } from '../components/Icons';
 
 
 export default function ProductDetails({
@@ -21,6 +23,11 @@ export default function ProductDetails({
   const [qty, setQty] = useState(product?.moq || 10);
   const [successMsg, setSuccessMsg] = useState('');
   const [quantities, setQuantities] = useState({});
+  const [reviews, setReviews] = useState([]);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState('');
 
   const handleQuantityChange = (productId, val) => {
     setQuantities(prev => ({ ...prev, [productId]: val }));
@@ -33,6 +40,16 @@ export default function ProductDetails({
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product, id]);
+
+  // Load reviews from Supabase
+  useEffect(() => {
+    if (!product?.id) return;
+    let isMounted = true;
+    supabase.from('reviews').select('*').eq('product_id', product.id).order('created_at', { ascending: false }).then(({ data, error }) => {
+      if (!error && data && isMounted) setReviews(data);
+    });
+    return () => { isMounted = false; };
+  }, [product?.id]);
 
   const relatedProducts = products
     .filter((p) => p.category === product.category && p.id !== product.id)
@@ -105,6 +122,36 @@ export default function ProductDetails({
       }, 3000);
     }
   };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (reviewRating === 0) return;
+    setReviewSubmitting(true);
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) {
+      if (onOpenLoginModal) onOpenLoginModal();
+      setReviewSubmitting(false);
+      return;
+    }
+    const { data: profile } = await supabase.from('profiles').select('name').eq('id', u.id).maybeSingle();
+    const { error } = await supabase.from('reviews').insert({
+      product_id: product.id,
+      user_id: u.id,
+      user_name: profile?.name || u.email?.split('@')[0] || 'Customer',
+      rating: reviewRating,
+      comment: reviewComment || null
+    });
+    setReviewSubmitting(false);
+    if (error) return;
+    setReviewSuccess('Review submitted!');
+    setReviewRating(0);
+    setReviewComment('');
+    const { data: updated } = await supabase.from('reviews').select('*').eq('product_id', product.id).order('created_at', { ascending: false });
+    if (updated) setReviews(updated);
+    setTimeout(() => setReviewSuccess(''), 3000);
+  };
+
+  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '0.0';
 
   return (
     <div className="product-details-page-wrapper navbar-width-limiter" style={{ padding: '32px 0 64px', textAlign: 'left' }}>
@@ -314,6 +361,62 @@ export default function ProductDetails({
         </div>
 
       </div>
+
+      {/* Customer Reviews Section */}
+      <section style={{ marginTop: '48px' }}>
+        <div className="section-header-flex">
+          <div>
+            <h2 className="section-title text-left" style={{ fontSize: '22px', fontWeight: '800' }}>Customer Reviews</h2>
+            <p className="section-subtitle text-left">
+              {reviews.length > 0 ? `${avgRating} avg rating from ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : 'No reviews yet'}
+            </p>
+          </div>
+        </div>
+
+        {/* Existing reviews */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+          {reviews.map((r) => (
+            <div key={r.id} style={{ border: '1px solid var(--color-border)', borderRadius: '8px', padding: '16px', backgroundColor: '#f8fafc' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <strong style={{ fontSize: '14px' }}>{r.user_name}</strong>
+                <div style={{ display: 'flex', gap: '2px' }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <StarIcon key={s} size={14} fill={s <= r.rating ? '#f59e0b' : 'none'} color={s <= r.rating ? '#f59e0b' : '#d1d5db'} />
+                  ))}
+                </div>
+              </div>
+              {r.comment && <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: '4px 0 0' }}>{r.comment}</p>}
+              <p style={{ fontSize: '11px', color: '#9ca3af', margin: '6px 0 0' }}>{new Date(r.created_at).toLocaleDateString('en-IN')}</p>
+            </div>
+          ))}
+          {reviews.length === 0 && (
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Be the first to review this product.</p>
+          )}
+        </div>
+
+        {/* Submit a review */}
+        <form onSubmit={handleSubmitReview} style={{ marginTop: '20px', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '20px', backgroundColor: 'white' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 12px' }}>Write a Review</h3>
+          {reviewSuccess && <p style={{ color: 'var(--color-success)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>{reviewSuccess}</p>}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button key={s} type="button" onClick={() => setReviewRating(s)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <StarIcon size={24} fill={s <= reviewRating ? '#f59e0b' : 'none'} color={s <= reviewRating ? '#f59e0b' : '#d1d5db'} />
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value)}
+            placeholder="Share your experience with this product (optional)"
+            rows={3}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+          <button type="submit" disabled={reviewRating === 0 || reviewSubmitting} className="primary-b2b-btn" style={{ marginTop: '12px' }}>
+            {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+          </button>
+        </form>
+      </section>
 
       {/* More from this category */}
       {relatedProducts.length > 0 && (
