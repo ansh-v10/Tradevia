@@ -245,6 +245,19 @@ export default function App() {
     setIsLoginModalOpen(false);
   };
 
+  const handleUpdateUser = async (updatedUser) => {
+    setUser(updatedUser);
+    if (updatedUser?.id) {
+      await supabase.from('profiles').upsert({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        business_name: updatedUser.businessName,
+        mobile: updatedUser.mobile
+      });
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -373,7 +386,7 @@ export default function App() {
       {/* Dynamic Header */}
       <Navbar 
         user={user}
-        onUpdateUser={setUser}
+        onUpdateUser={handleUpdateUser}
         onLogout={handleLogout}
         onOpenLoginModal={() => openLoginModalWithContext(false)}
         cart={cart}
@@ -397,7 +410,7 @@ export default function App() {
           selectedBrands={selectedBrands}
           cart={cart}
           user={user}
-          onUpdateUser={setUser}
+          onUpdateUser={handleUpdateUser}
           addresses={addresses}
           onAddAddress={handleAddAddress}
           onDeleteAddress={handleDeleteAddress}

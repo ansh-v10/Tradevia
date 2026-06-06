@@ -16,6 +16,7 @@ const toProductPayload = (product) => ({
   price: Number(product.wholesalePrice ?? product.retailPrice ?? 0),
   moq: Number(product.moq ?? 10),
   unit: product.packSize || '',
+  inventory: Number(product.inventory ?? 100),
   description: JSON.stringify({
     brand: product.brand || '',
     retailPrice: Number(product.retailPrice ?? product.wholesalePrice ?? 0),
@@ -23,7 +24,11 @@ const toProductPayload = (product) => ({
     packSize: product.packSize || '',
     rating: Number(product.rating ?? 0),
     reviewsCount: Number(product.reviewsCount ?? 0),
-    isMostBought: Boolean(product.isMostBought)
+    isMostBought: Boolean(product.isMostBought),
+    tier2Price: product.tier2Price != null ? Number(product.tier2Price) : null,
+    tier2Moq: product.tier2Moq != null ? Number(product.tier2Moq) : null,
+    tier3Price: product.tier3Price != null ? Number(product.tier3Price) : null,
+    tier3Moq: product.tier3Moq != null ? Number(product.tier3Moq) : null
   }),
   image_url: product.imageUrl || ''
 });
@@ -51,7 +56,11 @@ const fromProductRow = (product) => {
     isMostBought: parsed.isMostBought ?? false,
     moq: product.moq,
     inventory: product.inventory ?? 100,
-    imageUrl: product.image_url || ''
+    imageUrl: product.image_url || '',
+    tier2Price: parsed.tier2Price ?? null,
+    tier2Moq: parsed.tier2Moq ?? null,
+    tier3Price: parsed.tier3Price ?? null,
+    tier3Moq: parsed.tier3Moq ?? null
   };
 };
 
