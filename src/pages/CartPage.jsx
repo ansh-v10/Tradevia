@@ -4,12 +4,14 @@ import { TrashIcon, CartIcon, CloseIcon } from '../components/Icons';
 import { supabase } from '../util/supabaseClient';
 import { getTieredWholesalePrice } from '../util/productsData';
 import { generateInvoicePDF } from '../util/generateInvoice';
+import LocationPicker from '../components/LocationPicker';
 
 export default function CartPage({ 
   cart, 
   user, 
   addresses = [],
   onAddAddress,
+  onDeleteAddress,
   onAddOrder,
   onUpdateQuantity,
   onRemoveItem,
@@ -34,6 +36,9 @@ export default function CartPage({
   const [newAddrPin, setNewAddrPin] = useState('');
   const [newAddrPhone, setNewAddrPhone] = useState(user?.mobile || '');
   const [addressErrors, setAddressErrors] = useState({});
+  const [newAddrLat, setNewAddrLat] = useState(null);
+  const [newAddrLng, setNewAddrLng] = useState(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   // Auto-select the first address when list becomes available or user logs in
   useEffect(() => {
@@ -261,6 +266,22 @@ export default function CartPage({
     })();
   };
 
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      if (data?.address) {
+        const a = data.address;
+        if (a.road) setNewAddrLine(a.road + (a.house_number ? `, ${a.house_number}` : ''));
+        if (a.city || a.town || a.village || a.county) setNewAddrCity(a.city || a.town || a.village || a.county);
+        if (a.state) setNewAddrState(a.state);
+        if (a.postcode) setNewAddrPin(a.postcode);
+      }
+    } catch (_) {}
+  };
+
   const handleSaveNewAddress = (e) => {
     e.preventDefault();
     const errs = {};
@@ -281,7 +302,9 @@ export default function CartPage({
       city: newAddrCity,
       state: newAddrState,
       pincode: newAddrPin,
-      phone: newAddrPhone
+      phone: newAddrPhone,
+      latitude: newAddrLat,
+      longitude: newAddrLng
     };
 
     onAddAddress(newAddr);
@@ -293,6 +316,10 @@ export default function CartPage({
     setNewAddrCity('');
     setNewAddrState('');
     setNewAddrPin('');
+    setNewAddrPhone('');
+    setNewAddrLat(null);
+    setNewAddrLng(null);
+    setShowMapPicker(false);
     setAddressErrors({});
   };
 
@@ -540,7 +567,24 @@ export default function CartPage({
                         key={addr.id} 
                         className={`address-card-item ${selectedAddressId === addr.id ? 'selected' : ''}`}
                         onClick={() => setSelectedAddressId(addr.id)}
+                        style={{ position: 'relative' }}
                       >
+                        <button
+                          type="button"
+                          style={{ position: 'absolute', top: '6px', right: '6px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', zIndex: 2 }}
+                          title="Remove Address"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm("Are you sure you want to remove this shipping location?")) {
+                              onDeleteAddress(addr.id);
+                            }
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
                         <input 
                           type="radio" 
                           name="selected-address"
@@ -554,6 +598,11 @@ export default function CartPage({
                           <span className="address-lines">{addr.addressLine}</span>
                           <span className="address-location">{addr.city}, {addr.state} - {addr.pincode}</span>
                           <span className="address-phone">📞 {addr.phone}</span>
+                          {addr.latitude && addr.longitude && (
+                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginTop: '4px' }}>
+                              📍 {addr.latitude.toFixed(4)}, {addr.longitude.toFixed(4)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -655,6 +704,26 @@ export default function CartPage({
                             />
                             {addressErrors.phone && <span className="input-error-msg">{addressErrors.phone}</span>}
                           </div>
+                        </div>
+
+                        <div style={{ marginTop: '12px' }}>
+                          <button type="button" className="secondary-b2b-btn" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={() => setShowMapPicker(!showMapPicker)}>
+                            {showMapPicker ? 'Hide Map' : '📍 Pick on Map'}
+                          </button>
+                          {showMapPicker && (
+                            <div style={{ marginTop: '10px' }}>
+                              <LocationPicker
+                                lat={newAddrLat}
+                                lng={newAddrLng}
+                                onLocationChange={(lat, lng) => {
+                                  setNewAddrLat(lat);
+                                  setNewAddrLng(lng);
+                                  reverseGeocode(lat, lng);
+                                }}
+                                height="250px"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         <div className="address-form-actions">

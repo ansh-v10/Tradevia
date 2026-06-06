@@ -8,6 +8,7 @@ import AdminPortal from '../pages/AdminPortal';
 import YourAccount from '../pages/YourAccount';
 import ProductDetails from '../pages/ProductDetails';
 import WishlistPage from '../pages/WishlistPage';
+import ProfilePage from '../pages/ProfilePage';
 
 export default function AppRouter({
   products,
@@ -90,6 +91,7 @@ export default function AppRouter({
           user={user}
           addresses={addresses}
           onAddAddress={onAddAddress}
+          onDeleteAddress={onDeleteAddress}
           onAddOrder={onAddOrder}
           onUpdateQuantity={onUpdateQuantity}
           onRemoveItem={onRemoveItem}
@@ -130,6 +132,12 @@ export default function AppRouter({
           wishlist={wishlist}
           onToggleWishlist={onToggleWishlist}
           onAddToCart={onAddToCart}
+        />
+      } />
+      <Route path="/profile" element={
+        <ProfilePage 
+          user={user}
+          onUpdateUser={onUpdateUser}
         />
       } />
       <Route path="/admin" element={

@@ -450,6 +450,16 @@ export default function Navbar({
                         className="dropdown-action-btn"
                         onClick={() => {
                           setProfileDropdownOpen(false);
+                          navigate('/profile');
+                        }}
+                        style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}
+                      >
+                        👤 My Profile
+                      </button>
+                      <button 
+                        className="dropdown-action-btn"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
                           navigate('/account');
                         }}
                         style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}

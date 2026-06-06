@@ -314,8 +314,14 @@ export default function App() {
 
   // --- Cart Manipulation ---
   const handleAddToCart = (product, quantity) => {
+    const stock = product.inventory !== undefined ? product.inventory : 100;
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id);
+      const currentQty = existingItem ? existingItem.quantity : 0;
+      if (currentQty + quantity > stock) {
+        setCartMsg(`Only ${stock - currentQty} left in stock`);
+        return prevCart;
+      }
       if (existingItem) {
         return prevCart.map((item) =>
           item.product.id === product.id
@@ -333,11 +339,18 @@ export default function App() {
       handleRemoveItem(productId);
       return;
     }
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.product.id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+    setCart((prevCart) => {
+      const item = prevCart.find((i) => i.product.id === productId);
+      if (!item) return prevCart;
+      const stock = item.product.inventory !== undefined ? item.product.inventory : 100;
+      if (newQuantity > stock) {
+        setCartMsg(`Only ${stock} in stock`);
+        return prevCart;
+      }
+      return prevCart.map((i) =>
+        i.product.id === productId ? { ...i, quantity: newQuantity } : i
+      );
+    });
   };
 
   const handleRemoveItem = (productId) => {
@@ -419,7 +432,9 @@ export default function App() {
         city: a.city,
         state: a.state,
         pincode: a.pincode,
-        phone: a.phone
+        phone: a.phone,
+        latitude: a.latitude,
+        longitude: a.longitude
       }));
       if (isMounted) {
         setAddresses(mapped);
@@ -464,7 +479,9 @@ export default function App() {
         city: newAddr.city,
         state: newAddr.state,
         pincode: newAddr.pincode,
-        phone: newAddr.phone
+        phone: newAddr.phone,
+        latitude: newAddr.latitude || null,
+        longitude: newAddr.longitude || null
       }).select().single();
 
       if (!error && data) {
@@ -476,7 +493,9 @@ export default function App() {
           city: data.city,
           state: data.state,
           pincode: data.pincode,
-          phone: data.phone
+          phone: data.phone,
+          latitude: data.latitude,
+          longitude: data.longitude
         };
         setAddresses((prev) => {
           const isDuplicate = prev.some(

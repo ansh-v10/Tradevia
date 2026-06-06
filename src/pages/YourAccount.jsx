@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../util/supabaseClient';
+import LocationPicker from '../components/LocationPicker';
 
 export default function YourAccount({
   user,
@@ -36,6 +37,9 @@ export default function YourAccount({
   const [addrPhone, setAddrPhone] = useState('');
   const [addressError, setAddressError] = useState('');
   const [addressSuccess, setAddressSuccess] = useState('');
+  const [addrLat, setAddrLat] = useState(null);
+  const [addrLng, setAddrLng] = useState(null);
+  const [showAddrMap, setShowAddrMap] = useState(false);
 
   // Quick calculations
   const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -92,6 +96,22 @@ export default function YourAccount({
     }
   };
 
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      if (data?.address) {
+        const a = data.address;
+        if (a.road) setAddrLine(a.road + (a.house_number ? `, ${a.house_number}` : ''));
+        if (a.city || a.town || a.village || a.county) setAddrCity(a.city || a.town || a.village || a.county);
+        if (a.state) setAddrState(a.state);
+        if (a.postcode) setAddrPincode(a.postcode);
+      }
+    } catch (_) {}
+  };
+
   const handleAddressSubmit = (e) => {
     e.preventDefault();
     setAddressError('');
@@ -120,7 +140,9 @@ export default function YourAccount({
       city: addrCity.trim(),
       state: addrState.trim(),
       pincode: addrPincode.trim(),
-      phone: addrPhone.trim()
+      phone: addrPhone.trim(),
+      latitude: addrLat,
+      longitude: addrLng
     };
 
     if (onAddAddress) {
@@ -135,6 +157,9 @@ export default function YourAccount({
       setAddrState('');
       setAddrPincode('');
       setAddrPhone('');
+      setAddrLat(null);
+      setAddrLng(null);
+      setShowAddrMap(false);
       
       setTimeout(() => {
         setShowAddAddressForm(false);
@@ -453,6 +478,24 @@ export default function YourAccount({
               {addressError && <span style={{ color: 'var(--color-danger)', fontSize: '12px', fontWeight: 'bold' }}>{addressError}</span>}
               {addressSuccess && <span style={{ color: 'var(--color-success)', fontSize: '12px', fontWeight: 'bold' }}>{addressSuccess}</span>}
 
+              <button type="button" className="secondary-b2b-btn" style={{ fontSize: '12px', padding: '6px 14px', alignSelf: 'flex-start' }} onClick={() => setShowAddrMap(!showAddrMap)}>
+                {showAddrMap ? 'Hide Map' : '📍 Pick on Map'}
+              </button>
+              {showAddrMap && (
+                <div style={{ marginTop: '4px' }}>
+                  <LocationPicker
+                    lat={addrLat}
+                    lng={addrLng}
+                    onLocationChange={(lat, lng) => {
+                      setAddrLat(lat);
+                      setAddrLng(lng);
+                      reverseGeocode(lat, lng);
+                    }}
+                    height="220px"
+                  />
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                 <button type="submit" className="primary-b2b-btn" style={{ padding: '6px 12px', fontSize: '12px' }}>
                   Save Location
@@ -471,8 +514,7 @@ export default function YourAccount({
             ) : (
               addresses.map((addr) => (
                 <div key={addr.id} style={{ padding: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', position: 'relative', backgroundColor: 'var(--color-bg-light)' }}>
-                  {addresses.length > 1 && (
-                    <button 
+                  <button 
                       style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
                       title="Remove Address"
                       onClick={() => {
@@ -486,11 +528,15 @@ export default function YourAccount({
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                       </svg>
                     </button>
-                  )}
                   <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: '700', width: '85%' }}>{addr.businessName}</h4>
                   <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: '500' }}>Contact: {addr.name}</p>
                   <p style={{ margin: '0 0 4px', fontSize: '13px', color: 'var(--color-text-muted)' }}>{addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode}</p>
                   <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>📞 {addr.phone}</p>
+                  {addr.latitude && addr.longitude && (
+                    <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                      📍 {addr.latitude.toFixed(4)}, {addr.longitude.toFixed(4)}
+                    </p>
+                  )}
                 </div>
               ))
             )}
