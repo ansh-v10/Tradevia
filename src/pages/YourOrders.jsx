@@ -1,10 +1,33 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartIcon } from '../components/Icons';
+import { supabase } from '../util/supabaseClient';
 
 export default function YourOrders({ orders = [] }) {
   const navigate = useNavigate();
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [returnForm, setReturnForm] = useState({ orderId: null, reason: '', details: '' });
+  const [returnMsg, setReturnMsg] = useState('');
+  const [returnLoading, setReturnLoading] = useState(false);
+
+  const handleReturnSubmit = async (e, orderId) => {
+    e.preventDefault();
+    setReturnLoading(true);
+    setReturnMsg('');
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) { setReturnMsg('Please sign in'); setReturnLoading(false); return; }
+    const { error } = await supabase.from('returns').insert({
+      order_id: orderId,
+      user_id: u.id,
+      reason: returnForm.reason,
+      details: returnForm.details || null
+    });
+    setReturnLoading(false);
+    if (error) { setReturnMsg(error.message); return; }
+    setReturnMsg('Return request submitted!');
+    setReturnForm({ orderId: null, reason: '', details: '' });
+    setTimeout(() => setReturnMsg(''), 4000);
+  };
 
   const toggleOrderDetails = (orderId) => {
     setExpandedOrderId(prev => (prev === orderId ? null : orderId));
@@ -174,6 +197,54 @@ export default function YourOrders({ orders = [] }) {
 
                     </div>
                   </div>
+
+                    {/* Return / Refund */}
+                    {(order.status === 'paid' || order.status === 'shipped') && (
+                      <div style={{ marginTop: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+                        {returnForm.orderId === order.id ? (
+                          <form onSubmit={(e) => handleReturnSubmit(e, order.id)} style={{ fontSize: '13px' }}>
+                            <strong style={{ display: 'block', marginBottom: '8px' }}>Request Return / Refund</strong>
+                            {returnMsg && <p style={{ color: returnMsg.includes('submitted') ? 'var(--color-success)' : '#dc2626', fontWeight: '600', marginBottom: '8px' }}>{returnMsg}</p>}
+                            <select
+                              value={returnForm.reason}
+                              onChange={(e) => setReturnForm((p) => ({ ...p, reason: e.target.value }))}
+                              required
+                              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--color-border)', marginBottom: '8px', fontSize: '13px' }}
+                            >
+                              <option value="">Select a reason</option>
+                              <option value="damaged">Damaged / Defective</option>
+                              <option value="wrong_item">Wrong item shipped</option>
+                              <option value="quality">Quality not as expected</option>
+                              <option value="other">Other</option>
+                            </select>
+                            <textarea
+                              value={returnForm.details}
+                              onChange={(e) => setReturnForm((p) => ({ ...p, details: e.target.value }))}
+                              placeholder="Additional details (optional)"
+                              rows={2}
+                              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--color-border)', marginBottom: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+                            />
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button type="submit" disabled={!returnForm.reason || returnLoading} className="pincode-btn" style={{ backgroundColor: 'var(--color-danger)', color: 'white', fontSize: '12px', padding: '6px 14px' }}>
+                                {returnLoading ? 'Submitting...' : 'Submit Request'}
+                              </button>
+                              <button type="button" onClick={() => { setReturnForm({ orderId: null, reason: '', details: '' }); setReturnMsg(''); }} className="pincode-btn" style={{ backgroundColor: '#e2e8f0', color: '#1e293b', fontSize: '12px', padding: '6px 14px' }}>
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setReturnForm((p) => ({ ...p, orderId: order.id }))}
+                            className="pincode-btn"
+                            style={{ backgroundColor: 'transparent', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', fontSize: '12px', padding: '6px 14px' }}
+                          >
+                            Request Return / Refund
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                 </div>
               )}

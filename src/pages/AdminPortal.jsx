@@ -14,7 +14,23 @@ export default function AdminPortal({
   onResetCatalog
 }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns'
+  const [returns, setReturns] = useState([]);
+  const [returnsLoaded, setReturnsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'returns' && !returnsLoaded) {
+      supabase.from('returns').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+        if (data) setReturns(data);
+        setReturnsLoaded(true);
+      });
+    }
+  }, [activeTab, returnsLoaded]);
+
+  const handleUpdateReturnStatus = async (returnId, newStatus) => {
+    const { error } = await supabase.from('returns').update({ status: newStatus }).eq('id', returnId);
+    if (!error) setReturns((prev) => prev.map((r) => r.id === returnId ? { ...r, status: newStatus } : r));
+  };
   
   // Admin Login/Signup Authentication States
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
@@ -947,6 +963,12 @@ export default function AdminPortal({
           Orders Placed Log ({orders.length})
         </button>
         <button 
+          className={`admin-tab-btn ${activeTab === 'returns' ? 'active' : ''}`}
+          onClick={() => setActiveTab('returns')}
+        >
+          Returns / Refunds
+        </button>
+        <button 
           className={`admin-tab-btn ${activeTab === 'admins' ? 'active' : ''}`}
           onClick={() => setActiveTab('admins')}
         >
@@ -1683,7 +1705,47 @@ export default function AdminPortal({
         </div>
       )}
 
-      {/* TAB 5: ADMIN ACCOUNTS PERSISTENCE & MANAGEMENT */}
+      {/* TAB 5: RETURNS / REFUNDS */}
+      {activeTab === 'returns' && (
+        <div className="summary-card mt-6">
+          <h3>Return / Refund Requests</h3>
+          <p className="gst-disclaimer">Review and manage customer return and refund requests.</p>
+          <div className="divider-card"></div>
+          {returns.length === 0 ? (
+            <p style={{ padding: '20px 0', color: 'var(--color-text-muted)', fontSize: '13px' }}>No return requests yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {returns.map((r) => (
+                <div key={r.id} style={{ border: '1px solid var(--color-border)', borderRadius: '8px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '13px' }}>
+                      <strong>Order: {r.order_id}</strong>
+                      <span style={{ display: 'block', color: 'var(--color-text-muted)' }}>Reason: {r.reason}</span>
+                      {r.details && <span style={{ display: 'block', color: 'var(--color-text-muted)' }}>Details: {r.details}</span>}
+                      <span style={{ display: 'block', fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{new Date(r.created_at).toLocaleDateString('en-IN')}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px',
+                        backgroundColor: r.status === 'pending' ? 'rgba(234, 179, 8, 0.1)' : r.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: r.status === 'pending' ? '#b45309' : r.status === 'approved' ? 'var(--color-success)' : '#dc2626'
+                      }}>{r.status.toUpperCase()}</span>
+                      {r.status === 'pending' && (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button type="button" onClick={() => handleUpdateReturnStatus(r.id, 'approved')} style={{ padding: '4px 10px', fontSize: '11px', backgroundColor: 'var(--color-success)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>Approve</button>
+                          <button type="button" onClick={() => handleUpdateReturnStatus(r.id, 'rejected')} style={{ padding: '4px 10px', fontSize: '11px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>Reject</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 6: ADMIN ACCOUNTS PERSISTENCE & MANAGEMENT */}
       {activeTab === 'admins' && (
         <div className="admin-grid-layout mt-6">
           {/* Left Form: Add/Edit Admin Account */}
