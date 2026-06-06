@@ -468,7 +468,9 @@ export default function App() {
         trackingNumber: o.tracking_number || null,
         shippedAt: o.shipped_at || null,
         couponDiscount: Number(o.coupon_discount || 0),
-        couponCode: o.coupon_code || null
+        couponCode: o.coupon_code || null,
+        gstin: o.gstin || null,
+        customerEmail: o.customer_email || null
       }));
 
       if (isMounted) setOrders(mapped);

@@ -1724,6 +1724,10 @@ export default function AdminPortal({
                         <span style={{ display: 'block', fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                           Client Business: <strong>{order.address?.businessName || order.address?.name}</strong> | Phone: <strong>{order.address?.phone}</strong>
                         </span>
+                        <span style={{ display: 'block', fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                          Customer: <strong>{order.customerEmail || 'N/A'}</strong>
+                          {order.gstin && <> | GSTIN: <strong>{order.gstin}</strong></>}
+                        </span>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'bold' }}>BILLING AMOUNT</span>
