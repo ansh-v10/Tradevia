@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../util/supabaseClient';
+import { COURIER_OPTIONS } from '../util/tracking';
 
 export default function AdminPortal({ 
   products, 
@@ -15,6 +16,7 @@ export default function AdminPortal({
 }) {
   const navigate = useNavigate();
   const [trackingInputs, setTrackingInputs] = useState({});
+  const [courierInputs, setCourierInputs] = useState({});
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns', 'customers', 'analytics'
   const [returns, setReturns] = useState([]);
   const [returnsLoaded, setReturnsLoaded] = useState(false);
@@ -1750,27 +1752,38 @@ export default function AdminPortal({
                       {order.trackingNumber && (
                         <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-success)' }}>
                           <strong>Tracking:</strong> {order.trackingNumber}
+                          {order.courier && <> via {order.courier}</>}
                           {order.shippedAt && <> (shipped {new Date(order.shippedAt).toLocaleDateString('en-IN')})</>}
                         </div>
                       )}
 
                       {/* Mark as shipped */}
                       {order.status === 'paid' && (
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
                           <input
                             type="text"
                             value={trackingInputs[order.id] || ''}
                             onChange={(e) => setTrackingInputs((p) => ({ ...p, [order.id]: e.target.value }))}
                             placeholder="Tracking number"
-                            style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '12px', maxWidth: '250px' }}
+                            style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '12px', maxWidth: '200px' }}
                           />
+                          <select
+                            value={courierInputs[order.id] || ''}
+                            onChange={(e) => setCourierInputs((p) => ({ ...p, [order.id]: e.target.value }))}
+                            style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '12px', maxWidth: '160px' }}
+                          >
+                            <option value="">Select Courier</option>
+                            {COURIER_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
                           <button
                             type="button"
                             onClick={async () => {
                               const tracking = (trackingInputs[order.id] || '').trim();
-                              if (!tracking) return;
-                              await supabase.rpc('mark_order_shipped', { order_id: order.id, tracking });
+                              const courier = courierInputs[order.id] || '';
+                              if (!tracking || !courier) return alert('Enter tracking number and select courier.');
+                              await supabase.rpc('mark_order_shipped', { order_id: order.id, tracking, courier_name: courier });
                               setTrackingInputs((p) => ({ ...p, [order.id]: '' }));
+                              setCourierInputs((p) => ({ ...p, [order.id]: '' }));
                               const apiBase = import.meta.env.VITE_API_BASE_URL || '';
                               if (apiBase) {
                                 fetch(apiBase + '/api/send-shipping-notification', {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartIcon } from '../components/Icons';
 import { supabase } from '../util/supabaseClient';
+import { getTrackingUrl } from '../util/tracking';
 
 export default function YourOrders({ orders = [] }) {
   const navigate = useNavigate();
@@ -139,7 +140,19 @@ export default function YourOrders({ orders = [] }) {
                       }}>{(order.status || 'pending').toUpperCase()}</span></p>
                       <p style={{ margin: '2px 0' }}>Fulfillment: <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{order.status === 'shipped' ? 'Shipped' : order.status === 'paid' ? 'Dispatching (Within 24 Hours)' : 'Awaiting Payment'}</span></p>
                       {order.trackingNumber && (
-                        <p style={{ margin: '2px 0', fontSize: '12px' }}>Tracking: <strong>{order.trackingNumber}</strong></p>
+                        <p style={{ margin: '2px 0', fontSize: '12px' }}>
+                          Tracking: <strong>{order.trackingNumber}</strong>
+                          {order.courier && <> via {order.courier}</>}
+                          {' · '}
+                          <a
+                            href={getTrackingUrl(order.trackingNumber, order.courier)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'underline' }}
+                          >
+                            Track Package
+                          </a>
+                        </p>
                       )}
                       <p style={{ margin: '2px 0' }}>Nearest Hub: <span style={{ fontWeight: '600' }}>Jhajjar B2B Hub</span></p>
                     </div>
