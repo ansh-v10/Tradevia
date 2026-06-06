@@ -375,6 +375,63 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (req.method === 'POST' && requestUrl.pathname === '/api/send-shipping-notification') {
+    try {
+      const body = await readBody(req);
+      const { orderId, trackingNumber } = body;
+      if (!orderId || !trackingNumber) {
+        return sendJson(res, 400, { error: 'orderId and trackingNumber required' });
+      }
+      if (!transporter) {
+        return sendJson(res, 200, { sent: false, note: 'SMTP not configured' });
+      }
+      const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
+      if (!order) return sendJson(res, 404, { error: 'Order not found' });
+
+      let customerEmail = order.customer_email || '';
+      if (!customerEmail && order.user_id) {
+        const { data: profile } = await supabase.from('profiles').select('email').eq('id', order.user_id).maybeSingle();
+        customerEmail = profile?.email || '';
+      }
+
+      const addr = order.address || {};
+      const items = order.items || [];
+      const itemsList = items.map(i => `<li>${i.name} × ${i.quantity}</li>`).join('');
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:sans-serif;padding:24px;max-width:600px;margin:auto">
+        <div style="border-bottom:2px solid #3b82f6;padding-bottom:12px;margin-bottom:20px">
+          <h1 style="color:#3b82f6;margin:0">Sanjay Sales</h1>
+          <p style="color:#666;margin:4px 0 0">B2B Wholesale Marketplace</p>
+        </div>
+        <h2 style="color:#16a34a">🚚 Your Order Has Been Shipped!</h2>
+        <p style="font-size:14px;color:#333">Order <strong>${orderId}</strong> is on its way.</p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0">
+          <p style="margin:0 0 8px;font-size:13px;color:#333"><strong>Tracking Number:</strong></p>
+          <p style="margin:0;font-size:18px;font-weight:bold;color:#16a34a">${trackingNumber}</p>
+        </div>
+        <h3 style="margin-top:20px">Delivery Address</h3>
+        <p style="font-size:13px;color:#555">${addr.name || ''}<br>${addr.businessName || ''}<br>${addr.addressLine || ''}<br>${addr.city || ''}, ${addr.state || ''} - ${addr.pincode || ''}<br>Phone: ${addr.phone || ''}</p>
+        <h3 style="margin-top:20px">Items</h3>
+        <ul style="font-size:13px;color:#555">${itemsList}</ul>
+        <p style="margin-top:24px;color:#666;font-size:12px">Thank you for your business!</p>
+      </body></html>`;
+
+      if (customerEmail) {
+        await transporter.sendMail({
+          from: '"Sanjay Sales" <' + smtpUser + '>',
+          to: customerEmail,
+          subject: 'Order Shipped — ' + orderId,
+          html
+        });
+        console.log('Shipping notification sent to', customerEmail);
+      }
+      return sendJson(res, 200, { sent: !!customerEmail });
+    } catch (error) {
+      console.error('Shipping notification error:', error);
+      return sendJson(res, 500, { error: error.message });
+    }
+  }
+
   return sendJson(res, 404, { error: 'Not found' });
 });
 

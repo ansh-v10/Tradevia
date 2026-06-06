@@ -11,6 +11,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
   const [businessName, setBusinessName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [email, setEmail] = useState('');
+  const [gstin, setGstin] = useState('');
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -25,6 +26,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
       setBusinessName('');
       setMobileNumber('');
       setEmail('');
+      setGstin('');
     }
   }, [isOpen, mode]);
 
@@ -113,8 +115,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
 
           // create profile entry if signed up immediately
           if (data?.user) {
-            await supabase.from('profiles').upsert({ id: data.user.id, email: emailToUse, name: fullName, business_name: businessName, mobile: mobileNumber });
-            const profile = { id: data.user.id, email: emailToUse, name: fullName, businessName, mobile: mobileNumber };
+            await supabase.from('profiles').upsert({ id: data.user.id, email: emailToUse, name: fullName, business_name: businessName, mobile: mobileNumber, gstin: gstin || '' });
+            const profile = { id: data.user.id, email: emailToUse, name: fullName, businessName, mobile: mobileNumber, gstin: gstin || '' };
             setSuccessMsg('Account created — logged in.');
             setTimeout(() => { onSuccess(profile); onClose(); }, 800);
           } else {
@@ -174,7 +176,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
           const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single().maybeSingle();
           const profile = profileData || { id: user.id, email: user.email };
           setSuccessMsg('Logged in successfully!');
-          setTimeout(() => { onSuccess({ name: profile.name || '', businessName: profile.business_name || '', email: profile.email || user.email, mobile: profile.mobile || '' }); onClose(); }, 800);
+          setTimeout(() => { onSuccess({ name: profile.name || '', businessName: profile.business_name || '', email: profile.email || user.email, mobile: profile.mobile || '', gstin: profile.gstin || '' }); onClose(); }, 800);
         } else if (mode === 'forgot') {
           // Forgot password reset
           const identifier = loginIdentifier.trim();
@@ -267,6 +269,20 @@ export default function LoginModal({ isOpen, onClose, onSuccess, initialMode = '
                   className={errors.businessName ? 'error-input' : ''}
                 />
                 {errors.businessName && <span className="input-error-msg">{errors.businessName}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="gstin">GSTIN (Optional)</label>
+                <input 
+                  type="text" 
+                  id="gstin"
+                  value={gstin}
+                  onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                  placeholder="e.g. 07AABCU9603R1ZN"
+                  maxLength={15}
+                  className={errors.gstin ? 'error-input' : ''}
+                />
+                {errors.gstin && <span className="input-error-msg">{errors.gstin}</span>}
               </div>
 
               {errors.contact && (

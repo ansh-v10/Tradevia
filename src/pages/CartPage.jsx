@@ -79,6 +79,8 @@ export default function CartPage({
     const qty = parseInt(item.quantity) || 0;
     return acc + (getTieredWholesalePrice(item.product, qty) * qty);
   }, 0);
+  const MIN_ORDER_AMOUNT = 500;
+
   const gstAmount = Math.round(rawSubtotal * 0.18);
   const bulkTierDiscount = rawSubtotal > 10000 ? Math.round(rawSubtotal * 0.05) : 0;
 
@@ -112,7 +114,11 @@ export default function CartPage({
 
   const handleCheckoutBtn = () => {
     if (!user) {
-      onOpenLoginModal(true); // pass true to indicate it was a checkout trigger
+      onOpenLoginModal(true);
+      return;
+    }
+    if (rawSubtotal < MIN_ORDER_AMOUNT) {
+      alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Add more items to proceed.`);
       return;
     }
     setCheckoutStep('address');
@@ -156,7 +162,7 @@ export default function CartPage({
       try {
         // create draft order in Supabase with status 'pending'
         const user = (await supabase.auth.getUser()).data.user;
-        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, raw_subtotal: rawSubtotal, items: orderPayload.items, address: orderPayload.address, coupon_discount: couponDiscount, coupon_code: appliedCoupon?.code || null }]).select().single();
+        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, raw_subtotal: rawSubtotal, items: orderPayload.items, address: orderPayload.address, coupon_discount: couponDiscount, coupon_code: appliedCoupon?.code || null, gstin: user?.gstin || null, customer_email: user?.email || null }]).select().single();
         if (error) throw error;
 
         // increment coupon usage count

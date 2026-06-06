@@ -9,6 +9,7 @@ export default function ProfilePage({ user, onUpdateUser }) {
   const [businessName, setBusinessName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
+  const [gstin, setGstin] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState('');
@@ -20,6 +21,7 @@ export default function ProfilePage({ user, onUpdateUser }) {
       setBusinessName(user.businessName || '');
       setMobile(user.mobile || '');
       setEmail(user.email || '');
+      setGstin(user.gstin || '');
     }
   }, [user]);
 
@@ -56,7 +58,7 @@ export default function ProfilePage({ user, onUpdateUser }) {
     }
     setSaving(true);
     if (onUpdateUser) {
-      await onUpdateUser({ ...user, name: name.trim(), businessName: businessName.trim(), mobile: mobile.trim(), email: email.trim() });
+      await onUpdateUser({ ...user, name: name.trim(), businessName: businessName.trim(), mobile: mobile.trim(), email: email.trim(), gstin: gstin.trim() });
     }
     setSaving(false);
     setEditing(false);
@@ -137,6 +139,10 @@ export default function ProfilePage({ user, onUpdateUser }) {
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--color-text-muted)' }}>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pincode-input" style={{ width: '100%', height: '40px', padding: '0 12px' }} required />
             </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--color-text-muted)' }}>GSTIN</label>
+              <input type="text" maxLength={15} value={gstin} onChange={(e) => setGstin(e.target.value.toUpperCase())} className="pincode-input" style={{ width: '100%', height: '40px', padding: '0 12px' }} placeholder="e.g. 07AABCU9603R1ZN" />
+            </div>
             {error && <div style={{ color: '#dc2626', fontSize: '13px', fontWeight: 600 }}>{error}</div>}
             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
               <button type="submit" disabled={saving} className="primary-b2b-btn" style={{ opacity: saving ? 0.6 : 1 }}>
@@ -174,6 +180,12 @@ export default function ProfilePage({ user, onUpdateUser }) {
                   <div style={{ fontSize: '15px', fontWeight: 500 }}>{user.email}
                     {user.emailConfirmed && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#16a34a', fontWeight: 600 }}>Verified</span>}
                   </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '2px' }}>GSTIN</div>
+                  <div style={{ fontSize: '15px', fontWeight: 500 }}>{user.gstin || '-'}</div>
                 </div>
               </div>
             </div>

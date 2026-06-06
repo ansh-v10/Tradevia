@@ -38,7 +38,7 @@ export default function App() {
       if (data?.session?.user) {
         const u = data.session.user;
         supabase.from('profiles').select('*').eq('id', u.id).maybeSingle().then(({ data: profile }) => {
-          const base = { id: u.id, email: profile?.email || u.email, name: profile?.name || '', businessName: profile?.business_name || '', mobile: profile?.mobile || '' };
+          const base = { id: u.id, email: profile?.email || u.email, name: profile?.name || '', businessName: profile?.business_name || '', mobile: profile?.mobile || '', gstin: profile?.gstin || '' };
           setUser({ ...base, emailConfirmed: !!u.email_confirmed_at });
           setLoading(false);
         });
@@ -282,6 +282,7 @@ export default function App() {
   };
 
   const handleUpdateUser = async (updatedUser) => {
+    const oldEmail = user?.email;
     setUser(updatedUser);
     if (updatedUser?.id) {
       await supabase.from('profiles').upsert({
@@ -289,8 +290,13 @@ export default function App() {
         email: updatedUser.email,
         name: updatedUser.name,
         business_name: updatedUser.businessName,
-        mobile: updatedUser.mobile
+        mobile: updatedUser.mobile,
+        gstin: updatedUser.gstin || ''
       });
+      if (oldEmail && oldEmail !== updatedUser.email) {
+        const { error } = await supabase.auth.updateUser({ email: updatedUser.email });
+        if (error) console.error('Auth email update failed:', error.message);
+      }
     }
   };
 

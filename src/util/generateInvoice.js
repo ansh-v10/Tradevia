@@ -58,7 +58,12 @@ export function generateInvoicePDF({ orderId, user, address, cart, rawSubtotal, 
   y += 4;
   normal(`Email: ${user?.email || 'N/A'}`, 9, 10);
   normal(`Phone: ${address?.phone || ''}`, 9, pageW / 2 + 10);
-  y += 10;
+  y += 4;
+  if (user?.gstin) {
+    normal(`GSTIN: ${user.gstin}`, 9, 10);
+    y += 4;
+  }
+  y += 6;
   line();
 
   // Items table header

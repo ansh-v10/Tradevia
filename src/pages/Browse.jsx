@@ -33,6 +33,8 @@ export default function Browse({
   const [sortOption, setSortOption] = useState('most-bought'); // 'alpha', 'price-low', 'price-high', 'most-bought'
   const [quantities, setQuantities] = useState({}); // { productId: qty }
   const [showInStockOnly, setShowInStockOnly] = useState(false);
+  const ITEMS_PER_PAGE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Mobile Bottom Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false); // true/false
@@ -57,6 +59,10 @@ export default function Browse({
       setSelectedBrands([brand]);
     }
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategories, selectedBrands, showInStockOnly, sortOption]);
 
   const handleCategoryToggle = (category) => {
     if (selectedCategories.includes(category)) {
@@ -145,6 +151,9 @@ export default function Browse({
       }
       return 0;
     });
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const openMobileDrawer = (tab) => {
     setMobileDrawerTab(tab);
@@ -292,7 +301,7 @@ export default function Browse({
 
           {/* Product Cards Grid */}
           <div className="products-grid-layout">
-            {filteredProducts.map((product) => {
+            {paginatedProducts.map((product) => {
               const qty = quantities[product.id] !== undefined ? quantities[product.id] : (product.moq || 10);
               const unitDiscount = product.retailPrice - product.wholesalePrice;
               
@@ -452,6 +461,72 @@ export default function Browse({
               );
             })}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '32px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '8px 16px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  background: currentPage === 1 ? '#f1f5f9' : '#fff',
+                  color: currentPage === 1 ? '#94a3b8' : 'var(--color-text-main)',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px'
+                }}
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  if (totalPages <= 7) return true;
+                  if (page === 1 || page === totalPages) return true;
+                  if (Math.abs(page - currentPage) <= 1) return true;
+                  return false;
+                })
+                .map((page, idx, arr) => (
+                  <React.Fragment key={page}>
+                    {idx > 0 && arr[idx - 1] !== page - 1 && <span style={{ padding: '0 4px', color: '#94a3b8' }}>...</span>}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        border: currentPage === page ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        borderRadius: '6px',
+                        background: currentPage === page ? 'var(--color-primary)' : '#fff',
+                        color: currentPage === page ? '#fff' : 'var(--color-text-main)',
+                        cursor: 'pointer',
+                        fontWeight: currentPage === page ? '700' : '400',
+                        fontSize: '13px'
+                      }}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                ))}
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '8px 16px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  background: currentPage === totalPages ? '#f1f5f9' : '#fff',
+                  color: currentPage === totalPages ? '#94a3b8' : 'var(--color-text-main)',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px'
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
 
         </main>
       </div>

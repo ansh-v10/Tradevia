@@ -15,9 +15,13 @@ export default function AdminPortal({
 }) {
   const navigate = useNavigate();
   const [trackingInputs, setTrackingInputs] = useState({});
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns', 'customers', 'analytics'
   const [returns, setReturns] = useState([]);
   const [returnsLoaded, setReturnsLoaded] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [customersLoaded, setCustomersLoaded] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'returns' && !returnsLoaded) {
@@ -26,7 +30,47 @@ export default function AdminPortal({
         setReturnsLoaded(true);
       });
     }
-  }, [activeTab, returnsLoaded]);
+    if (activeTab === 'customers' && !customersLoaded) {
+      (async () => {
+        const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        const { data: allOrders } = await supabase.from('orders').select('user_id');
+        const orderCounts = {};
+        if (allOrders) {
+          allOrders.forEach(o => {
+            orderCounts[o.user_id] = (orderCounts[o.user_id] || 0) + 1;
+          });
+        }
+        setCustomers((profiles || []).map(p => ({ ...p, ordersCount: orderCounts[p.id] || 0 })));
+        setCustomersLoaded(true);
+      })();
+    }
+    if (activeTab === 'analytics' && !analyticsLoaded) {
+      (async () => {
+        const { data: paidOrders } = await supabase.from('orders').select('*').eq('status', 'paid');
+        if (!paidOrders || paidOrders.length === 0) {
+          setAnalyticsData({ totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, topProducts: [] });
+          setAnalyticsLoaded(true);
+          return;
+        }
+        const totalOrders = paidOrders.length;
+        const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+        const avgOrderValue = totalRevenue / totalOrders;
+        const productQty = {};
+        paidOrders.forEach(o => {
+          (o.items || []).forEach(item => {
+            const key = item.name || item.productId || 'Unknown';
+            productQty[key] = (productQty[key] || 0) + (item.quantity || 0);
+          });
+        });
+        const topProducts = Object.entries(productQty)
+          .map(([name, qty]) => ({ name, qty }))
+          .sort((a, b) => b.qty - a.qty)
+          .slice(0, 5);
+        setAnalyticsData({ totalRevenue, totalOrders, avgOrderValue, topProducts });
+        setAnalyticsLoaded(true);
+      })();
+    }
+  }, [activeTab, returnsLoaded, customersLoaded, analyticsLoaded]);
 
   const handleUpdateReturnStatus = async (returnId, newStatus) => {
     const { error } = await supabase.from('returns').update({ status: newStatus }).eq('id', returnId);
@@ -40,27 +84,14 @@ export default function AdminPortal({
   
   const [registeredAdmins, setRegisteredAdmins] = useState(() => {
     const saved = localStorage.getItem('tradevia_sales_admins');
-    const defaults = [
-      { id: 'admin', password: 'admin' },
-      { id: 'vansh2005', password: 'Vansh@2005' }
-    ];
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const merged = [...parsed];
-          defaults.forEach(def => {
-            if (!merged.some(a => a.id.toLowerCase() === def.id.toLowerCase())) {
-              merged.push(def);
-            }
-          });
-          return merged;
-        }
+        return JSON.parse(saved);
       } catch (e) {
         console.error("Failed to parse admins database", e);
       }
     }
-    return defaults;
+    return [];
   });
 
   useEffect(() => {
@@ -180,25 +211,25 @@ export default function AdminPortal({
     setAuthSuccess('');
 
     if (authMode === 'login') {
-      // First, try local storage admin credentials
-      const localAdmin = registeredAdmins.find(
-        a => a.id.toLowerCase() === authId.trim().toLowerCase() && a.password === authPassword
-      );
-      if (localAdmin) {
-        setIsAdminAuthenticated(true);
-        setActionSuccess('Login successful. Welcome to the admin panel.');
-        setAuthId('');
-        setAuthPassword('');
-        return;
-      }
-
-      // If not found in local admins, try Supabase (production)
+      // Primary: Supabase authentication
       const { error } = await supabase.auth.signInWithPassword({
         email: authId.trim(),
         password: authPassword
       });
 
       if (error) {
+        // Fallback: local development admin (INSECURE — for dev only)
+        const localAdmin = registeredAdmins.find(
+          a => a.id.toLowerCase() === authId.trim().toLowerCase() && a.password === authPassword
+        );
+        if (localAdmin) {
+          console.warn('Using local admin authentication (insecure — for development only)');
+          setIsAdminAuthenticated(true);
+          setActionSuccess('Login successful (dev mode).');
+          setAuthId('');
+          setAuthPassword('');
+          return;
+        }
         setAuthError(error.message);
         return;
       }
@@ -970,6 +1001,18 @@ export default function AdminPortal({
           Returns / Refunds
         </button>
         <button 
+          className={`admin-tab-btn ${activeTab === 'customers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('customers')}
+        >
+          Customers
+        </button>
+        <button 
+          className={`admin-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          Analytics
+        </button>
+        <button 
           className={`admin-tab-btn ${activeTab === 'admins' ? 'active' : ''}`}
           onClick={() => setActiveTab('admins')}
         >
@@ -1709,6 +1752,13 @@ export default function AdminPortal({
                               if (!tracking) return;
                               await supabase.rpc('mark_order_shipped', { order_id: order.id, tracking });
                               setTrackingInputs((p) => ({ ...p, [order.id]: '' }));
+                              const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+                              if (apiBase) {
+                                fetch(apiBase + '/api/send-shipping-notification', {
+                                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ orderId: order.id, trackingNumber: tracking })
+                                }).catch(() => {});
+                              }
                               if (window.onAdminOrderUpdate) window.onAdminOrderUpdate();
                             }}
                             style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
@@ -1776,6 +1826,106 @@ export default function AdminPortal({
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 7: CUSTOMERS */}
+      {activeTab === 'customers' && (
+        <div className="summary-card mt-6">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h3 style={{ margin: 0 }}>Registered Customers</h3>
+              <p className="gst-disclaimer">All user profiles who have created an account on the platform.</p>
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+              Total Customers: {customers.length}
+            </div>
+          </div>
+          <div className="divider-card"></div>
+          {customers.length === 0 ? (
+            <p style={{ padding: '20px 0', color: 'var(--color-text-muted)', fontSize: '13px' }}>No customers found.</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="invoice-table" style={{ width: '100%', fontSize: '13px' }}>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Business Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>GSTIN</th>
+                    <th className="text-center">Orders</th>
+                    <th>Created At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customers.map((c) => (
+                    <tr key={c.id}>
+                      <td><strong>{c.name || '-'}</strong></td>
+                      <td>{c.business_name || '-'}</td>
+                      <td>{c.email || '-'}</td>
+                      <td>{c.mobile || '-'}</td>
+                      <td>{c.gstin || '-'}</td>
+                      <td className="text-center"><span className="b2b-badge">{c.ordersCount}</span></td>
+                      <td>{c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 8: ANALYTICS */}
+      {activeTab === 'analytics' && (
+        <div className="summary-card mt-6">
+          <h3>Sales Analytics</h3>
+          <p className="gst-disclaimer">Revenue breakdown and top-selling products from paid orders.</p>
+          <div className="divider-card"></div>
+          {!analyticsData ? (
+            <p style={{ padding: '20px 0', color: 'var(--color-text-muted)', fontSize: '13px' }}>Loading analytics...</p>
+          ) : analyticsData.totalOrders === 0 ? (
+            <p style={{ padding: '20px 0', color: 'var(--color-text-muted)', fontSize: '13px' }}>No paid orders yet.</p>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <div className="admin-stat-card" style={{ flex: '1', minWidth: '160px', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', backgroundColor: '#f0fdf4', textAlign: 'center' }}>
+                  <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Revenue</span>
+                  <span style={{ display: 'block', fontSize: '24px', fontWeight: '800', color: 'var(--color-success)', marginTop: '8px' }}>₹{analyticsData.totalRevenue.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="admin-stat-card" style={{ flex: '1', minWidth: '160px', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', backgroundColor: '#eff6ff', textAlign: 'center' }}>
+                  <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Orders</span>
+                  <span style={{ display: 'block', fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)', marginTop: '8px' }}>{analyticsData.totalOrders}</span>
+                </div>
+                <div className="admin-stat-card" style={{ flex: '1', minWidth: '160px', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', backgroundColor: '#fefce8', textAlign: 'center' }}>
+                  <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Avg Order Value</span>
+                  <span style={{ display: 'block', fontSize: '24px', fontWeight: '800', color: '#b45309', marginTop: '8px' }}>₹{analyticsData.avgOrderValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+              <div>
+                <h4 style={{ margin: '0 0 12px', fontSize: '15px' }}>Top 5 Products (by quantity sold)</h4>
+                <table className="invoice-table" style={{ width: '100%', fontSize: '13px' }}>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Product Name</th>
+                      <th className="text-center">Quantity Sold</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analyticsData.topProducts.map((p, i) => (
+                      <tr key={p.name}>
+                        <td>{i + 1}</td>
+                        <td><strong>{p.name}</strong></td>
+                        <td className="text-center"><span className="b2b-badge">{p.qty}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
