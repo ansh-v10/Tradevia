@@ -30,6 +30,7 @@ export default function App() {
     if (saved) try { return JSON.parse(saved); } catch (_) {}
     return [];
   });
+  const [loading, setLoading] = useState(true);
 
   // Restore Supabase session on page load
   useEffect(() => {
@@ -39,7 +40,10 @@ export default function App() {
         supabase.from('profiles').select('*').eq('id', u.id).maybeSingle().then(({ data: profile }) => {
           const base = { id: u.id, email: profile?.email || u.email, name: profile?.name || '', businessName: profile?.business_name || '', mobile: profile?.mobile || '' };
           setUser({ ...base, emailConfirmed: !!u.email_confirmed_at });
+          setLoading(false);
         });
+      } else {
+        setLoading(false);
       }
     });
 
@@ -506,7 +510,22 @@ export default function App() {
   };
 
   return (
-    <div className="app-main-flex-wrapper">
+    <>
+      {loading && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          background: '#f8fafc', gap: '20px'
+        }}>
+          <div style={{
+            width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: 'var(--color-primary)',
+            borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+          }} />
+          <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Loading Tradevia...</span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+      <div className="app-main-flex-wrapper" style={loading ? { display: 'none' } : {}}>
       
       {/* Dynamic Header */}
       <Navbar 
@@ -575,6 +594,7 @@ export default function App() {
       {/* Corporate B2B Footer */}
       <Footer />
 
-    </div>
+      </div>
+    </>
   );
 }
