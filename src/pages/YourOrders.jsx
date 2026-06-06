@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartIcon } from '../components/Icons';
 import { supabase } from '../util/supabaseClient';
@@ -12,6 +12,13 @@ export default function YourOrders({ orders = [] }) {
   const [returnLoading, setReturnLoading] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelMsg, setCancelMsg] = useState('');
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
+  useEffect(() => {
+    if (orders && orders.length >= 0) {
+      setOrdersLoading(false);
+    }
+  }, [orders]);
 
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm('Are you sure you want to cancel this order?')) return;
@@ -61,6 +68,18 @@ export default function YourOrders({ orders = [] }) {
       return isoString;
     }
   };
+
+  if (ordersLoading) {
+    return (
+      <div className="orders-page-wrapper navbar-width-limiter" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Loading orders...</span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
 
   if (orders.length === 0) {
     return (

@@ -17,7 +17,7 @@ export default function AdminPortal({
   const navigate = useNavigate();
   const [trackingInputs, setTrackingInputs] = useState({});
   const [courierInputs, setCourierInputs] = useState({});
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns', 'customers', 'analytics'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'categories', 'bulk', 'orders', 'returns', 'customers', 'analytics', 'price-history'
   const [returns, setReturns] = useState([]);
   const [returnsLoaded, setReturnsLoaded] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -27,6 +27,8 @@ export default function AdminPortal({
   const [customerOrdersLoaded, setCustomerOrdersLoaded] = useState(false);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
+  const [priceHistory, setPriceHistory] = useState([]);
+  const [priceHistoryLoaded, setPriceHistoryLoaded] = useState(false);
   const [adminToast, setAdminToast] = useState({ show: false, message: '', type: 'success' });
 
   const Spinner = () => (
@@ -35,6 +37,26 @@ export default function AdminPortal({
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
+
+  const exportCSV = (data, filename) => {
+    if (!data || data.length === 0) return;
+    const headers = Object.keys(data[0]);
+    const csvRows = [headers.join(',')];
+    for (const row of data) {
+      const values = headers.map(h => {
+        const val = row[h]?.toString() || '';
+        return `"${val.replace(/"/g, '""')}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     if (activeTab === 'returns' && !returnsLoaded) {
@@ -56,6 +78,12 @@ export default function AdminPortal({
         setCustomers((profiles || []).map(p => ({ ...p, ordersCount: orderCounts[p.id] || 0 })));
         setCustomersLoaded(true);
       })();
+    }
+    if (activeTab === 'price-history' && !priceHistoryLoaded) {
+      supabase.from('price_history').select('*').order('changed_at', { ascending: false }).then(({ data }) => {
+        if (data) setPriceHistory(data);
+        setPriceHistoryLoaded(true);
+      });
     }
     if (activeTab === 'analytics' && !analyticsLoaded) {
       (async () => {
@@ -83,7 +111,15 @@ export default function AdminPortal({
         setAnalyticsLoaded(true);
       })();
     }
-  }, [activeTab, returnsLoaded, customersLoaded, analyticsLoaded]);
+  }, [activeTab, returnsLoaded, customersLoaded, analyticsLoaded, priceHistoryLoaded]);
+
+  useEffect(() => {
+    setReturnsLoaded(false);
+    setCustomersLoaded(false);
+    setCustomerOrdersLoaded(false);
+    setAnalyticsLoaded(false);
+    setPriceHistoryLoaded(false);
+  }, [activeTab]);
 
   const loadCustomerOrders = async (userId) => {
     setSelectedCustomerId(userId);
@@ -106,6 +142,17 @@ export default function AdminPortal({
     await supabase.rpc('mark_order_delivered', { order_id: orderId });
     if (window.onAdminOrderUpdate) window.onAdminOrderUpdate();
     setAdminToast({ show: true, message: 'Order marked as delivered!', type: 'success' });
+    setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
+  };
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    const update = { status: newStatus };
+    if (newStatus === 'confirmed') update.confirmed_at = new Date().toISOString();
+    if (newStatus === 'processing') update.processing_at = new Date().toISOString();
+    if (newStatus === 'out_for_delivery') update.out_for_delivery_at = new Date().toISOString();
+    await supabase.from('orders').update(update).eq('id', orderId);
+    if (window.onAdminOrderUpdate) window.onAdminOrderUpdate();
+    setAdminToast({ show: true, message: `Order marked as ${newStatus.replace(/_/g, ' ')}!`, type: 'success' });
     setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 3000);
   };
 
@@ -1072,6 +1119,12 @@ export default function AdminPortal({
           Analytics
         </button>
         <button 
+          className={`admin-tab-btn ${activeTab === 'price-history' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('price-history'); }}
+        >
+          Price History
+        </button>
+        <button 
           className={`admin-tab-btn ${activeTab === 'admins' ? 'active' : ''}`}
           onClick={() => setActiveTab('admins')}
         >
@@ -1764,8 +1817,11 @@ export default function AdminPortal({
               <h3 style={{ margin: 0 }}>Incoming Wholesale Order Shipments</h3>
               <p className="gst-disclaimer">Review compliance tax invoices and dispatch details for all placed orders.</p>
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
-              Total Placed Orders: {orders.length}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                Total Placed Orders: {orders.length}
+              </div>
+              <button onClick={() => exportCSV(orders.map(o => ({ ID: o.id, Date: new Date(o.date).toLocaleDateString('en-IN'), Customer: o.customerEmail || '', Amount: o.grandTotal, Status: o.status || 'pending', Items: o.items?.length || 0 })), 'orders-export')} style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>Export CSV</button>
             </div>
           </div>
           <div className="divider-card"></div>
@@ -1821,25 +1877,63 @@ export default function AdminPortal({
                         </div>
                       )}
 
+                      {/* Granular status timestamps */}
+                      {order.confirmed_at && (
+                        <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-text-muted)' }}>
+                          <strong>Confirmed:</strong> {new Date(order.confirmed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                      {order.processing_at && (
+                        <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-text-muted)' }}>
+                          <strong>Processing:</strong> {new Date(order.processing_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                      {order.out_for_delivery_at && (
+                        <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-text-muted)' }}>
+                          <strong>Out for Delivery:</strong> {new Date(order.out_for_delivery_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
                       {order.status === 'delivered' && order.delivered_at && (
                         <div style={{ fontSize: '12px', textAlign: 'left', color: 'var(--color-success)' }}>
                           <strong>Delivered:</strong> {new Date(order.delivered_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
-                      {order.status === 'shipped' && (
+
+                      {/* Action buttons based on status */}
+                      {order.status === 'paid' && (
                         <div style={{ marginTop: '4px' }}>
                           <button
                             type="button"
-                            onClick={() => handleMarkDelivered(order.id)}
+                            onClick={() => handleUpdateOrderStatus(order.id, 'confirmed')}
                             style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
                           >
-                            Mark Delivered
+                            Mark as Confirmed
                           </button>
                         </div>
                       )}
-
-                      {/* Mark as shipped */}
-                      {order.status === 'paid' && (
+                      {order.status === 'confirmed' && (
+                        <div style={{ marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateOrderStatus(order.id, 'processing')}
+                            style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Mark as Processing
+                          </button>
+                        </div>
+                      )}
+                      {order.status === 'processing' && (
+                        <div style={{ marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateOrderStatus(order.id, 'out_for_delivery')}
+                            style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Mark as Out for Delivery
+                          </button>
+                        </div>
+                      )}
+                      {order.status === 'out_for_delivery' && (
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
                           <input
                             type="text"
@@ -1881,6 +1975,17 @@ export default function AdminPortal({
                             style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
                           >
                             Mark Shipped
+                          </button>
+                        </div>
+                      )}
+                      {order.status === 'shipped' && (
+                        <div style={{ marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkDelivered(order.id)}
+                            style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Mark Delivered
                           </button>
                         </div>
                       )}
@@ -1955,8 +2060,11 @@ export default function AdminPortal({
               <h3 style={{ margin: 0 }}>Registered Customers</h3>
               <p className="gst-disclaimer">All user profiles who have created an account on the platform.</p>
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
-              Total Customers: {customers.length}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                Total Customers: {customers.length}
+              </div>
+              <button onClick={() => exportCSV(customers.map(c => ({ Name: c.name || '', Business: c.business_name || '', Email: c.email || '', Mobile: c.mobile || '', GSTIN: c.gstin || '', Orders: c.ordersCount, Created: c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN') : '' })), 'customers-export')} style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>Export CSV</button>
             </div>
           </div>
           <div className="divider-card"></div>
@@ -2071,6 +2179,7 @@ export default function AdminPortal({
                   <span style={{ display: 'block', fontSize: '24px', fontWeight: '800', color: '#b45309', marginTop: '8px' }}>₹{analyticsData.avgOrderValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               </div>
+              <button onClick={() => exportCSV([{ Metric: 'Total Revenue', Value: analyticsData.totalRevenue }, { Metric: 'Total Orders', Value: analyticsData.totalOrders }, { Metric: 'Avg Order Value', Value: analyticsData.avgOrderValue.toFixed(2) }], 'analytics-summary')} style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', marginBottom: '12px' }}>Export Summary CSV</button>
               <div>
                 <h4 style={{ margin: '0 0 12px', fontSize: '15px' }}>Top 5 Products (by quantity sold)</h4>
                 <table className="invoice-table" style={{ width: '100%', fontSize: '13px' }}>
@@ -2088,6 +2197,33 @@ export default function AdminPortal({
                         <td><strong>{p.name}</strong></td>
                         <td className="text-center"><span className="b2b-badge">{p.qty}</span></td>
                       </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <button onClick={() => exportCSV(analyticsData.topProducts.map((p, i) => ({ Rank: i+1, Product: p.name, Quantity: p.qty })), 'top-products')} style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', marginTop: '12px' }}>Export Top Products CSV</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* TAB 9: PRICE HISTORY */}
+      {activeTab === 'price-history' && (
+        <div className="summary-card mt-6">
+          <h3>Price Change History</h3>
+          <p className="gst-disclaimer">Track all wholesale price modifications.</p>
+          <div className="divider-card"></div>
+          {!priceHistoryLoaded ? <Spinner /> : priceHistory.length === 0 ? (
+            <p style={{ padding: '20px 0', color: 'var(--color-text-muted)' }}>No price changes recorded yet.</p>
+          ) : (
+            <>
+              <button onClick={() => exportCSV(priceHistory.map(p => ({ ID: p.id, ProductID: p.product_id, OldPrice: p.old_price, NewPrice: p.new_price, ChangedAt: new Date(p.changed_at).toLocaleString('en-IN') })), 'price-history')} style={{ padding: '6px 12px', fontSize: '11px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', marginBottom: '12px' }}>Export CSV</button>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="invoice-table" style={{ width: '100%', fontSize: '13px' }}>
+                  <thead><tr><th>ID</th><th>Product ID</th><th>Old Price</th><th>New Price</th><th>Changed At</th></tr></thead>
+                  <tbody>
+                    {priceHistory.map((p) => (
+                      <tr key={p.id}><td>{p.id}</td><td>{p.product_id}</td><td>₹{p.old_price}</td><td>₹{p.new_price}</td><td>{new Date(p.changed_at).toLocaleString('en-IN')}</td></tr>
                     ))}
                   </tbody>
                 </table>

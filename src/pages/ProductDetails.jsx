@@ -32,6 +32,7 @@ export default function ProductDetails({
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifyMsg, setNotifyMsg] = useState('');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const handleQuantityChange = (productId, val) => {
     setQuantities(prev => ({ ...prev, [productId]: val }));
@@ -44,6 +45,15 @@ export default function ProductDetails({
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product, id]);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    try {
+      const prev = JSON.parse(localStorage.getItem('ss_recently_viewed') || '[]');
+      const updated = [{ id: product.id, name: product.name, imageUrl: product.imageUrl, wholesalePrice: product.wholesalePrice, retailPrice: product.retailPrice, category: product.category }, ...prev.filter(p => p.id !== product.id)].slice(0, 10);
+      localStorage.setItem('ss_recently_viewed', JSON.stringify(updated));
+    } catch (e) {}
+  }, [product?.id]);
 
   // Load reviews from Supabase
   useEffect(() => {
@@ -167,6 +177,40 @@ export default function ProductDetails({
   return (
     <div className="product-details-page-wrapper navbar-width-limiter" style={{ padding: '32px 0 64px', textAlign: 'left' }}>
       
+      {lightboxOpen && (
+        <div
+          onClick={() => setLightboxOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', padding: '40px'
+          }}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            style={{
+              position: 'absolute', top: '20px', right: '20px',
+              background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
+              width: '48px', height: '48px', borderRadius: '50%',
+              fontSize: '28px', cursor: 'pointer', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              backdropFilter: 'blur(4px)'
+            }}
+          >
+            ×
+          </button>
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            style={{
+              maxWidth: '90%', maxHeight: '90vh', objectFit: 'contain',
+              borderRadius: '8px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+            }}
+          />
+        </div>
+      )}
+
       {/* Breadcrumbs */}
       <div className="breadcrumbs-row" style={{ display: 'flex', gap: '8px', fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', flexWrap: 'wrap' }}>
         <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>Home</span>
@@ -188,7 +232,8 @@ export default function ProductDetails({
           <img 
             src={product.imageUrl} 
             alt={product.name} 
-            style={{ width: '100%', maxHeight: '380px', objectFit: 'contain', padding: '16px' }} 
+            onClick={() => setLightboxOpen(true)}
+            style={{ width: '100%', maxHeight: '380px', objectFit: 'contain', padding: '16px', cursor: 'pointer' }} 
           />
         </div>
 

@@ -35,6 +35,7 @@ export default function Browse({
   const [showInStockOnly, setShowInStockOnly] = useState(false);
   const ITEMS_PER_PAGE = 20;
   const [currentPage, setCurrentPage] = useState(1);
+  const [browseLoading, setBrowseLoading] = useState(true);
 
   // Mobile Bottom Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false); // true/false
@@ -43,6 +44,12 @@ export default function Browse({
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setBrowseLoading(false);
+    }
+  }, [products]);
 
   // Read URL params on mount
   useEffect(() => {
@@ -159,6 +166,18 @@ export default function Browse({
     setMobileDrawerTab(tab);
     setMobileDrawerOpen(true);
   };
+
+  if (browseLoading) {
+    return (
+      <div className="browse-page-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Loading products...</span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="browse-page-wrapper">

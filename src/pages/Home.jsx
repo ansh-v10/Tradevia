@@ -619,6 +619,59 @@ export default function Home({
         );
       })}
 
+      {(() => {
+        let recentItems = [];
+        try { recentItems = JSON.parse(localStorage.getItem('ss_recently_viewed') || '[]'); } catch(e) {}
+        const recentProducts = recentItems.filter(r => products.some(p => p.id === r.id)).slice(0, 6);
+        if (recentProducts.length === 0) return null;
+        return (
+          <section className="super-saver-section navbar-width-limiter" style={{ marginTop: '32px' }}>
+            <div className="section-header-flex">
+              <div>
+                <h2 className="section-title text-left">Recently Viewed</h2>
+                <p className="section-subtitle text-left font-sm">Products you checked out recently</p>
+              </div>
+            </div>
+            <div className="products-horizontal-scroller">
+              {recentProducts.map((r) => {
+                const product = products.find(p => p.id === r.id);
+                if (!product) return null;
+                const margin = Math.round(((product.retailPrice - product.wholesalePrice) / product.retailPrice) * 100);
+                return (
+                  <div key={product.id} className="product-card-unit home-scroll-card">
+                    <div className="margin-overlay-badge">{margin}% OFF</div>
+                    <div className="product-image-container home-padded-img-wrap" onClick={() => navigate('/product/' + product.id)}>
+                      <img src={product.imageUrl} alt={product.name} className="product-card-img" />
+                    </div>
+                    <div className="product-details-container">
+                      <h3 className="product-name-heading" onClick={() => navigate('/product/' + product.id)}>{product.name}</h3>
+                      <div className="divider-card" style={{ margin: '8px 0' }}></div>
+                      <div style={{ fontSize: '11px', textAlign: 'left', marginBottom: '8px' }}>
+                        {(product.inventory !== undefined ? product.inventory : 100) <= 0 ? (
+                          <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>❌ Out of Stock</span>
+                        ) : (product.inventory !== undefined ? product.inventory : 100) < 10 ? (
+                          <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>left: {product.inventory}</span>
+                        ) : (
+                          <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>✓ In Stock</span>
+                        )}
+                      </div>
+                      <div className="price-actions-flex-row-blinkit">
+                        <div className="price-stack">
+                          <span className="mrp-txt">MRP ₹{product.retailPrice} (₹{product.retailPrice * getPackMultiplier(product.packSize)} / {getPackContainerName(product.packSize)})</span>
+                          <span className="wholesale-deal-price" style={{ margin: 0 }}>
+                            ₹{getTieredWholesalePrice(product, product.moq || 10)} <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>(₹{(getTieredWholesalePrice(product, product.moq || 10) * getPackMultiplier(product.packSize)).toLocaleString('en-IN')} / {getPackContainerName(product.packSize)})</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Info Banners */}
       <section className="b2b-info-banners navbar-width-limiter">
         <div className="info-banner-card blue-gradient">

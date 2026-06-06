@@ -1,3 +1,9 @@
+-- Add columns first (before functions that reference them)
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_at timestamp with time zone;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS cancelled_at timestamp with time zone;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS cancel_reason text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS variants jsonb DEFAULT '[]'::jsonb;
+
 -- Mark delivered
 CREATE OR REPLACE FUNCTION mark_order_delivered(order_id text)
 RETURNS void
@@ -7,12 +13,7 @@ AS $$
   WHERE id = order_id AND status = 'shipped';
 $$;
 
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_at timestamp with time zone;
-
 -- Cancel order
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS cancelled_at timestamp with time zone;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS cancel_reason text;
-
 CREATE OR REPLACE FUNCTION cancel_order(order_id text)
 RETURNS void
 LANGUAGE sql SECURITY DEFINER
@@ -45,13 +46,10 @@ BEGIN
 END;
 $$;
 
--- Product variants
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS variants jsonb DEFAULT '[]'::jsonb;
-
--- Back-in-stock requests
+-- Back-in-stock requests table
 CREATE TABLE IF NOT EXISTS public.back_in_stock_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id integer REFERENCES public.products(id) ON DELETE CASCADE,
+  product_id integer,
   email text NOT NULL,
   notified boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now()
@@ -70,5 +68,3 @@ ON public.back_in_stock_requests
 FOR SELECT
 TO authenticated
 USING (public.is_admin());
-
--- Delivered status in customer_email column already exists
