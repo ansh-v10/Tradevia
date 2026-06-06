@@ -155,7 +155,9 @@ export default function AdminApp() {
         address: o.address || {},
         status: o.status || 'pending',
         trackingNumber: o.tracking_number || null,
-        shippedAt: o.shipped_at || null
+        shippedAt: o.shipped_at || null,
+        couponDiscount: Number(o.coupon_discount || 0),
+        couponCode: o.coupon_code || null
       }));
 
       if (isMounted) setOrders(mapped);

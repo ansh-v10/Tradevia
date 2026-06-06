@@ -151,7 +151,7 @@ export default function CartPage({
       try {
         // create draft order in Supabase with status 'pending'
         const user = (await supabase.auth.getUser()).data.user;
-        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, raw_subtotal: rawSubtotal, items: orderPayload.items, address: orderPayload.address }]).select().single();
+        const { data, error } = await supabase.from('orders').insert([{ id: generatedId, user_id: user?.id, status: 'pending', amount: grandTotal, gst: gstAmount, discount: bulkTierDiscount, raw_subtotal: rawSubtotal, items: orderPayload.items, address: orderPayload.address, coupon_discount: couponDiscount, coupon_code: appliedCoupon?.code || null }]).select().single();
         if (error) throw error;
 
         // increment coupon usage count

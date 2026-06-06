@@ -378,6 +378,39 @@ const server = http.createServer(async (req, res) => {
   return sendJson(res, 404, { error: 'Not found' });
 });
 
+// --- Crash Recovery: reconcile pending orders on startup ---
+async function recoverPendingOrders() {
+  console.log('Checking for pending orders to reconcile...');
+  const { data: pendingOrders, error } = await supabase
+    .from('orders')
+    .select('id, amount, status')
+    .eq('status', 'pending')
+    .lt('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString());
+
+  if (error || !pendingOrders?.length) {
+    console.log('No pending orders to recover.');
+    return;
+  }
+
+  for (const order of pendingOrders) {
+    try {
+      // Fetch Razorpay payments by order_id from notes
+      const payments = await razor.payments.all({ count: 50 });
+      const matched = (payments.items || []).find((p) =>
+        p.description && p.description.includes(order.id)
+      );
+      if (matched && matched.status === 'captured') {
+        await supabase.from('orders').update({ status: 'paid' }).eq('id', order.id);
+        console.log(`Recovered order ${order.id} -> marked as paid`);
+      }
+    } catch (e) {
+      console.warn(`Could not reconcile order ${order.id}:`, e.message);
+    }
+  }
+}
+
+recoverPendingOrders().catch(console.error);
+
 server.listen(port, () => {
   console.log(`API server running on http://localhost:${port}`);
 });
