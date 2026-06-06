@@ -26,6 +26,22 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [cart, setCart] = useState([]);
 
+  // Restore Supabase session on page load
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.user) {
+        const u = data.session.user;
+        supabase.from('profiles').select('*').eq('id', u.id).maybeSingle().then(({ data: profile }) => {
+          if (profile) {
+            setUser({ id: u.id, email: profile.email || u.email, name: profile.name || '', businessName: profile.business_name || '', mobile: profile.mobile || '' });
+          } else {
+            setUser({ id: u.id, email: u.email, name: '', businessName: '', mobile: '' });
+          }
+        });
+      }
+    });
+  }, []);
+
   // --- Dynamic B2B Catalog and Settings States ---
   const [products, setProducts] = useState(() => productsData.map(p => ({ ...p, inventory: 100 })));
   const [categories, setCategories] = useState(() => {
@@ -229,9 +245,11 @@ export default function App() {
     setIsLoginModalOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setCart([]);
+    setOrders([]);
     navigate('/');
   };
 
