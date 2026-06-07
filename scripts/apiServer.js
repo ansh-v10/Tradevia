@@ -202,6 +202,10 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  if (req.method === 'GET' && requestUrl.pathname === '/') {
+    return sendJson(res, 200, { ok: true, name: 'Tradevia API', endpoints: ['/health', '/api/create-razorpay-order', '/api/razorpay-verify', '/api/razorpay-payment-failed', '/api/upload-image', '/api/send-shipping-notification'] });
+  }
+
   if (req.method === 'GET' && requestUrl.pathname === '/health') {
     return sendJson(res, 200, { ok: true });
   }
