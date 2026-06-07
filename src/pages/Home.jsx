@@ -127,7 +127,7 @@ export default function Home({
       return src;
     }
     const cleanPath = src.startsWith('/') ? src : '/' + src;
-    return `/Tradevia${cleanPath}`;
+    return `${cleanPath}`;
   };
 
   // Dynamic circular categories utilizing dynamic categories prop
