@@ -126,8 +126,8 @@ export default function Home({
     if (src.startsWith('http') || src.startsWith('data:')) {
       return src;
     }
-    const cleanPath = src.startsWith('/') ? src : '/' + src;
-    return `${cleanPath}`;
+    const cleanPath = src.startsWith('/') ? src.slice(1) : src;
+    return cleanPath;
   };
 
   // Dynamic circular categories utilizing dynamic categories prop

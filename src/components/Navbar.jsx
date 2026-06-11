@@ -219,8 +219,8 @@ export default function Navbar({
           
           {/* Logo */}
           <div className="brand-logo-container" onClick={handleLogoClick}>
-            <img src="/Tradevia/logo-desktop.png" alt="Tradevia Logo" className="logo-img-desktop" />
-            <img src="/Tradevia/logo-mobile.png" alt="Tradevia Logo" className="logo-img-mobile" />
+            <img src="logo-desktop.png" alt="Tradevia Logo" className="logo-img-desktop" />
+            <img src="logo-mobile.png" alt="Tradevia Logo" className="logo-img-mobile" />
           </div>
 
           {/* Delivery Location Pin */}
@@ -334,7 +334,7 @@ export default function Navbar({
                 <h4>📞 Order directly on Call</h4>
                 <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '8px 0' }}></div>
                 <img 
-                  src="/order_on_call.jpg" 
+                  src="order_on_call.jpg" 
                   alt="Order on Call Support" 
                   style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', marginBottom: '8px' }} 
                 />
