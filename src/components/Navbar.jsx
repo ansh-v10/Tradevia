@@ -219,8 +219,8 @@ export default function Navbar({
           
           {/* Logo */}
           <div className="brand-logo-container" onClick={handleLogoClick}>
-            <span className="logo-text">Trade<span className="logo-accent">via</span></span>
-            <span className="logo-subtext">B2B Wholesale</span>
+            <img src="/Tradevia/logo-desktop.png" alt="Tradevia Logo" className="logo-img-desktop" />
+            <img src="/Tradevia/logo-mobile.png" alt="Tradevia Logo" className="logo-img-mobile" />
           </div>
 
           {/* Delivery Location Pin */}
