@@ -208,50 +208,42 @@ export default function Home({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '24px',
+            justifyContent: 'center',
             textAlign: 'center',
-            padding: '20px'
+            padding: '20px',
+            marginTop: '-40px'
           }}>
-            {/* Logo container */}
-            <div className="splash-logo-container" style={{
-              animation: 'pulseGlow 2s infinite ease-in-out',
-            }}>
-              <img 
-                src="logo-desktop.png" 
-                alt="TradeVia Logo" 
-                style={{
-                  height: '70px',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 0 15px rgba(225, 29, 72, 0.6))'
-                }} 
-              />
-            </div>
-
             {/* Transitional Welcome text */}
             <h1 style={{
               fontSize: '2.5rem',
               fontWeight: '800',
               color: '#ffffff',
-              letterSpacing: '2px',
+              letterSpacing: '3px',
               margin: '0',
               fontFamily: "'Outfit', sans-serif",
               animation: 'fadeInText 1.5s ease-out forwards',
-              textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
+              textTransform: 'uppercase'
             }}>
-              Welcome to TradeVia
+              Welcome to
             </h1>
 
+            {/* Spacer to leave room for the background image's TRADEVIA logo in the middle */}
+            <div style={{ height: '140px' }} />
+
+            {/* Subtitle B2C info */}
             <p style={{
-              fontSize: '1rem',
-              color: '#cbd5e1',
-              letterSpacing: '1.5px',
+              fontSize: '1.2rem',
+              color: '#f43f5e', // Pink theme matching color
+              letterSpacing: '2px',
               margin: '0',
               textTransform: 'uppercase',
-              fontWeight: '500',
+              fontWeight: '700',
               animation: 'fadeInTextDelayed 2s ease-out forwards',
-              textShadow: '0 1px 5px rgba(0, 0, 0, 0.5)'
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
+              fontFamily: "'Outfit', sans-serif"
             }}>
-              Premium B2B Wholesale Marketplace
+              B2C Wholesale Marketplace
             </p>
           </div>
 
