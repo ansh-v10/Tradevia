@@ -197,8 +197,7 @@ export default function Home({
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'rgba(15, 23, 42, 0.75)', // Glassmorphism backdrop tint
-            backdropFilter: 'blur(4px)',
+            background: 'rgba(15, 23, 42, 0.55)', // Dark tint without blur
             zIndex: 1
           }} />
 
@@ -211,7 +210,7 @@ export default function Home({
             justifyContent: 'center',
             textAlign: 'center',
             padding: '20px',
-            marginTop: '-40px'
+            marginTop: '30px'
           }}>
             {/* Transitional Welcome text */}
             <h1 style={{
