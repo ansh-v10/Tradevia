@@ -81,7 +81,13 @@ export default function CartPage({
   }, 0);
   const MIN_ORDER_AMOUNT = 500;
 
-  const gstAmount = Math.round(rawSubtotal * 0.18);
+  const gstAmount = Math.round(cart.reduce((acc, item) => {
+    const qty = parseInt(item.quantity) || 0;
+    const price = getTieredWholesalePrice(item.product, qty);
+    const itemSubtotal = price * qty;
+    const gstRate = item.product.gst !== undefined ? parseFloat(item.product.gst) : 18;
+    return acc + (itemSubtotal * (gstRate / 100));
+  }, 0));
   const bulkTierDiscount = rawSubtotal > 10000 ? Math.round(rawSubtotal * 0.05) : 0;
 
   const couponDiscount = appliedCoupon
@@ -483,7 +489,7 @@ export default function CartPage({
 
                 <div className="summary-row">
                   <span className="gst-label-flex">
-                    CGST + SGST (18%):
+                    CGST + SGST:
                     <span className="gst-info-bubble">Claimable</span>
                   </span>
                   <span>+ ₹{gstAmount.toLocaleString('en-IN')}</span>
@@ -793,7 +799,7 @@ export default function CartPage({
                 </div>
 
                 <div className="summary-row">
-                  <span>GST (18%):</span>
+                  <span>GST:</span>
                   <span>+ ₹{gstAmount.toLocaleString('en-IN')}</span>
                 </div>
 
@@ -888,7 +894,7 @@ export default function CartPage({
                 <span>₹{rawSubtotal.toLocaleString('en-IN')}</span>
               </div>
               <div className="invoice-total-row">
-                <span>Total GST (18%):</span>
+                <span>Total GST:</span>
                 <span>₹{gstAmount.toLocaleString('en-IN')}</span>
               </div>
               {bulkTierDiscount > 0 && (

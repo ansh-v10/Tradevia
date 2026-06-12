@@ -227,7 +227,7 @@ export default function YourOrders({ orders = [] }) {
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>CGST + SGST (18%):</span>
+                        <span>CGST + SGST:</span>
                         <span>₹{order.gstAmount.toLocaleString('en-IN')}</span>
                       </div>
 

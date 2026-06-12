@@ -111,7 +111,7 @@ export function generateInvoicePDF({ orderId, user, address, cart, rawSubtotal, 
   normal('Subtotal (ex. GST):', 9, totX);
   doc.text(`₹${rawSubtotal.toLocaleString('en-IN')}`, pageW + 10, y - 5, { align: 'right' });
   y += 5;
-  normal(`GST (18%):`, 9, totX);
+  normal(`Total GST:`, 9, totX);
   doc.text(`₹${gstAmount.toLocaleString('en-IN')}`, pageW + 10, y - 5, { align: 'right' });
   y += 5;
   if (bulkTierDiscount > 0) {

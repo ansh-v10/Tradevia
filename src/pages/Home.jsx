@@ -20,6 +20,28 @@ export default function Home({
   const navigate = useNavigate();
   const [activeSlide, setActiveSlide] = useState(0);
   const [quantities, setQuantities] = useState({});
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem('tradevia_loaded');
+  });
+  const [fadeSplash, setFadeSplash] = useState(false);
+
+  useEffect(() => {
+    if (showSplash) {
+      const fadeTimer = setTimeout(() => {
+        setFadeSplash(true);
+      }, 2500);
+
+      const removeTimer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem('tradevia_loaded', 'true');
+      }, 3000);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(removeTimer);
+      };
+    }
+  }, [showSplash]);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
@@ -37,7 +59,7 @@ export default function Home({
       desc: "Get up to 25% extra profit margins by buying directly in bulk cartons. Free doorstep delivery on orders above ₹10,000.",
       badge: "DISTRIBUTOR DIRECT",
       theme: "slide-blue",
-      image: "distribution.jpg"
+      image: "distribution_v2.png"
     },
     {
       title: "Save 18% GST Input Credit",
@@ -45,7 +67,7 @@ export default function Home({
       desc: "Get tax-compliant business invoices instantly with every purchase to claim Input Tax Credit.",
       badge: "GST BENEFIT",
       theme: "slide-amber",
-      image: "gst.jpg"
+      image: "gst_v2.png"
     },
     {
       title: "Order on Call",
@@ -53,7 +75,7 @@ export default function Home({
       desc: "Don't want to place orders online? Dial +917496865205 to place your bulk inventory order instantly on call or WhatsApp.",
       badge: "ORDER ON CALL",
       theme: "slide-red",
-      image: "order_on_call.jpg"
+      image: "order_on_call_v2.png"
     }
   ];
 
@@ -155,7 +177,119 @@ export default function Home({
   ];
 
   return (
-    <div className="home-container">
+    <>
+      {showSplash && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100000,
+          backgroundImage: `url(${resolveImgSrc('welcome-bg.png')})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'opacity 0.5s ease-in-out',
+          opacity: fadeSplash ? 0 : 1,
+        }}>
+          {/* Dark overlay for readability */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.75)', // Glassmorphism backdrop tint
+            backdropFilter: 'blur(4px)',
+            zIndex: 1
+          }} />
+
+          <div style={{
+            position: 'relative',
+            zIndex: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '24px',
+            textAlign: 'center',
+            padding: '20px'
+          }}>
+            {/* Logo container */}
+            <div className="splash-logo-container" style={{
+              animation: 'pulseGlow 2s infinite ease-in-out',
+            }}>
+              <img 
+                src="logo-desktop.png" 
+                alt="TradeVia Logo" 
+                style={{
+                  height: '70px',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 0 15px rgba(225, 29, 72, 0.6))'
+                }} 
+              />
+            </div>
+
+            {/* Transitional Welcome text */}
+            <h1 style={{
+              fontSize: '2.5rem',
+              fontWeight: '800',
+              color: '#ffffff',
+              letterSpacing: '2px',
+              margin: '0',
+              fontFamily: "'Outfit', sans-serif",
+              animation: 'fadeInText 1.5s ease-out forwards',
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}>
+              Welcome to TradeVia
+            </h1>
+
+            <p style={{
+              fontSize: '1rem',
+              color: '#cbd5e1',
+              letterSpacing: '1.5px',
+              margin: '0',
+              textTransform: 'uppercase',
+              fontWeight: '500',
+              animation: 'fadeInTextDelayed 2s ease-out forwards',
+              textShadow: '0 1px 5px rgba(0, 0, 0, 0.5)'
+            }}>
+              Premium B2B Wholesale Marketplace
+            </p>
+          </div>
+
+          <style>{`
+            @keyframes pulseGlow {
+              0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 10px rgba(225, 29, 72, 0.4));
+              }
+              50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 25px rgba(225, 29, 72, 0.8));
+              }
+            }
+            @keyframes fadeInText {
+              0% {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+              100% {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            @keyframes fadeInTextDelayed {
+              0%, 30% {
+                opacity: 0;
+                transform: translateY(10px);
+              }
+              100% {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+        </div>
+      )}
+      <div className="home-container">
       {/* Hero Banner Slider */}
       <section className="hero-slider-section">
         <div 
@@ -683,6 +817,7 @@ export default function Home({
           <p>Exclusive quotes for hotels, restaurants, schools and offices. Purchase order invoicing support. Bulk volumes above 50 cartons.</p>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

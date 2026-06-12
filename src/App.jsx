@@ -136,7 +136,8 @@ export default function App() {
       tier2Price: p.tier2Price || null,
       tier3Price: p.tier3Price || null,
       tier2Moq: p.tier2Moq || null,
-      tier3Moq: p.tier3Moq || null
+      tier3Moq: p.tier3Moq || null,
+      gst: p.gst !== undefined ? p.gst : 18
     }),
     image_url: p.imageUrl || p.image_url || '',
     inventory: p.inventory !== undefined ? p.inventory : 100
@@ -273,6 +274,14 @@ export default function App() {
             return parsed.wholesalePrice ?? product.price;
           } catch (e) {
             return product.price;
+          }
+        })(),
+        gst: (() => {
+          try {
+            const parsed = JSON.parse(product.description || '{}');
+            return parsed.gst ?? 18;
+          } catch (e) {
+            return 18;
           }
         })(),
         packSize: product.unit || '',

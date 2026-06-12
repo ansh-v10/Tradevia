@@ -384,6 +384,7 @@ export default function AdminPortal({
   // Product Form states
   const [editingId, setEditingId] = useState(null); // null if adding
   const [name, setName] = useState('');
+  const [gst, setGst] = useState('18');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState(() => {
     return categories && categories.length > 0 ? categories[0].name : '';
@@ -501,6 +502,7 @@ export default function AdminPortal({
     setIsMostBought(product.isMostBought || false);
     setMoq(product.moq ? product.moq.toString() : '10');
     setInventory(product.inventory !== undefined ? product.inventory.toString() : '100');
+    setGst((product.gst || 18).toString());
     setTier2Price(product.tier2Price !== undefined && product.tier2Price !== null ? product.tier2Price.toString() : '');
     setTier3Price(product.tier3Price !== undefined && product.tier3Price !== null ? product.tier3Price.toString() : '');
     setTier2Moq(product.tier2Moq !== undefined && product.tier2Moq !== null ? product.tier2Moq.toString() : '');
@@ -535,6 +537,7 @@ export default function AdminPortal({
     setImageSourceType('link');
     setMoq('10');
     setInventory('100');
+    setGst('18');
     setTier2Price('');
     setTier3Price('');
     setTier2Moq('');
@@ -599,6 +602,7 @@ export default function AdminPortal({
       tier3Price: t3,
       tier2Moq: t2Moq,
       tier3Moq: t3Moq,
+      gst: parseInt(gst) || 18,
       rating: editingId ? (products.find(p => p.id === editingId)?.rating || 4.5) : 4.5,
       reviewsCount: editingId ? (products.find(p => p.id === editingId)?.reviewsCount || 100) : 100
     };
@@ -635,6 +639,7 @@ export default function AdminPortal({
     setImageSourceType('link');
     setMoq('10');
     setInventory('100');
+    setGst('18');
     setTier2Price('');
     setTier3Price('');
     setTier2Moq('');
@@ -1213,6 +1218,23 @@ export default function AdminPortal({
                 </div>
 
                 <div className="form-group">
+                  <label htmlFor="prod-gst">GST Rate (%) *</label>
+                  <select 
+                    id="prod-gst" 
+                    value={gst} 
+                    onChange={(e) => setGst(e.target.value)}
+                    className="pincode-input font-bold"
+                    style={{ height: '42px', padding: '8px' }}
+                  >
+                    <option value="0">0%</option>
+                    <option value="5">5%</option>
+                    <option value="12">12%</option>
+                    <option value="18">18%</option>
+                    <option value="28">28%</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label htmlFor="prod-pack">Trade Pack Size *</label>
                   <input 
                     type="text" 
@@ -1478,7 +1500,7 @@ export default function AdminPortal({
                               <img src={prod.imageUrl} alt="" style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'cover' }} />
                               <div>
                                 <strong>{prod.name}</strong>
-                                <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)' }}>Brand: {prod.brand} | {prod.packSize}</span>
+                                <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)' }}>Brand: {prod.brand} | {prod.packSize} | GST: {prod.gst || 18}%</span>
                               </div>
                             </div>
                           </td>
@@ -1530,7 +1552,7 @@ export default function AdminPortal({
                         <img src={prod.imageUrl} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
                         <div style={{ flexGrow: 1 }}>
                           <strong style={{ fontSize: '13px', display: 'block', textAlign: 'left' }}>{prod.name}</strong>
-                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)', textAlign: 'left' }}>Brand: {prod.brand} | {prod.packSize}</span>
+                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-muted)', textAlign: 'left' }}>Brand: {prod.brand} | {prod.packSize} | GST: {prod.gst || 18}%</span>
                         </div>
                       </div>
                       
