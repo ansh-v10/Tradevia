@@ -18,7 +18,7 @@ const defaultCategories = [
   { name: "Sweets & Namkeen", showOnHome: true, showProductsOnHome: true, imageUrl: "rasgulla_category.jpg" },
   { name: "Beverages", showOnHome: true, showProductsOnHome: true, imageUrl: "https://www.logodesignlove.com/wp-content/uploads/2021/07/coca-cola-logo-arden-square-01.jpg" },
   { name: "Grains & Masalas", showOnHome: true, showProductsOnHome: false, imageUrl: "https://prithvienterprises.co.in/cdn/shop/collections/Aashirvaad_Logo.png?v=1746877542&width=750" },
-  { name: "Fresh & Dairy", showOnHome: true, showProductsOnHome: true, imageUrl: "https://animationvisarts.com/wp-content/uploads/2023/12/Frame-32-6.png" },
+  { name: "Fresh & Dairy", showOnHome: true, showProductsOnHome: true, imageUrl: "amul.jpg" },
   { name: "Snacks & Biscuits", showOnHome: true, showProductsOnHome: false, imageUrl: "https://images.yourstory.com/cs/images/companies/4146603810349766400073541079337822789304320o-1611498760663.png?fm=auto&ar=1%3A1&mode=fill&fill=solid&fill-color=fff&format=auto&w=1920&q=85" },
   { name: "Cosmetics & Hygiene", showOnHome: true, showProductsOnHome: false, imageUrl: "https://i.pinimg.com/736x/da/78/1d/da781de9ad2bffefcedb6d872856900c.jpg" }
 ];
@@ -65,7 +65,14 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.map(cat => {
+            if (cat.name === "Fresh & Dairy" && (cat.imageUrl === "https://animationvisarts.com/wp-content/uploads/2023/12/Frame-32-6.png" || !cat.imageUrl)) {
+              return { ...cat, imageUrl: "amul.jpg" };
+            }
+            return cat;
+          });
+        }
       } catch (e) {
         console.error("Failed to parse categories", e);
       }
