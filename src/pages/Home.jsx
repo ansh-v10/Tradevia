@@ -204,13 +204,9 @@ export default function Home({
           <div style={{
             position: 'relative',
             zIndex: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
             textAlign: 'center',
             padding: '20px',
-            marginTop: '30px'
+            transform: 'translateY(-80px)'
           }}>
             {/* Transitional Welcome text */}
             <h1 style={{
@@ -226,24 +222,6 @@ export default function Home({
             }}>
               Welcome to
             </h1>
-
-            {/* Spacer to leave room for the background image's TRADEVIA logo in the middle */}
-            <div style={{ height: '140px' }} />
-
-            {/* Subtitle B2C info */}
-            <p style={{
-              fontSize: '1.2rem',
-              color: '#f43f5e', // Pink theme matching color
-              letterSpacing: '2px',
-              margin: '0',
-              textTransform: 'uppercase',
-              fontWeight: '700',
-              animation: 'fadeInTextDelayed 2s ease-out forwards',
-              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
-              fontFamily: "'Outfit', sans-serif"
-            }}>
-              B2C Wholesale Marketplace
-            </p>
           </div>
 
           <style>{`
