@@ -100,8 +100,8 @@ export default function Navbar({
   const mobileInputRef = useRef(null);
 
   // Calculate cart metrics
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cart.reduce((acc, item) => acc + (item.product.wholesalePrice * item.quantity), 0);
+  const totalItems = cart.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
+  const totalPrice = cart.reduce((acc, item) => acc + (item.product.wholesalePrice * (parseInt(item.quantity) || 0)), 0);
 
   // Sync temp search when parent state updates
   useEffect(() => {

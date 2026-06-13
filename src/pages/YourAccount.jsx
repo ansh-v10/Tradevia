@@ -42,8 +42,8 @@ export default function YourAccount({
   const [showAddrMap, setShowAddrMap] = useState(false);
 
   // Quick calculations
-  const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalCartValue = cart.reduce((acc, item) => acc + (item.product.wholesalePrice * item.quantity), 0);
+  const totalCartItems = cart.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
+  const totalCartValue = cart.reduce((acc, item) => acc + (item.product.wholesalePrice * (parseInt(item.quantity) || 0)), 0);
 
   // Sync edits if user prop changes
   React.useEffect(() => {

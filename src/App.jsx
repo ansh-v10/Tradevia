@@ -409,20 +409,34 @@ export default function App() {
   };
 
   const handleUpdateQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) {
-      handleRemoveItem(productId);
+    if (newQuantity === '') {
+      setCart((prevCart) =>
+        prevCart.map((i) =>
+          i.product.id === productId ? { ...i, quantity: '' } : i
+        )
+      );
       return;
     }
+
+    const parsedQty = parseInt(newQuantity);
+    if (isNaN(parsedQty)) {
+      return;
+    }
+
+    if (parsedQty < 0) {
+      return;
+    }
+
     setCart((prevCart) => {
       const item = prevCart.find((i) => i.product.id === productId);
       if (!item) return prevCart;
       const stock = item.product.inventory !== undefined ? item.product.inventory : 100;
-      if (newQuantity > stock) {
+      if (parsedQty > stock) {
         setCartMsg(`Only ${stock} in stock`);
         return prevCart;
       }
       return prevCart.map((i) =>
-        i.product.id === productId ? { ...i, quantity: newQuantity } : i
+        i.product.id === productId ? { ...i, quantity: parsedQty } : i
       );
     });
   };
