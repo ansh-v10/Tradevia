@@ -335,8 +335,22 @@ export default function Home({
 
       {/* 8 Product Categories Circles Grid */}
       <section className="categories-grid-section navbar-width-limiter">
-        <h2 className="section-title text-left">Shop by Wholesale Category</h2>
-        <p className="section-subtitle text-left">Select a segment to browse volume-based trade pricing</p>
+        <div className="section-header-flex">
+          <div>
+            <h2 className="section-title text-left" style={{ margin: 0 }}>Shop by Wholesale Category</h2>
+            <p className="section-subtitle text-left" style={{ margin: '4px 0 0 0' }}>Select a segment to browse volume-based trade pricing</p>
+          </div>
+          <button 
+            type="button"
+            className="view-all-link-btn"
+            onClick={() => {
+              setSelectedCategories([]);
+              navigate('/browse');
+            }}
+          >
+            Shop by Categories →
+          </button>
+        </div>
         
         <div className="categories-blinkit-grid">
           {categoriesList.map((cat, idx) => (
