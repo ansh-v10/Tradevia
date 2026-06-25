@@ -6,7 +6,7 @@ export default function WishlistPage({ products = [], wishlist = [], onToggleWis
   const navigate = useNavigate();
   const [addedMsg, setAddedMsg] = useState({});
 
-  const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
+  const wishlistProducts = products.filter((p) => p && wishlist.includes(p.id));
 
   const handleAddToCart = (product) => {
     const qty = product.moq || 10;

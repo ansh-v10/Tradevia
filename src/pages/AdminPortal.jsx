@@ -770,6 +770,7 @@ export default function AdminPortal({
 
   // Filter products by search query inside table
   const filteredProducts = products.filter(p => {
+    if (!p) return false;
     const q = adminSearch.toLowerCase();
     return p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
   });
@@ -1145,8 +1146,9 @@ export default function AdminPortal({
       {activeTab === 'products' && (
         <>
           {(() => {
-            const outOfStock = products.filter(p => (p.inventory !== undefined ? p.inventory : 100) <= 0).length;
+            const outOfStock = products.filter(p => p && (p.inventory !== undefined ? p.inventory : 100) <= 0).length;
             const lowStock = products.filter(p => {
+              if (!p) return false;
               const inv = p.inventory !== undefined ? p.inventory : 100;
               return inv > 0 && inv < 10;
             }).length;

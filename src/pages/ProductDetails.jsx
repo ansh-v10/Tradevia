@@ -70,7 +70,7 @@ export default function ProductDetails({
     .slice(0, 8);
 
   const bestSellers = products
-    .filter((p) => p.isMostBought && p.id !== product.id)
+    .filter((p) => p && p.isMostBought && p.id !== product.id)
     .slice(0, 8);
 
   if (!product) {

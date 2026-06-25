@@ -102,6 +102,7 @@ export default function Browse({
   // Filter and Sort Logic consuming dynamic products prop
   const filteredProducts = products
     .filter(product => {
+      if (!product) return false;
       // 1. Search Query Filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
