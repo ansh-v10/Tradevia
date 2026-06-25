@@ -66,7 +66,7 @@ export default function ProductDetails({
   }, [product?.id]);
 
   const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
+    .filter((p) => p && p.category === product.category && p.id !== product.id)
     .slice(0, 8);
 
   const bestSellers = products

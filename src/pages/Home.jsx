@@ -123,7 +123,7 @@ export default function Home({
 
   // Get most bought products from dynamic prop, sorting out-of-stock to the bottom
   const mostBoughtProducts = products
-    .filter(p => p.isMostBought)
+    .filter(p => p && p.isMostBought)
     .sort((a, b) => {
       const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
       const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
@@ -611,7 +611,7 @@ export default function Home({
       {/* Category Specific Dynamic Product Rows */}
       {categoryProductsRows.map((cat) => {
         const catProducts = products
-          .filter(p => p.category === cat.name)
+          .filter(p => p && p.category === cat.name)
           .sort((a, b) => {
             const isOutOfStockA = (a.inventory !== undefined ? a.inventory : 100) <= 0 ? 1 : 0;
             const isOutOfStockB = (b.inventory !== undefined ? b.inventory : 100) <= 0 ? 1 : 0;
@@ -739,7 +739,7 @@ export default function Home({
       {(() => {
         let recentItems = [];
         try { recentItems = JSON.parse(localStorage.getItem('ss_recently_viewed') || '[]'); } catch(e) {}
-        const recentProducts = recentItems.filter(r => products.some(p => p.id === r.id)).slice(0, 6);
+        const recentProducts = recentItems.filter(r => products.some(p => p && p.id === r.id)).slice(0, 6);
         if (recentProducts.length === 0) return null;
         return (
           <section className="super-saver-section navbar-width-limiter" style={{ marginTop: '32px' }}>
