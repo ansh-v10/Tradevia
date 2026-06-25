@@ -149,7 +149,7 @@ export default function Home({
       return src;
     }
     const cleanPath = src.startsWith('/') ? src.slice(1) : src;
-    return cleanPath;
+    return '/' + cleanPath;
   };
 
   // Dynamic circular categories utilizing dynamic categories prop
