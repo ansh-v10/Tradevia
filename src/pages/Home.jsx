@@ -24,6 +24,15 @@ export default function Home({
     return !sessionStorage.getItem('tradevia_loaded');
   });
   const [fadeSplash, setFadeSplash] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (showSplash) {
@@ -183,7 +192,7 @@ export default function Home({
           position: 'fixed',
           inset: 0,
           zIndex: 100000,
-          backgroundImage: `url(${resolveImgSrc('welcome-bg.png')})`,
+          backgroundImage: `url(${resolveImgSrc(isMobile ? 'welcome-bg-mobile.jpg' : 'welcome-bg.png')})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
