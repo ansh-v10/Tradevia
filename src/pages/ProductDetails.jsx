@@ -20,7 +20,7 @@ export default function ProductDetails({
   const { id } = useParams();
   const navigate = useNavigate();
   
-  const product = products.find((p) => p.id === parseInt(id));
+  const product = products.find((p) => p && p.id === parseInt(id));
   
   const [qty, setQty] = useState(product?.moq || 10);
   const [quantities, setQuantities] = useState({});
@@ -40,9 +40,7 @@ export default function ProductDetails({
 
   // Sync quantity MOQ when product changes and scroll to top
   useEffect(() => {
-    if (product) {
-      setQty(product.moq || 10);
-    }
+    if (product) setQty(product.moq || 10);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product, id]);
 
@@ -50,7 +48,7 @@ export default function ProductDetails({
     if (!product?.id) return;
     try {
       const prev = JSON.parse(localStorage.getItem('ss_recently_viewed') || '[]');
-      const updated = [{ id: product.id, name: product.name, imageUrl: product.imageUrl, wholesalePrice: product.wholesalePrice, retailPrice: product.retailPrice, category: product.category }, ...prev.filter(p => p.id !== product.id)].slice(0, 10);
+      const updated = [{ id: product.id, name: product.name, imageUrl: product.imageUrl, wholesalePrice: product.wholesalePrice, retailPrice: product.retailPrice, category: product.category }, ...prev.filter(p => p && p.id !== product.id)].slice(0, 10);
       localStorage.setItem('ss_recently_viewed', JSON.stringify(updated));
     } catch (e) {}
   }, [product?.id]);
@@ -65,13 +63,13 @@ export default function ProductDetails({
     return () => { isMounted = false; };
   }, [product?.id]);
 
-  const relatedProducts = products
+  const relatedProducts = (product ? products
     .filter((p) => p && p.category === product.category && p.id !== product.id)
-    .slice(0, 8);
+    .slice(0, 8) : []);
 
-  const bestSellers = products
+  const bestSellers = (product ? products
     .filter((p) => p && p.isMostBought && p.id !== product.id)
-    .slice(0, 8);
+    .slice(0, 8) : []);
 
   if (!product) {
     return (

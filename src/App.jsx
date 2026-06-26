@@ -252,9 +252,12 @@ export default function App() {
         return;
       }
 
-      const mappedProducts = data.map((product) => ({
+      // Map Supabase UUIDs back to numeric IDs from productsData for URL matching
+      const numericIdMap = {};
+      productsData.forEach((p, i) => { numericIdMap[p.name.toLowerCase().trim()] = p.id; });
+      const mappedProducts = data.map((product, idx) => ({
         ...product,
-        id: product.id,
+        id: numericIdMap[product.name?.toLowerCase().trim()] || product.id || idx + 1,
         name: product.name,
         inventory: product.inventory ?? 100,
         brand: (() => {
