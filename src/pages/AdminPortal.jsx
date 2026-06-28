@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../util/supabaseClient';
+import * as XLSX from 'xlsx';
 import { COURIER_OPTIONS } from '../util/tracking';
 
 export default function AdminPortal({ 
@@ -403,6 +404,12 @@ export default function AdminPortal({
   const [errors, setErrors] = useState({});
   const [actionSuccess, setActionSuccess] = useState('');
 
+  // Bulk Upload states
+  const [bulkUploadData, setBulkUploadData] = useState([]);
+  const [bulkUploadErrors, setBulkUploadErrors] = useState([]);
+  const [bulkUploadFileName, setBulkUploadFileName] = useState('');
+  const [bulkUploading, setBulkUploading] = useState(false);
+
   // Image Source Tab: 'link' or 'upload'
   const [imageSourceType, setImageSourceType] = useState('link');
 
@@ -646,6 +653,99 @@ export default function AdminPortal({
     setTier3Moq('');
 
     setTimeout(() => setActionSuccess(''), 2500);
+  };
+
+  // === Bulk Upload from Excel/CSV ===
+  const handleDownloadTemplate = () => {
+    const headers = ['name', 'brand', 'category', 'retailPrice', 'wholesalePrice', 'packSize', 'imageUrl', 'moq', 'inventory', 'gst', 'tier2Price', 'tier2Moq', 'tier3Price', 'tier3Moq', 'isMostBought'];
+    const sample = ['Sample Product', 'Brand Name', 'Category Name', '199', '149', 'Box of 12', 'https://example.com/image.jpg', '10', '100', '18', '139', '50', '129', '100', 'true'];
+    const csvContent = [headers.join(','), sample.join(',')].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tradevia_product_upload_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleBulkFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setBulkUploadFileName(file.name);
+    setBulkUploadErrors([]);
+    setBulkUploadData([]);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const workbook = XLSX.read(event.target.result, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        const errors = [];
+        const valid = [];
+
+        jsonData.forEach((row, idx) => {
+          if (!row.name || !row.brand || !row.retailPrice || !row.wholesalePrice) {
+            errors.push(`Row ${idx + 2}: Missing required fields (name, brand, retailPrice, wholesalePrice)`);
+            return;
+          }
+          valid.push({
+            name: String(row.name).trim(),
+            brand: String(row.brand).trim(),
+            category: String(row.category || 'Uncategorized').trim(),
+            retailPrice: parseFloat(row.retailPrice),
+            wholesalePrice: parseFloat(row.wholesalePrice),
+            packSize: String(row.packSize || 'Standard Pack').trim(),
+            imageUrl: String(row.imageUrl || '').trim(),
+            moq: parseInt(row.moq) || 10,
+            inventory: parseInt(row.inventory) !== undefined && !isNaN(parseInt(row.inventory)) ? parseInt(row.inventory) : 100,
+            gst: parseInt(row.gst) || 18,
+            tier2Price: row.tier2Price ? parseFloat(row.tier2Price) : null,
+            tier2Moq: row.tier2Moq ? parseInt(row.tier2Moq) : null,
+            tier3Price: row.tier3Price ? parseFloat(row.tier3Price) : null,
+            tier3Moq: row.tier3Moq ? parseInt(row.tier3Moq) : null,
+            isMostBought: row.isMostBought === 'true' || row.isMostBought === true || row.isMostBought === 'TRUE',
+            rating: 4.5,
+            reviewsCount: 0
+          });
+        });
+
+        setBulkUploadErrors(errors);
+        setBulkUploadData(valid);
+      } catch (err) {
+        setBulkUploadErrors(['Failed to parse file: ' + err.message]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleBulkUploadSubmit = async () => {
+    if (bulkUploadData.length === 0) return;
+    setBulkUploading(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const product of bulkUploadData) {
+      try {
+        await onAddProduct(product);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setBulkUploading(false);
+    setAdminToast({
+      show: true,
+      message: `Bulk upload complete: ${successCount} added, ${failCount} failed.`,
+      type: failCount > 0 ? 'warning' : 'success'
+    });
+    setTimeout(() => setAdminToast(p => ({ ...p, show: false })), 4000);
+    setBulkUploadData([]);
+    setBulkUploadFileName('');
+    // Reset file input
+    const fileInput = document.getElementById('bulk-file-input');
+    if (fileInput) fileInput.value = '';
   };
 
   const handleDeleteClick = async (productId, name) => {
@@ -1099,6 +1199,12 @@ export default function AdminPortal({
           onClick={() => setActiveTab('bulk')}
         >
           Bulk Rates Adjuster
+        </button>
+        <button 
+          className={`admin-tab-btn ${activeTab === 'bulk-upload' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bulk-upload')}
+        >
+          Bulk Upload Products
         </button>
         <button 
           className={`admin-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
@@ -1830,6 +1936,97 @@ export default function AdminPortal({
             </button>
           </div>
 
+        </div>
+      )}
+
+      {/* TAB: BULK UPLOAD PRODUCTS */}
+      {activeTab === 'bulk-upload' && (
+        <div className="summary-card mt-6">
+          <h3>Bulk Upload Products from Spreadsheet</h3>
+          <p className="gst-disclaimer">
+            Upload a CSV or Excel (.xlsx) file containing your product list. All products will be added to the catalog at once.
+          </p>
+          <div className="divider-card"></div>
+
+          {/* Step 1: Download Template */}
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontWeight: 600, marginBottom: '8px' }}>Step 1: Download the template format</p>
+            <button type="button" className="checkout-proceed-btn" style={{ backgroundColor: 'var(--color-primary)', border: 'none' }} onClick={handleDownloadTemplate}>
+              Download CSV Template
+            </button>
+            <p className="text-sm text-muted" style={{ marginTop: '6px' }}>
+              The template shows the required columns: name, brand, category, retailPrice, wholesalePrice, packSize, imageUrl, moq, inventory, gst, tier2Price, tier2Moq, tier3Price, tier3Moq, isMostBought.
+            </p>
+          </div>
+
+          <div className="divider-card"></div>
+
+          {/* Step 2: Upload File */}
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontWeight: 600, marginBottom: '8px' }}>Step 2: Upload your CSV or Excel file</p>
+            <input id="bulk-file-input" type="file" accept=".csv,.xlsx" onChange={handleBulkFileUpload} style={{ marginBottom: '8px' }} />
+            {bulkUploadFileName && <p className="text-sm text-muted">Selected file: {bulkUploadFileName}</p>}
+          </div>
+
+          {/* Errors */}
+          {bulkUploadErrors.length > 0 && (
+            <div style={{ color: 'var(--color-danger)', marginBottom: '16px', padding: '12px', background: '#fff0f0', borderRadius: '6px' }}>
+              <p style={{ fontWeight: 600, marginBottom: '4px' }}>Skipped rows:</p>
+              {bulkUploadErrors.map((err, i) => <p key={i} style={{ fontSize: '13px', margin: '2px 0' }}>{err}</p>)}
+            </div>
+          )}
+
+          {/* Preview Table */}
+          {bulkUploadData.length > 0 && (
+            <>
+              <div className="divider-card"></div>
+              <h4>Preview — {bulkUploadData.length} product{bulkUploadData.length > 1 ? 's' : ''} ready to upload</h4>
+              <div style={{ maxHeight: '360px', overflowY: 'auto', margin: '12px 0', border: '1px solid #e0e0e0', borderRadius: '6px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ background: '#f5f5f5', position: 'sticky', top: 0 }}>
+                      <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>#</th>
+                      <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Name</th>
+                      <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Brand</th>
+                      <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Category</th>
+                      <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>MRP</th>
+                      <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>Wholesale</th>
+                      <th style={{ padding: '8px', textAlign: 'center', borderBottom: '2px solid #ddd' }}>MOQ</th>
+                      <th style={{ padding: '8px', textAlign: 'center', borderBottom: '2px solid #ddd' }}>Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkUploadData.map((p, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                        <td style={{ padding: '6px 8px' }}>{i + 1}</td>
+                        <td style={{ padding: '6px 8px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</td>
+                        <td style={{ padding: '6px 8px' }}>{p.brand}</td>
+                        <td style={{ padding: '6px 8px' }}>{p.category}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right' }}>₹{p.retailPrice}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right' }}>₹{p.wholesalePrice}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center' }}>{p.moq}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center' }}>{p.inventory}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                type="button"
+                className="checkout-proceed-btn"
+                style={{ backgroundColor: 'var(--color-primary)', border: 'none' }}
+                onClick={handleBulkUploadSubmit}
+                disabled={bulkUploading}
+              >
+                {bulkUploading ? 'Uploading...' : `Upload All ${bulkUploadData.length} Products`}
+              </button>
+            </>
+          )}
+
+          {/* Empty state */}
+          {bulkUploadFileName && bulkUploadData.length === 0 && bulkUploadErrors.length === 0 && (
+            <p className="text-sm text-muted">No valid products found in file. Check the format and try again.</p>
+          )}
         </div>
       )}
 
