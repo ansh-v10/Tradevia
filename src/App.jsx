@@ -255,11 +255,36 @@ export default function App() {
         return;
       }
 
-      // Only update inventory from Supabase — don't replace numeric IDs
-      setProducts(prev => prev.map(p => {
-        const match = data.find(sp => sp.name === p.name);
-        return match ? { ...p, inventory: match.inventory ?? p.inventory } : p;
-      }));
+      // Merge Supabase products with local: update inventory for matching, add new ones
+      setProducts(prev => {
+        const merged = prev.map(p => {
+          const match = data.find(sp => sp.name === p.name);
+          return match ? { ...p, inventory: match.inventory ?? p.inventory } : p;
+        });
+        let maxId = merged.reduce((max, p) => Math.max(max, p.id || 0), 0);
+        data.forEach(sp => {
+          if (!merged.some(p => p.name === sp.name)) {
+            maxId += 1;
+            merged.push({
+              id: maxId,
+              name: sp.name,
+              category: sp.category || '',
+              wholesalePrice: sp.price || 0,
+              retailPrice: 0,
+              moq: sp.moq || 10,
+              imageUrl: sp.image_url || '',
+              packSize: sp.unit || '',
+              inventory: sp.inventory ?? 100,
+              rating: 4.5,
+              reviewsCount: 0,
+              isMostBought: false,
+              brand: '',
+              description: sp.description || ''
+            });
+          }
+        });
+        return merged;
+      });
     };
 
     loadProducts();
