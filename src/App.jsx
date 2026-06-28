@@ -252,90 +252,11 @@ export default function App() {
         return;
       }
 
-      // Map Supabase UUIDs back to numeric IDs from productsData for URL matching
-      const numericIdMap = {};
-      productsData.forEach((p, i) => { numericIdMap[p.name.toLowerCase().trim()] = p.id; });
-      const mappedProducts = data.map((product, idx) => ({
-        ...product,
-        id: numericIdMap[product.name?.toLowerCase().trim()] || product.id || idx + 1,
-        name: product.name,
-        inventory: product.inventory ?? 100,
-        brand: (() => {
-          if (!product.description) return '';
-          try {
-            const parsed = JSON.parse(product.description);
-            return parsed.brand || '';
-          } catch (e) {
-            return product.description?.split(' | ')[0] || '';
-          }
-        })(),
-        category: product.category,
-        retailPrice: (() => {
-          try {
-            const parsed = JSON.parse(product.description || '{}');
-            return parsed.retailPrice ?? product.price;
-          } catch (e) {
-            return product.price;
-          }
-        })(),
-        wholesalePrice: (() => {
-          try {
-            const parsed = JSON.parse(product.description || '{}');
-            return parsed.wholesalePrice ?? product.price;
-          } catch (e) {
-            return product.price;
-          }
-        })(),
-        gst: (() => {
-          try {
-            const parsed = JSON.parse(product.description || '{}');
-            return parsed.gst ?? 18;
-          } catch (e) {
-            return 18;
-          }
-        })(),
-        packSize: product.unit || '',
-        rating: (() => {
-          try {
-            const parsed = JSON.parse(product.description || '{}');
-            return parsed.rating ?? 0;
-          } catch (e) {
-            return 0;
-          }
-        })(),
-        reviewsCount: (() => {
-          try {
-            const parsed = JSON.parse(product.description || '{}');
-            return parsed.reviewsCount ?? 0;
-          } catch (e) {
-            return 0;
-          }
-        })(),
-        isMostBought: (() => {
-          try {
-            const parsed = JSON.parse(product.description || '{}');
-            return parsed.isMostBought ?? false;
-          } catch (e) {
-            return false;
-          }
-        })(),
-        moq: product.moq,
-        tier2Price: (() => {
-          try { const p = JSON.parse(product.description || '{}'); return p.tier2Price ?? null; } catch (e) { return null; }
-        })(),
-        tier3Price: (() => {
-          try { const p = JSON.parse(product.description || '{}'); return p.tier3Price ?? null; } catch (e) { return null; }
-        })(),
-        tier2Moq: (() => {
-          try { const p = JSON.parse(product.description || '{}'); return p.tier2Moq ?? null; } catch (e) { return null; }
-        })(),
-        tier3Moq: (() => {
-          try { const p = JSON.parse(product.description || '{}'); return p.tier3Moq ?? null; } catch (e) { return null; }
-        })(),
-        imageUrl: product.image_url || ''
+      // Only update inventory from Supabase — don't replace numeric IDs
+      setProducts(prev => prev.map(p => {
+        const match = data.find(sp => sp.name === p.name);
+        return match ? { ...p, inventory: match.inventory ?? p.inventory } : p;
       }));
-
-      setProducts(mappedProducts);
     };
 
     loadProducts();
