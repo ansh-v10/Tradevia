@@ -126,7 +126,6 @@ export default function App() {
 
   // --- Admin Desk Database Callbacks ---
   const productToSupabase = (p) => ({
-    id: p.id,
     name: p.name,
     category: p.category,
     price: p.wholesalePrice || 0,
@@ -162,13 +161,17 @@ export default function App() {
     setProducts(prevProducts =>
       prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p)
     );
-    const { error } = await supabase.from('products').update(productToSupabase(updatedProduct)).eq('id', updatedProduct.id);
+    const { error } = await supabase.from('products').update(productToSupabase(updatedProduct)).eq('name', updatedProduct.name);
     if (error) console.error('Failed to update product in Supabase:', error.message);
   };
 
   const handleDeleteProduct = async (productId) => {
+    const deleted = products.find(p => p.id === productId);
     setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
-    const { error } = await supabase.from('products').delete().eq('id', productId);
+    if (deleted) {
+      const { error } = await supabase.from('products').delete().eq('name', deleted.name);
+      if (error) console.error('Failed to delete product from Supabase:', error.message);
+    }
     if (error) console.error('Failed to delete product from Supabase:', error.message);
   };
 
