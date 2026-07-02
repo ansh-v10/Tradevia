@@ -2472,7 +2472,7 @@ export default function AdminPortal({
                     id="admin-acc-id"
                     value={adminAccId}
                     onChange={(e) => setAdminAccId(e.target.value.replace(/\s/g, ''))}
-                    placeholder="e.g. vansh2005"
+                    placeholder="e.g. admin_manager"
                     required
                     disabled={editingAdminId !== null}
                     className="pincode-input"
